@@ -33,18 +33,17 @@ const PLAYING = 1;
 const ENDED = 0;
 const END_POLL_MS = 150;
 const AUTOPLAY_TIMEOUT_MS = 2500;
-/**
- * Keep our cover up briefly after playback starts: it hides YouTube's play/pause flash and
- * the first moment, which can still be at the starting quality (~480p) before HD kicks in.
- */
-const START_FLASH_MS = 900;
+/** Keep our cover up a moment after playback starts, over YouTube's play/pause flash. */
+const START_FLASH_MS = 250;
 /**
  * While players are guessing, the host pre-loads the clip silently: it plays the seconds
  * before it (so YouTube has measured the bandwidth) and waits paused at the clip start.
  * At reveal it starts instantly and reaches HD within about a second.
  */
-const WARMUP_LEAD_SEC = 15;
+const WARMUP_LEAD_SEC = 8;
 const WARMUP_STOP_EARLY_SEC = 0.3;
+/** Already parked this close before the start (warm-up done): play on without seeking. */
+const NO_SEEK_WINDOW_SEC = 1.5;
 const ERROR_END_DELAY_MS = 4000;
 
 /** Bare video + audio for [startSec, endSec] (OPEN_CLIP_SEC when there is no end): no YouTube chrome. */
@@ -88,7 +87,11 @@ export function YoutubeClip({
     setStatus('loading');
     player.unMute();
     player.setVolume(100);
-    player.seekTo(optionsRef.current.startSec, true);
+    // A seek throws away the decoded frames and can rebuffer; skip it when the warm-up
+    // already parked the video just before the start.
+    const start = optionsRef.current.startSec;
+    const time = player.getCurrentTime();
+    if (!(time >= start - NO_SEEK_WINDOW_SEC && time <= start + 0.2)) player.seekTo(start, true);
     player.playVideo();
     later(() => {
       if (player.getPlayerState() !== PLAYING) setStatus((s) => (s === 'loading' ? 'blocked' : s));
