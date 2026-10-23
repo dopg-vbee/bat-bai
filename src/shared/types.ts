@@ -46,6 +46,8 @@ export interface HostState {
   endsAt: number;
   /** When the leaderboard moves on by itself (0 when nothing is scheduled). */
   advanceAt: number;
+  /** The round ended early because everyone answered correctly. */
+  allCorrect: boolean;
   players: PlayerSummary[];
   audioUrl: string | null;
   nextAudioUrl: string | null;
@@ -72,6 +74,7 @@ export interface PlayerState {
   qTotal: number;
   startsAt: number;
   endsAt: number;
+  allCorrect: boolean;
   playerCount: number;
   me: PlayerIdentity & { score: number; rank: number; delta: number };
   round: { correct: boolean; points: number };

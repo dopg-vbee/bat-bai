@@ -34,3 +34,27 @@ export function playCorrectChime(step = 0) {
     osc.stop(start + 0.45);
   });
 }
+
+const FANFARE_NOTES = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+
+function note(ac: AudioContext, hz: number, start: number, length: number, volume: number, type: OscillatorType) {
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.type = type;
+  osc.frequency.value = hz;
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + length);
+  osc.connect(gain).connect(ac.destination);
+  osc.start(start);
+  osc.stop(start + length + 0.05);
+}
+
+/** Short victory fanfare: four quick rising notes, then a ringing major chord. */
+export function playFanfare() {
+  const ac = audio();
+  const now = ac.currentTime;
+  FANFARE_NOTES.forEach((hz, i) => note(ac, hz, now + i * 0.11, 0.18, VOLUME, 'square'));
+  const chordAt = now + FANFARE_NOTES.length * 0.11 + 0.04;
+  FANFARE_NOTES.forEach((hz) => note(ac, hz, chordAt, 1.1, VOLUME * 0.55, 'triangle'));
+}

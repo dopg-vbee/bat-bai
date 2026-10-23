@@ -1,6 +1,6 @@
 import type { PlayerState } from '../../../shared/types.ts';
 import { CountUp } from '../../components/AnimatedLeaderboard.tsx';
-import { AnimatedEmoji, EmojiText } from '../../components/Emoji.tsx';
+import { AnimatedEmoji, Emoji, EmojiText } from '../../components/Emoji.tsx';
 import { Delta } from '../../components/Leaderboard.tsx';
 
 export function PlayerReveal({ state }: { state: PlayerState }) {
@@ -13,6 +13,11 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
         <span className="label">Đáp án</span>
         <strong className="answer-title">{state.answer}</strong>
       </div>
+      {state.allCorrect && (
+        <p className="pill all-correct-pill">
+          <Emoji char="💯" /> Cả phòng đều đúng!
+        </p>
+      )}
       <p className="total-line">
         Tổng điểm{' '}
         <strong>

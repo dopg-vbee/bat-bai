@@ -54,7 +54,8 @@ const MAX_NAME_LENGTH = 20;
 const MAX_GUESS_LENGTH = 100;
 const GUESS_INTERVAL_MS = 300;
 const LATE_GRACE_MS = 300;
-const ALL_CORRECT_DELAY_MS = 1200;
+/** Just long enough for the last correct answer to pop on the big screen. */
+const ALL_CORRECT_DELAY_MS = 400;
 /** The big screen reports when the answer clip ends; this covers a clip that never does (load error, blocked autoplay). */
 const REVEAL_FALLBACK_EXTRA_MS = 12_000;
 
@@ -79,6 +80,8 @@ export class Room {
   startsAt = 0;
   endsAt = 0;
   advanceAt = 0;
+  /** The current round ended because every online player answered correctly. */
+  allCorrect = false;
   lastActivity = Date.now();
   private readonly questions: GameQuestion[];
   private readonly countdownMs: number;
@@ -302,6 +305,7 @@ export class Room {
       qTotal: this.questions.length,
       startsAt: this.startsAt,
       endsAt: this.endsAt,
+      allCorrect: this.allCorrect,
     };
   }
 
@@ -314,6 +318,7 @@ export class Room {
     this.qIndex = index;
     this.phase = 'question';
     this.advanceAt = 0;
+    this.allCorrect = false;
     this.correctOrder = [];
     const now = Date.now();
     this.startsAt = now + this.countdownMs;
@@ -347,7 +352,9 @@ export class Room {
       online++;
       if (!p.answers.has(this.qIndex)) return;
     }
-    if (online > 0) this.schedule(ALL_CORRECT_DELAY_MS, () => this.reveal());
+    if (online === 0) return;
+    this.allCorrect = true;
+    this.schedule(ALL_CORRECT_DELAY_MS, () => this.reveal());
   }
 
   private ranking(): Player[] {

@@ -79,6 +79,30 @@ describe('preview room', () => {
     expect(room.phase).toBe('ended');
   });
 
+  it('moves on almost at once when everyone is right, and flags it', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // every bot answers at 45% of the round
+    const room = makeRoom(true);
+    room.next();
+    vi.advanceTimersByTime(3000 + 4500);
+    expect(room.phase).toBe('question');
+    vi.advanceTimersByTime(450);
+    expect(room.phase).toBe('reveal');
+    expect(room.hostView().allCorrect).toBe(true);
+
+    room.next(); // → leaderboard
+    room.next(); // → question 2: the flag resets
+    expect(room.hostView().allCorrect).toBe(false);
+  });
+
+  it('does not flag a round that simply ran out of time', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.1); // nobody answers
+    const room = makeRoom(true);
+    room.next();
+    vi.advanceTimersByTime(3000 + 10_000 + 400);
+    expect(room.phase).toBe('reveal');
+    expect(room.hostView().allCorrect).toBe(false);
+  });
+
   it('a normal room has no bots', () => {
     expect(makeRoom(false).hostView().players).toHaveLength(0);
   });

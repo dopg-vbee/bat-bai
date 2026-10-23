@@ -2,6 +2,7 @@ import { ArrowLeft, CircleAlert, Eye, Flag, Users, WifiOff } from 'lucide-react'
 import { useEffect, useState } from 'react';
 import type { HostState } from '../../../shared/types.ts';
 import { BrandMark } from '../../components/Brand.tsx';
+import { preloadAnimatedEmoji } from '../../components/Emoji.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { ThemeToggle } from '../../components/ThemeToggle.tsx';
 import { Link } from '../../lib/router.tsx';
@@ -21,6 +22,10 @@ export function HostPage({ code }: { code: string }) {
   const [videoSlot, setVideoSlot] = useState<HTMLElement | null>(null);
   const connected = useConnected();
   const audio = useQuestionAudio(state);
+
+  useEffect(() => {
+    preloadAnimatedEmoji(['💯', '🏆']);
+  }, []);
 
   useEffect(() => {
     const hostToken = readStorage(storageKeys.host(code));

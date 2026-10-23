@@ -1,6 +1,7 @@
 import { SkipForward } from 'lucide-react';
 import type { HostState } from '../../../shared/types.ts';
 import { socket } from '../../lib/socket.ts';
+import { AllCorrectCelebration } from './AllCorrectCelebration.tsx';
 
 interface HostRevealProps {
   state: HostState;
@@ -16,6 +17,7 @@ export function HostReveal({ state, onVideoSlot }: HostRevealProps) {
 
   return (
     <section className="host-reveal">
+      {state.allCorrect && <AllCorrectCelebration />}
       <p className="host-question-no">
         Câu {state.qIndex + 1}/{state.qTotal} · {state.correctFeed.length}/{state.players.length} người đoán đúng
       </p>

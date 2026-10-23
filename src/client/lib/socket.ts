@@ -42,6 +42,8 @@ export function useConnected() {
     const update = () => setConnected(socket.connected);
     socket.on('connect', update);
     socket.on('disconnect', update);
+    // The socket may have connected between the first render and this subscription.
+    update();
     return () => {
       socket.off('connect', update);
       socket.off('disconnect', update);

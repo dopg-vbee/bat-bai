@@ -1614,6 +1614,66 @@ button {
   color: #fde047;
 }
 
+/* ---------- everyone answered correctly ---------- */
+
+.all-correct {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  background: radial-gradient(circle at center, rgb(12 10 24 / 0.82) 0%, rgb(12 10 24 / 0.55) 60%, transparent 100%);
+  pointer-events: none;
+  animation: all-correct-fade 2.6s ease-in-out forwards;
+}
+
+.all-correct-emoji {
+  width: min(32vh, 260px);
+  height: min(32vh, 260px);
+  animation: all-correct-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.all-correct-text {
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(90deg, #fde047, #f472b6, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 0 rgb(0 0 0 / 0.35));
+  animation: all-correct-pop 0.6s 0.15s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.all-correct-pill {
+  background: rgb(250 204 21 / 0.2);
+  color: #fde047;
+}
+
+@keyframes all-correct-pop {
+  from {
+    transform: scale(0.2) rotate(-8deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes all-correct-fade {
+  0%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 /* ---------- theme toggle ---------- */
 
 .theme-toggle {
