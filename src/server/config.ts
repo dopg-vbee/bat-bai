@@ -7,6 +7,7 @@ export const DEFAULT_ADMIN_PASSWORD = 'batbai';
 export interface Config {
   port: number;
   adminPassword: string;
+  publicUrl?: string;
   dataDir: string;
   s3: S3Config | null;
 }
@@ -27,6 +28,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     port: Number(env.PORT) || 3000,
     adminPassword: env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD,
+    publicUrl: env.PUBLIC_URL?.replace(/\/+$/, '') || undefined,
     dataDir: env.DATA_DIR || 'data',
     s3,
   };

@@ -33,7 +33,10 @@ npm start            # http://localhost:3000, mật khẩu mặc định: batbai
 ```
 
 - Đặt mật khẩu thật: copy `.env.example` thành `.env` và sửa `ADMIN_PASSWORD`.
-- **Chơi trong mạng LAN** (laptop nối TV, mọi người dùng chung wifi): cứ mở `http://localhost:3000` trên laptop. QR tự trỏ sang địa chỉ LAN của máy, điện thoại quét là vào. Nếu Windows hỏi tường lửa thì bấm cho phép.
+- **Chơi trong mạng LAN** (laptop nối TV, mọi người dùng chung Wi-Fi): cứ mở `http://localhost:3000` trên laptop.
+  - Mã QR tự trỏ sang IP Wi-Fi của máy, bỏ qua các card mạng ảo (Hyper-V, WSL, VPN…). Lúc khởi động, terminal cũng in dòng `Điện thoại vào: http://…`.
+  - Điện thoại quét QR mà chỉ thấy **màn hình trắng hoặc đen, không tải được**: kiểm tra điện thoại có cùng Wi-Fi với laptop không. Sau đó kiểm tra tường lửa Windows có cho Node.js ở mạng **Private** không (Windows Security → Firewall → Allow an app → Node.js). Wi-Fi ở nhà nên đặt là Private.
+  - Vẫn không được thì đặt `PUBLIC_URL=http://<IP-Wi-Fi>:3000` trong `.env`, QR sẽ dùng đúng địa chỉ đó.
 - Khi phát triển: `npm run dev` (tự reload khi sửa code).
 
 ## Deploy online: Render + Cloudflare R2 (miễn phí)

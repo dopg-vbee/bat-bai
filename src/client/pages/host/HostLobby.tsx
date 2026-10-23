@@ -6,16 +6,21 @@ import { Avatar } from '../../components/Avatar.tsx';
 import { openPlayerWindow } from '../../lib/rooms.ts';
 import { socket } from '../../lib/socket.ts';
 
-/** On localhost, phones cannot reach "localhost": point the QR at the LAN address instead. */
+const isLocalhost = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+
+/**
+ * Where phones should go. PUBLIC_URL (server config) wins; on localhost (unreachable from a phone)
+ * the server's best LAN address is used; otherwise whatever address the host screen is on.
+ */
 function useJoinUrl(code: string) {
   const [base, setBase] = useState(location.origin);
   useEffect(() => {
-    if (!['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) return;
     fetch('/api/info')
       .then((res) => res.json())
-      .then((info: { lanAddresses: string[] }) => {
+      .then((info: { publicUrl: string | null; lanAddresses: string[] }) => {
+        if (info.publicUrl) return setBase(info.publicUrl);
         const ip = info.lanAddresses[0];
-        if (ip) setBase(`${location.protocol}//${ip}${location.port ? `:${location.port}` : ''}`);
+        if (ip && isLocalhost()) setBase(`${location.protocol}//${ip}${location.port ? `:${location.port}` : ''}`);
       })
       .catch(() => undefined);
   }, []);

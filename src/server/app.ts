@@ -1,5 +1,4 @@
 import http from 'node:http';
-import { networkInterfaces } from 'node:os';
 import path from 'node:path';
 import express, { type ErrorRequestHandler, type RequestHandler } from 'express';
 import multer from 'multer';
@@ -9,6 +8,7 @@ import { adminRouter } from './admin.ts';
 import { AudioError } from './audio.ts';
 import { HttpError } from './errors.ts';
 import { AUDIO_PREFIX, audioKey, Library } from './library.ts';
+import { lanAddresses } from './network.ts';
 import { setupRealtime, type GameServer } from './realtime.ts';
 import type { BlobStore } from './storage/types.ts';
 
@@ -16,19 +16,14 @@ export interface AppOptions {
   store: BlobStore;
   adminPassword: string;
   countdownMs?: number;
+  /** Address phones should open (QR code), e.g. https://bat-bai.example.com. Overrides LAN detection. */
+  publicUrl?: string;
   /** dev = Vite middleware with HMR, static = serve dist/client, none = API only (tests). */
   client?: 'dev' | 'static' | 'none';
 }
 
 const CLIENT_DIR = path.resolve(import.meta.dirname, '../../dist/client');
 const AUDIO_CACHE_SIZE = 40;
-
-export function lanAddresses(): string[] {
-  return Object.values(networkInterfaces())
-    .flat()
-    .filter((net) => net && net.family === 'IPv4' && !net.internal)
-    .map((net) => net!.address);
-}
 
 async function warnMissingAudio(library: Library, store: BlobStore) {
   const stored = new Set(await store.list(AUDIO_PREFIX));
@@ -96,8 +91,8 @@ export async function createApp(options: AppOptions) {
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, rooms: realtime.rooms.size });
   });
-  app.get('/api/info', (_req, res) => {
-    res.json({ lanAddresses: lanAddresses() });
+  app.get('/api/info', async (_req, res) => {
+    res.json({ publicUrl: options.publicUrl ?? null, lanAddresses: await lanAddresses() });
   });
   app.use('/api/admin', adminRouter(library, store, adminPassword));
   app.use('/api', (_req, res) => {
