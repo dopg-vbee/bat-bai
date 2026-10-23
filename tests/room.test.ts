@@ -152,7 +152,7 @@ describe('preview room', () => {
     room.guess(lan.id, 'x'.repeat(80));
     const wrong = room.hostView().wrongFeed;
     expect(wrong.map((w) => w.text)).toEqual(['nơi này có anh', 'x'.repeat(40)]);
-    expect(wrong[0]).toMatchObject({ name: 'Lan', key: '1' });
+    expect(wrong[0]).toEqual({ key: '1', text: 'nơi này có anh' }); // anonymous: no player info
     expect(JSON.stringify(room.playerViews())).not.toContain('nơi này có anh');
 
     room.next(); // reveal

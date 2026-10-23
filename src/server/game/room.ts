@@ -9,6 +9,7 @@ import {
   type Phase,
   type PlayerState,
   type RankRow,
+  type WrongEntry,
 } from '../../shared/types.ts';
 import { AVATARS } from '../../shared/emoji.ts';
 import { isCorrect } from './match.ts';
@@ -97,7 +98,8 @@ export class Room {
   private readonly onChange: () => void;
   private readonly players = new Map<string, Player>();
   private correctOrder: string[] = [];
-  private wrongGuesses: { key: string; playerId: string; text: string }[] = [];
+  /** Anonymous on purpose: the big screen shows what was guessed, not who guessed it. */
+  private wrongGuesses: WrongEntry[] = [];
   private wrongCount = 0;
   /** 0 while running; when the host paused (round clocks and timers are frozen). */
   pausedAt = 0;
@@ -257,7 +259,7 @@ export class Room {
     player.lastGuessAt = now;
     this.lastActivity = now;
     if (!isCorrect(text.slice(0, MAX_GUESS_LENGTH), this.questions[this.qIndex].title)) {
-      this.recordWrong(player.id, text);
+      this.recordWrong(text);
       return { status: 'wrong' };
     }
 
@@ -301,10 +303,7 @@ export class Room {
         inRound && question
           ? { youtubeId: question.youtubeId, startSec: question.startSec, endSec: question.endSec }
           : null,
-      wrongFeed: this.wrongGuesses.flatMap(({ key, playerId, text }) => {
-        const p = this.players.get(playerId);
-        return p ? [{ ...identity(p), key, text }] : [];
-      }),
+      wrongFeed: this.wrongGuesses,
       correctFeed: this.correctOrder.flatMap((id) => {
         const p = this.players.get(id);
         return p ? [{ ...identity(p), points: p.answers.get(this.qIndex)?.points ?? 0 }] : [];
@@ -374,10 +373,10 @@ export class Room {
     this.changed();
   }
 
-  private recordWrong(playerId: string, text: string): void {
+  private recordWrong(text: string): void {
     const clean = text.replace(/\s+/g, ' ').trim().slice(0, WRONG_TEXT_LENGTH);
     if (!clean) return;
-    this.wrongGuesses.push({ key: String(++this.wrongCount), playerId, text: clean });
+    this.wrongGuesses.push({ key: String(++this.wrongCount), text: clean });
     if (this.wrongGuesses.length > WRONG_FEED_SIZE) this.wrongGuesses.shift();
     this.changed();
   }

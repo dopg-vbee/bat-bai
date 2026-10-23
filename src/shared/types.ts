@@ -18,8 +18,8 @@ export interface CorrectEntry extends PlayerIdentity {
   points: number;
 }
 
-/** A wrong guess, shown on the big screen. `key` is unique within the round. */
-export interface WrongEntry extends PlayerIdentity {
+/** A wrong guess, shown anonymously on the big screen. `key` is unique within the round. */
+export interface WrongEntry {
   key: string;
   text: string;
 }

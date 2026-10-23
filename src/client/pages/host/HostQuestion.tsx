@@ -4,7 +4,8 @@ import { EmojiText } from '../../components/Emoji.tsx';
 import { Equalizer } from '../../components/Equalizer.tsx';
 import { TimerRing } from '../../components/TimerRing.tsx';
 import { useServerNow } from '../../lib/socket.ts';
-import { AnswerStream } from './AnswerStream.tsx';
+import { CorrectStream } from './CorrectStream.tsx';
+import { WrongList } from './WrongList.tsx';
 import type { QuestionAudio } from './useQuestionAudio.ts';
 
 export function HostQuestion({ state, audio }: { state: HostState; audio: QuestionAudio }) {
@@ -52,7 +53,8 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
           </button>
         )}
       </div>
-      <AnswerStream correct={state.correctFeed} wrong={state.wrongFeed} />
+      <WrongList entries={state.wrongFeed} />
+      <CorrectStream entries={state.correctFeed} />
     </section>
   );
 }
