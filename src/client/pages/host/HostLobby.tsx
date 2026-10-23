@@ -1,7 +1,7 @@
 import { Play, ScanQrCode, Smartphone, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import type { HostState, PlayerSummary } from '../../../shared/types.ts';
+import { PREVIEW_BOTS, type HostState, type PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { openPlayerWindow } from '../../lib/rooms.ts';
 import { socket } from '../../lib/socket.ts';
@@ -72,7 +72,7 @@ export function HostLobby({ state }: { state: HostState }) {
         {state.preview && (
           <div className="preview-note">
             <p>
-              Đây là phòng <strong>chơi thử</strong>: 8 bot sẽ tự đoán như người thật. Mở thêm màn hình người chơi
+              Đây là phòng <strong>chơi thử</strong>: {PREVIEW_BOTS} bot sẽ tự đoán như người thật. Mở thêm màn hình người chơi
               để tự trả lời trên "điện thoại".
             </p>
             <button className="btn btn-ghost" onClick={handleOpenPlayer}>

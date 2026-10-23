@@ -10,6 +10,7 @@ import type {
   QuestionSetDto,
   ServerToClientEvents,
 } from '../src/shared/types.ts';
+import { PREVIEW_BOTS } from '../src/shared/types.ts';
 import { fakeMp3, sleep, tempDir, waitFor } from './helpers.ts';
 
 type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -245,7 +246,7 @@ describe('preview rooms', () => {
     await waitFor(() => state !== null, 3000, 'host state');
     expect(state!.preview).toBe(true);
     expect(state!.qTotal).toBe(1);
-    expect(state!.players).toHaveLength(8);
+    expect(state!.players).toHaveLength(PREVIEW_BOTS);
     expect(state!.nextAudioUrl).toBe(target.audioUrl);
 
     const missing = await host.emitWithAck('host:create', {

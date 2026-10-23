@@ -142,7 +142,9 @@ export interface QuestionSetDto {
 }
 
 export const DURATION_OPTIONS = [15, 20, 30, 45, 60];
-export const DEFAULT_DURATION_SEC = 30;
+export const DEFAULT_DURATION_SEC = 20;
+/** Bots that join a "Chơi thử" room. */
+export const PREVIEW_BOTS = 4;
 /** Answer clips without an end mark play this long. */
 export const OPEN_CLIP_SEC = 25;
 export const LEADERBOARD_MS = 6000;

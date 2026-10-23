@@ -1,6 +1,6 @@
 import { Eye, Gamepad2 } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
-import { DEFAULT_DURATION_SEC, DURATION_OPTIONS, type QuestionSetDto } from '../../../shared/types.ts';
+import { DEFAULT_DURATION_SEC, DURATION_OPTIONS, PREVIEW_BOTS, type QuestionSetDto } from '../../../shared/types.ts';
 import { createRoom } from '../../lib/rooms.ts';
 
 export function CreateRoomPanel({ set }: { set: QuestionSetDto }) {
@@ -55,7 +55,7 @@ export function CreateRoomPanel({ set }: { set: QuestionSetDto }) {
           className="btn btn-ghost-dark btn-lg"
           onClick={handlePreview}
           disabled={disabled}
-          title="Chơi thử với 8 bot, xem trước đúng như ván thật"
+          title={`Chơi thử với ${PREVIEW_BOTS} bot, xem trước đúng như ván thật`}
         >
           <Eye /> Chơi thử
         </button>

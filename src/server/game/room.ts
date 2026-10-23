@@ -3,6 +3,7 @@ import {
   audioUrl,
   LEADERBOARD_MS,
   OPEN_CLIP_SEC,
+  PREVIEW_BOTS,
   type GuessResult,
   type HostState,
   type Phase,
@@ -48,7 +49,9 @@ export interface RoomOptions {
 }
 
 export const MAX_PLAYERS = 100;
-const BOT_NAMES = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Măng Cụt', 'Sầu Riêng'].map((n) => `Bot ${n}`);
+const BOT_NAMES = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Măng Cụt', 'Sầu Riêng']
+  .slice(0, PREVIEW_BOTS)
+  .map((n) => `Bot ${n}`);
 const BOT_MISS_RATE = 0.25;
 const MAX_NAME_LENGTH = 20;
 const MAX_GUESS_LENGTH = 100;

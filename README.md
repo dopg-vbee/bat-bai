@@ -16,7 +16,7 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
    - Ở trang quản lý bấm **▶ Xem trước đoạn YouTube** (trong form) hoặc **▶ YouTube 0:30 – 0:36** (ở từng câu) để nghe đúng đoạn đó.
 5. Hết câu cuối sẽ hiện bục vinh danh top 3. Bằng điểm thì ai trả lời nhanh hơn (tổng thời gian) xếp trên.
 
-**Chơi thử trước:** ở trang quản lý, nút **👁 Chơi thử** tạo một phòng y hệt ván thật, có 8 bot tự vào và tự đoán. Nút **👁 Xem thử** ở từng câu chỉ chạy riêng câu đó, để kiểm MP3 và đoạn YouTube. Trong phòng chơi thử có nút **📱 Mở màn hình người chơi**, mở cửa sổ cỡ điện thoại để tự đoán như người chơi.
+**Chơi thử trước:** ở trang quản lý, nút **👁 Chơi thử** tạo một phòng y hệt ván thật, có 4 bot tự vào và tự đoán. Nút **👁 Xem thử** ở từng câu chỉ chạy riêng câu đó, để kiểm MP3 và đoạn YouTube. Trong phòng chơi thử có nút **📱 Mở màn hình người chơi**, mở cửa sổ cỡ điện thoại để tự đoán như người chơi.
 
 **Giao diện sáng/tối:** mặc định là tối. Bấm nút mặt trời/mặt trăng (trên thanh tiêu đề, hoặc góc trên bên phải ở trang chủ) để đổi. Mỗi máy tự nhớ lựa chọn của mình.
 
