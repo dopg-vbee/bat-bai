@@ -910,7 +910,7 @@ button {
 .host-question {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr minmax(320px, 480px) 1fr;
+  grid-template-columns: 1fr minmax(300px, 420px) 1fr;
   gap: 24px;
   align-items: start;
   padding-top: 8px;
@@ -1487,34 +1487,56 @@ button {
   margin-top: auto;
 }
 
-/* Correct answers stay on screen, in two columns either side of the timer. */
+/* Correct answers stay on screen, in two columns either side of the timer. Chips are a uniform
+   grid: one per row while names are big, two per row once they shrink (min width is in em). */
 .correct-wall {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5em), 1fr));
+  align-content: start;
+  gap: 6px;
+  max-height: calc(100dvh - 100px);
+  overflow: hidden;
 }
 
-.correct-wall.left {
-  justify-content: flex-end;
-}
-
+/* Everything in a chip scales with its font size, which shrinks as the wall fills up. */
 .correct-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  max-width: 100%;
-  padding: 4px 12px 4px 4px;
+  gap: 0.45em;
+  min-width: 0;
+  padding: 0.2em 0.75em 0.2em 0.2em;
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
-  font-weight: 700;
-  font-size: 1.15rem;
+  font-weight: 800;
+  font-size: inherit;
   box-shadow: 0 6px 16px rgb(0 0 0 / 0.25);
+}
+
+.correct-wall.size-lg {
+  font-size: 1.85rem;
+}
+
+.correct-wall.size-md {
+  font-size: 1.4rem;
+}
+
+.correct-wall.size-sm {
+  font-size: 1.05rem;
+}
+
+.correct-wall.size-xs {
+  font-size: 0.95rem;
+}
+
+.correct-chip .avatar {
+  width: 1.75em;
+  height: 1.75em;
+  font-size: inherit;
 }
 
 .correct-chip.arriving {
@@ -1522,7 +1544,8 @@ button {
 }
 
 .correct-chip-name {
-  max-width: 150px;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1531,7 +1554,7 @@ button {
 .correct-chip-points {
   color: var(--success);
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.75em;
 }
 
 @keyframes chip-pop {
@@ -1933,11 +1956,6 @@ body,
   .host-lobby,
   .host-question {
     grid-template-columns: 1fr;
-  }
-
-  .correct-wall,
-  .correct-wall.left {
-    justify-content: center;
   }
 
   .lobby-side {

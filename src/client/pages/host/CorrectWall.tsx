@@ -6,6 +6,17 @@ import { playCorrectChime } from '../../lib/sfx.ts';
 /** Answers arriving in the same update pop in one after another rather than all at once. */
 const STAGGER_MS = 160;
 
+/**
+ * Names are shown big while there are few, then shrink (and pair up two per row, see
+ * .correct-wall) so ~60 players still fit on a 720p screen.
+ */
+function sizeFor(perColumn: number): 'lg' | 'md' | 'sm' | 'xs' {
+  if (perColumn <= 6) return 'lg';
+  if (perColumn <= 10) return 'md';
+  if (perColumn <= 24) return 'sm';
+  return 'xs';
+}
+
 function Chip({ entry, delay }: { entry: CorrectEntry; delay: number }) {
   return (
     <li className={`correct-chip${delay >= 0 ? ' arriving' : ''}`} style={{ animationDelay: `${Math.max(delay, 0)}ms` }}>
@@ -47,11 +58,12 @@ export function CorrectWall({ feed, children }: { feed: CorrectEntry[]; children
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const chip = (entry: CorrectEntry) => <Chip key={entry.id} entry={entry} delay={delays.current?.get(entry.id) ?? -1} />;
+  const size = sizeFor(Math.ceil(feed.length / 2));
   return (
     <>
-      <ol className="correct-wall left">{feed.filter((_, i) => i % 2 === 0).map(chip)}</ol>
+      <ol className={`correct-wall left size-${size}`}>{feed.filter((_, i) => i % 2 === 0).map(chip)}</ol>
       {children}
-      <ol className="correct-wall right">{feed.filter((_, i) => i % 2 === 1).map(chip)}</ol>
+      <ol className={`correct-wall right size-${size}`}>{feed.filter((_, i) => i % 2 === 1).map(chip)}</ol>
     </>
   );
 }
