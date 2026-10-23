@@ -1,7 +1,7 @@
 import confetti from 'canvas-confetti';
 
-export function burst() {
-  void confetti({ particleCount: 90, spread: 75, origin: { y: 0.7 } });
+export function burst(origin: { x?: number; y?: number } = { y: 0.7 }) {
+  void confetti({ particleCount: 90, spread: 75, origin });
 }
 
 export function celebrate(durationMs = 3000) {

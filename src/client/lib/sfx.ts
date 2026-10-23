@@ -59,3 +59,38 @@ export function playFanfare() {
   const chordAt = now + FANFARE_NOTES.length * 0.11 + 0.04;
   FANFARE_NOTES.forEach((hz) => note(ac, hz, chordAt, 1.1, VOLUME * 0.55, 'triangle'));
 }
+
+let noise: AudioBuffer | null = null;
+
+/** Snare roll that swells for `seconds`, building up to a reveal. */
+export function playDrumroll(seconds: number) {
+  const ac = audio();
+  if (!noise) {
+    noise = ac.createBuffer(1, ac.sampleRate * 0.1, ac.sampleRate);
+    const samples = noise.getChannelData(0);
+    for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+  }
+  const snare = ac.createBiquadFilter();
+  snare.type = 'bandpass';
+  snare.frequency.value = 1800;
+  snare.connect(output);
+  const now = ac.currentTime;
+  for (let t = 0; t < seconds; t += 0.045) {
+    const hit = ac.createBufferSource();
+    const gain = ac.createGain();
+    hit.buffer = noise;
+    gain.gain.setValueAtTime(VOLUME * (0.3 + (0.7 * t) / seconds), now + t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.06);
+    hit.connect(gain).connect(snare);
+    hit.start(now + t);
+    hit.stop(now + t + 0.08);
+  }
+}
+
+/** Low thump plus a major chord as 3rd (lower) or 2nd place appears; the winner gets the fanfare. */
+export function playPodiumHit(place: number) {
+  const ac = audio();
+  const root = place === 2 ? 392 : 523.25; // G4 / C5
+  note(ac, 110, ac.currentTime, 0.35, VOLUME, 'sine');
+  [1, 1.26, 1.5].forEach((ratio) => note(ac, root * ratio, ac.currentTime, 0.9, VOLUME * 0.45, 'triangle'));
+}

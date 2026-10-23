@@ -85,6 +85,8 @@ const BOT_MISS_RATE = 0.25;
 /** Share of answering bots that first try another song of the set (makes "Chơi thử" lively). */
 const BOT_WRONG_RATE = 0.4;
 /** Wrong guesses kept per round for the big screen (older ones have scrolled off anyway). */
+/** Rows on the between-rounds leaderboard; the final screen lists everyone. */
+const LEADERBOARD_ROWS = 10;
 const WRONG_FEED_SIZE = 40;
 const WRONG_TEXT_LENGTH = 40;
 const MAX_NAME_LENGTH = 20;
@@ -342,7 +344,11 @@ export class Room {
         const answer = p?.answers.get(this.qIndex);
         return p && answer ? [{ ...identity(p), points: answer.points, gift: answer.gift }] : [];
       }),
-      leaderboard: showRanking ? this.ranking().slice(0, 10).map((p, i) => this.rankRow(p, i + 1)) : [],
+      leaderboard: showRanking
+        ? this.ranking()
+            .slice(0, this.phase === 'ended' ? undefined : LEADERBOARD_ROWS)
+            .map((p, i) => this.rankRow(p, i + 1))
+        : [],
     };
   }
 

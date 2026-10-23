@@ -219,6 +219,7 @@ describe('a full game with 60 players', () => {
     await waitFor(() => hostState?.phase === 'leaderboard', 3000, 'leaderboard 2');
     host.emit('host:next'); // last question: leaderboard → podium
     await waitFor(() => hostState?.phase === 'ended', 3000, 'ended');
+    expect(hostState!.leaderboard).toHaveLength(PLAYERS); // the final screen lists everyone
     await waitFor(() => players[0].states.at(-1)?.phase === 'ended', 3000, 'player ended');
     const final = players[0].states.at(-1)!;
     expect(final.podium).toHaveLength(3);
