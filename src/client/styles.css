@@ -1740,6 +1740,8 @@ button {
   font-size: inherit;
   gap: 0.55em;
   animation: none;
+  /* Own layers from the start, so the first slide doesn't stall while they are created. */
+  will-change: transform;
   transition:
     transform 1.2s cubic-bezier(0.65, 0, 0.35, 1),
     opacity 0.6s,
@@ -2182,11 +2184,10 @@ button {
   z-index: 10;
 }
 
-/* Smooth switch when the theme is toggled. */
+/* Smooth switch when the theme is toggled. Not on leaderboard rows: their own transition slides them. */
 body,
 .card,
 .input,
-.leaderboard-row,
 .player-chip {
   transition:
     background-color 0.25s,
