@@ -108,6 +108,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
         durationMs: clamp(Math.round(Number(input.durationSec) || 30), 10, 120) * 1000,
         countdownMs: options.countdownMs,
         preview: Boolean(input.preview),
+        bots: Math.round(Number(input.bots)) || undefined,
         luck: pickLuck(questions.length),
         onChange: () => markDirty(room),
       });

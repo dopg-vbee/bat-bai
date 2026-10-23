@@ -12,6 +12,8 @@ export interface PlayerSummary extends PlayerIdentity {
   score: number;
   connected: boolean;
   correct: boolean;
+  /** Played by the server in a "Chơi thử" room. */
+  bot: boolean;
 }
 
 export interface CorrectEntry extends PlayerIdentity {
@@ -111,6 +113,8 @@ export interface CreateRoomInput {
   durationSec: number;
   shuffle: boolean;
   preview?: boolean;
+  /** Bots in a preview room (default PREVIEW_BOTS). */
+  bots?: number;
   /** Preview a single question instead of the whole set. */
   questionId?: string;
 }
@@ -166,7 +170,9 @@ export interface QuestionSetDto {
 export const DURATION_OPTIONS = [15, 20, 30, 45, 60];
 export const DEFAULT_DURATION_SEC = 20;
 /** Bots that join a "Chơi thử" room. */
+/** Default number of bots in a "Chơi thử" room; the admin can pick up to the last option. */
 export const PREVIEW_BOTS = 4;
+export const PREVIEW_BOT_OPTIONS = [4, 20, 50, 100];
 /** Answer clips without an end mark play this long. */
 export const OPEN_CLIP_SEC = 25;
 export const LEADERBOARD_MS = 5000;

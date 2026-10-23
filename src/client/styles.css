@@ -769,6 +769,7 @@ button {
 
 .host-lobby {
   flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 24px;
@@ -811,11 +812,14 @@ button {
   color: var(--code);
 }
 
+/* Fills the screen height; the player list scrolls inside it when it gets long. */
 .lobby-side {
   display: flex;
   flex-direction: column;
   gap: 18px;
   align-items: flex-start;
+  max-height: calc(100dvh - 100px);
+  min-height: 0;
 }
 
 .lobby-title {
@@ -842,10 +846,13 @@ button {
 .player-grid {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 4px 4px 0;
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .player-chip {

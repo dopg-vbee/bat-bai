@@ -48,6 +48,8 @@ export interface RoomOptions {
   durationMs: number;
   countdownMs: number;
   preview?: boolean;
+  /** How many bots a preview room starts with (default PREVIEW_BOTS). */
+  bots?: number;
   /** Random twists; omitted = none (tests). See pickLuck. */
   luck?: Luck;
   onChange: () => void;
@@ -75,10 +77,10 @@ export function pickLuck(questionCount: number, random = Math.random): Luck {
   return { doubleRounds: doubleRounds.sort((a, b) => a - b), giftChance: GIFT_CHANCE };
 }
 
-export const MAX_PLAYERS = 100;
-const BOT_NAMES = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Măng Cụt', 'Sầu Riêng']
-  .slice(0, PREVIEW_BOTS)
-  .map((n) => `Bot ${n}`);
+/** Room size: ~60 players expected, with headroom for 100-bot load tests plus real players. */
+export const MAX_PLAYERS = 150;
+const BOT_FRUITS = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Măng Cụt', 'Sầu Riêng'];
+const botName = (i: number) => `Bot ${BOT_FRUITS[i] ?? i + 1}`;
 const BOT_MISS_RATE = 0.25;
 /** Share of answering bots that first try another song of the set (makes "Chơi thử" lively). */
 const BOT_WRONG_RATE = 0.4;
@@ -143,7 +145,8 @@ export class Room {
     this.preview = options.preview ?? false;
     this.onChange = options.onChange;
     this.luck = options.luck ?? { doubleRounds: [], giftChance: 0 };
-    if (this.preview) for (const name of BOT_NAMES) this.addPlayer(name, null, true);
+    const bots = this.preview ? Math.min(MAX_PLAYERS - 10, options.bots ?? PREVIEW_BOTS) : 0;
+    for (let i = 0; i < bots; i++) this.addPlayer(botName(i), null, true);
   }
 
   /** Returns the player, or an error message for the joiner. */
@@ -324,6 +327,7 @@ export class Room {
         score: p.score,
         connected: isOnline(p),
         correct: p.answers.has(this.qIndex),
+        bot: p.bot,
       })),
       audioUrl: inRound && question ? audioUrl(question.audio) : null,
       nextAudioUrl: upcoming ? audioUrl(upcoming.audio) : null,

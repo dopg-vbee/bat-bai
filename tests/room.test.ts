@@ -213,3 +213,15 @@ describe('pickLuck', () => {
     expect(pickLuck(2).doubleRounds).toEqual([]);
   });
 });
+
+describe('preview bot count', () => {
+  it('honours the chosen number of bots, flagged as bots', () => {
+    const room = new Room({ code: '1234', setName: 'T', questions: [], durationMs: 10_000, countdownMs: 3000, preview: true, bots: 100, onChange: () => {} });
+    const players = room.hostView().players;
+    expect(players).toHaveLength(100);
+    expect(players.every((p) => p.bot)).toBe(true);
+    expect(players[0].name).toBe('Bot Mít');
+    expect(players[99].name).toBe('Bot 100');
+    expect(typeof room.join('Lan', undefined, 's1')).not.toBe('string'); // real players still fit
+  });
+});

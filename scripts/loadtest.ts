@@ -1,5 +1,6 @@
 // Plays complete games with bot players against a running server and reports latency.
 // Usage: npm run loadtest -- [--url http://localhost:3000] [--rooms 3] [--players 60] [--duration 15]
+//                          [--questions 3 | all] [--set "tên bộ đề"]
 // Needs ADMIN_PASSWORD (env or --password) and at least one question set with questions.
 import { parseArgs } from 'node:util';
 import { io as connect, type Socket } from 'socket.io-client';
@@ -15,13 +16,14 @@ const { values } = parseArgs({
     players: { type: 'string', default: '60' },
     duration: { type: 'string', default: '15' },
     questions: { type: 'string', default: '3' },
+    set: { type: 'string' },
   },
 });
 const url = values.url!;
 const roomCount = Number(values.rooms);
 const playerCount = Number(values.players);
 const durationSec = Number(values.duration);
-const maxQuestions = Number(values.questions);
+const maxQuestions = values.questions === 'all' ? Infinity : Number(values.questions);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const latencies = { join: [] as number[], guess: [] as number[] };
@@ -45,7 +47,9 @@ const res = await fetch(`${url}/api/admin/sets`, { headers: { 'x-admin-password'
 if (!res.ok) throw new Error(`Admin API ${res.status}: kiểm tra --url và --password`);
 const sets = ((await res.json()) as QuestionSetDto[]).filter((s) => s.questions.length);
 if (!sets.length) throw new Error('Cần ít nhất một bộ đề có câu hỏi');
-const set = sets[0];
+const found = values.set ? sets.find((s) => s.name.includes(values.set!)) : sets[0];
+if (!found) throw new Error(`Không thấy bộ đề "${values.set}"`);
+const set = found;
 const titles = new Map(set.questions.map((q) => [q.audioUrl, q.title]));
 
 async function playRoom(roomNo: number) {
@@ -95,8 +99,11 @@ async function playRoom(roomNo: number) {
       await sleep(50);
     }
     const s = hostState! as HostState;
-    console.log(`Phòng ${created.code} câu ${round + 1}: ${s.correctFeed.length}/${bots.length} đúng`);
+    console.log(`Phòng ${created.code} câu ${round + 1}: ${s.correctFeed.length}/${bots.length} đúng, ${s.wrongFeed.length} câu sai`);
     await sleep(1000);
+    // reveal → leaderboard; the next loop turn skips the leaderboard to the next question.
+    host.emit('host:next');
+    while ((hostState as HostState | null)?.phase === 'reveal') await sleep(20);
   }
   host.emit('host:end');
   while ((hostState as HostState | null)?.phase !== 'ended') await sleep(20);

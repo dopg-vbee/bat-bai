@@ -1,7 +1,7 @@
 import { Play, ScanQrCode, Smartphone, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { PREVIEW_BOTS, type HostState, type PlayerSummary } from '../../../shared/types.ts';
+import type { HostState, PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { openPlayerWindow } from '../../lib/rooms.ts';
 import { socket } from '../../lib/socket.ts';
@@ -77,7 +77,7 @@ export function HostLobby({ state }: { state: HostState }) {
         {state.preview && (
           <div className="preview-note">
             <p>
-              Đây là phòng <strong>chơi thử</strong>: {PREVIEW_BOTS} bot sẽ tự đoán như người thật. Mở thêm màn hình người chơi
+              Đây là phòng <strong>chơi thử</strong>: {state.players.filter((p) => p.bot).length} bot sẽ tự đoán như người thật. Mở thêm màn hình người chơi
               để tự trả lời trên "điện thoại".
             </p>
             <button className="btn btn-ghost" onClick={handleOpenPlayer}>
@@ -85,14 +85,15 @@ export function HostLobby({ state }: { state: HostState }) {
             </button>
           </div>
         )}
+        {/* Above the list, so it stays on screen however many players join. */}
+        <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!state.players.length}>
+          <Play /> Bắt đầu ({state.qTotal} câu)
+        </button>
         <ul className="player-grid">
           {state.players.map((player) => (
             <PlayerChip key={player.id} player={player} />
           ))}
         </ul>
-        <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!state.players.length}>
-          <Play /> Bắt đầu ({state.qTotal} câu)
-        </button>
       </div>
     </section>
   );
