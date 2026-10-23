@@ -909,9 +909,11 @@ button {
 
 .host-question {
   flex: 1;
-  position: relative;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr minmax(320px, 480px) 1fr;
+  gap: 24px;
+  align-items: start;
+  padding-top: 8px;
 }
 
 .host-question-main {
@@ -1478,66 +1480,68 @@ button {
   padding: 48px 20px;
 }
 
-/* ---------- round flow: bubbles, leaderboard ---------- */
+/* ---------- round flow: correct answers, leaderboard ---------- */
 
 .skip-btn {
   align-self: flex-end;
   margin-top: auto;
 }
 
-.bubbles {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
+/* Correct answers stay on screen, in two columns either side of the timer. */
+.correct-wall {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
 }
 
-.bubble {
-  position: absolute;
-  bottom: 6%;
-  display: flex;
+.correct-wall.left {
+  justify-content: flex-end;
+}
+
+.correct-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 18px 6px 6px;
+  gap: 8px;
+  max-width: 100%;
+  padding: 4px 12px 4px 4px;
   border-radius: 999px;
   background: var(--surface);
-  border: 1px solid rgb(255 255 255 / 0.14);
+  border: 1px solid var(--border);
   color: var(--text);
-  box-shadow: 0 12px 30px rgb(0 0 0 / 0.55), 0 0 24px rgb(34 197 94 / 0.25);
-  transform: translateX(-50%);
-  animation: bubble-rise 2.6s ease-out forwards;
+  font-weight: 700;
+  font-size: 1.15rem;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.25);
+}
+
+.correct-chip.arriving {
+  animation: chip-pop 0.55s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.correct-chip-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.bubble-name {
-  font-weight: 800;
-  font-size: 1.5rem;
-}
-
-.bubble-points {
-  font-weight: 800;
-  font-size: 1.3rem;
+.correct-chip-points {
   color: var(--success);
+  font-weight: 800;
+  font-size: 0.9rem;
 }
 
-@keyframes bubble-rise {
-  0% {
-    transform: translateX(-50%) translateY(40px) scale(0.4);
+@keyframes chip-pop {
+  from {
+    transform: scale(0.3);
     opacity: 0;
   }
-  12% {
-    transform: translateX(-50%) translateY(0) scale(1.12);
+  to {
+    transform: none;
     opacity: 1;
-  }
-  20% {
-    transform: translateX(-50%) translateY(-10px) scale(1);
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(-50%) translateY(-55vh) scale(0.9);
-    opacity: 0;
   }
 }
 
@@ -1913,8 +1917,14 @@ body,
 /* ---------- responsive ---------- */
 
 @media (max-width: 900px) {
-  .host-lobby {
+  .host-lobby,
+  .host-question {
     grid-template-columns: 1fr;
+  }
+
+  .correct-wall,
+  .correct-wall.left {
+    justify-content: center;
   }
 
   .lobby-side {
