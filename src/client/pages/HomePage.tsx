@@ -1,6 +1,7 @@
 import { ArrowRight, LogIn } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Logo } from '../components/Brand.tsx';
+import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { Link, navigate } from '../lib/router.tsx';
 
 export function HomePage() {
@@ -17,6 +18,7 @@ export function HomePage() {
 
   return (
     <main className="screen center">
+      <ThemeToggle floating />
       <Logo />
       <p className="tagline">Nghe lời – đoán tên bài hát!</p>
       <form className="card stack" onSubmit={handleSubmit}>

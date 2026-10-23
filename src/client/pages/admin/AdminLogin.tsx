@@ -1,6 +1,7 @@
 import { ArrowLeft, LogIn } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Logo } from '../../components/Brand.tsx';
+import { ThemeToggle } from '../../components/ThemeToggle.tsx';
 import { api, setAdminPassword } from '../../lib/api.ts';
 import { Link } from '../../lib/router.tsx';
 
@@ -30,6 +31,7 @@ export function AdminLogin({ onLoggedIn }: { onLoggedIn: () => void }) {
 
   return (
     <main className="screen center">
+      <ThemeToggle floating />
       <Logo small />
       <form className="card stack" onSubmit={handleSubmit}>
         <h2>Khu vực host</h2>

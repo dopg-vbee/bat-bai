@@ -22,8 +22,37 @@
   --white-20: rgb(255 255 255 / 0.14);
   --radius: 20px;
   --shadow: 0 12px 32px rgb(0 0 0 / 0.45);
+  /* Page background, text sitting directly on it, and the big room code. */
+  --page-bg:
+    radial-gradient(1100px 700px at 0% 0%, rgb(168 85 247 / 0.22), transparent 60%),
+    radial-gradient(1000px 700px at 100% 100%, rgb(236 72 153 / 0.16), transparent 60%), var(--bg);
+  --on-page: var(--text);
+  --code: var(--primary);
   color-scheme: dark;
   font-family: 'Baloo 2', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Light theme: the original purple → pink party look with white cards. */
+:root[data-theme='light'] {
+  --bg: #6d28d9;
+  --surface: #ffffff;
+  --surface-2: #f5f3ff;
+  --surface-3: #ede9fe;
+  --border: rgb(30 27 75 / 0.08);
+  --text: #1e1b4b;
+  --text-soft: #6b7280;
+  --accent: #7c3aed;
+  --success-text: #15803d;
+  --danger: #ef4444;
+  --danger-soft: #fee2e2;
+  --danger-text: #b91c1c;
+  --white-10: rgb(255 255 255 / 0.12);
+  --white-20: rgb(255 255 255 / 0.22);
+  --shadow: 0 10px 30px rgb(30 27 75 / 0.25);
+  --page-bg: linear-gradient(140deg, #5b21b6 0%, #c026d3 55%, #f43f5e 100%);
+  --on-page: #ffffff;
+  --code: #5b21b6;
+  color-scheme: light;
 }
 
 
@@ -39,11 +68,8 @@ body,
 
 body {
   margin: 0;
-  color: var(--text);
-  background:
-    radial-gradient(1100px 700px at 0% 0%, rgb(168 85 247 / 0.22), transparent 60%),
-    radial-gradient(1000px 700px at 100% 100%, rgb(236 72 153 / 0.16), transparent 60%),
-    var(--bg);
+  color: var(--on-page);
+  background: var(--page-bg);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
@@ -781,7 +807,7 @@ button {
   font-weight: 800;
   letter-spacing: 0.15em;
   line-height: 1;
-  color: var(--primary);
+  color: var(--code);
 }
 
 .lobby-side {
@@ -1586,6 +1612,32 @@ button {
 .total-line strong {
   font-size: 1.6rem;
   color: #fde047;
+}
+
+/* ---------- theme toggle ---------- */
+
+.theme-toggle {
+  flex-shrink: 0;
+  padding: 6px 8px;
+}
+
+.theme-toggle.floating {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+/* Smooth switch when the theme is toggled. */
+body,
+.card,
+.input,
+.leaderboard-row,
+.player-chip {
+  transition:
+    background-color 0.25s,
+    color 0.25s,
+    border-color 0.25s;
 }
 
 /* ---------- icons (lucide) ---------- */

@@ -4,6 +4,7 @@ import type { PlayerState } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { Emoji, EmojiText, preloadAnimatedEmoji } from '../../components/Emoji.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
+import { ThemeToggle } from '../../components/ThemeToggle.tsx';
 import { Link } from '../../lib/router.tsx';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { readJson, storageKeys, writeJson, writeStorage } from '../../lib/storage.ts';
@@ -97,6 +98,7 @@ export function PlayPage({ code }: { code: string }) {
         <Avatar avatar={state.me.avatar} color={state.me.color} size="sm" />
         <strong className="player-bar-name">{state.me.name}</strong>
         <span className="player-bar-score">{state.me.score.toLocaleString('vi-VN')} điểm</span>
+        <ThemeToggle />
       </header>
       {!connected && (
         <div className="banner">

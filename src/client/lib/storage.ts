@@ -30,6 +30,7 @@ export const writeJson = (key: string, value: unknown) => writeStorage(key, JSON
 export const storageKeys = {
   adminPassword: 'batbai:admin',
   lastName: 'batbai:name',
+  theme: 'batbai:theme',
   player: (code: string) => `batbai:player:${code}`,
   host: (code: string) => `batbai:host:${code}`,
 };

@@ -1,6 +1,7 @@
 import { Music } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Logo } from '../../components/Brand.tsx';
+import { ThemeToggle } from '../../components/ThemeToggle.tsx';
 import { socket } from '../../lib/socket.ts';
 import { readStorage, storageKeys } from '../../lib/storage.ts';
 import type { PlayerSession } from './PlayPage.tsx';
@@ -38,6 +39,7 @@ export function JoinForm({ code, initialError, onJoined }: JoinFormProps) {
 
   return (
     <main className="screen center">
+      <ThemeToggle floating />
       <Logo small />
       <form className="card stack" onSubmit={handleSubmit}>
         <p className="pill pill-dark">Phòng {code}</p>

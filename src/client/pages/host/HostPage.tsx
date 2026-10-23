@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { HostState } from '../../../shared/types.ts';
 import { BrandMark } from '../../components/Brand.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
+import { ThemeToggle } from '../../components/ThemeToggle.tsx';
 import { Link } from '../../lib/router.tsx';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { readStorage, storageKeys } from '../../lib/storage.ts';
@@ -92,6 +93,7 @@ export function HostPage({ code }: { code: string }) {
             <Flag /> Kết thúc
           </button>
         )}
+        <ThemeToggle />
       </header>
       {!connected && (
         <div className="banner">
