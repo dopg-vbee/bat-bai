@@ -71,7 +71,7 @@ Tạo một repo trên GitHub (để private cũng được), rồi push thư m�
 | `S3_ACCESS_KEY_ID` | lấy ở bước 1 |
 | `S3_SECRET_ACCESS_KEY` | lấy ở bước 1 |
 
-3. Bấm **Apply**. Vài phút sau có link dạng `https://bat-bai-xxxx.onrender.com`. Mở `/admin` để thêm câu hỏi.
+3. Bấm **Apply**. Vài phút sau có link dạng `https://batbai.onrender.com` (tên đã có người dùng thì Render thêm đuôi ngẫu nhiên). Mở `/admin` để thêm câu hỏi.
 
 > **Gói free của Render** ngủ sau 15 phút không có ai truy cập, lần mở đầu tiên mất khoảng 1 phút để khởi động. Host chỉ cần mở trang trước giờ chơi một chút. Muốn luôn sẵn sàng thì nâng lên gói Starter ($7/tháng). Ván đang chơi dở sẽ mất nếu server khởi động lại; thư viện câu hỏi thì không bao giờ mất.
 

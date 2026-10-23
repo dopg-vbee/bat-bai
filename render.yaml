@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: bat-bai
+    name: batbai
     runtime: node
     plan: free
     buildCommand: npm ci && npm run build
