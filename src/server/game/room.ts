@@ -4,7 +4,9 @@ import {
   LEADERBOARD_MS,
   OPEN_CLIP_SEC,
   PREVIEW_BOTS,
+  STREAK_MIN,
   streakBonus,
+  type GameAwards,
   type GuessResult,
   type HostState,
   type Phase,
@@ -38,6 +40,8 @@ interface Player {
   lastGuessAt: number;
   socketId: string | null;
   bot: boolean;
+  /** Wrong guesses over the whole game, for the "most wrong guesses" award. */
+  wrongTotal: number;
   /** points = speed score (doubled on lucky rounds) + gift + streak bonus. */
   answers: Map<number, { points: number; gift: number; ms: number }>;
 }
@@ -194,6 +198,7 @@ export class Room {
       lastGuessAt: 0,
       socketId,
       bot,
+      wrongTotal: 0,
       answers: new Map(),
     };
     this.players.set(player.id, player);
@@ -298,6 +303,7 @@ export class Room {
     player.lastGuessAt = now;
     this.lastActivity = now;
     if (!isCorrect(text.slice(0, MAX_GUESS_LENGTH), this.questions[this.qIndex].title)) {
+      player.wrongTotal++;
       this.recordWrong(text);
       return { status: 'wrong' };
     }
@@ -359,7 +365,34 @@ export class Room {
             .slice(0, this.phase === 'ended' ? undefined : LEADERBOARD_ROWS)
             .map((p, i) => this.rankRow(p, i + 1))
         : [],
+      awards: this.phase === 'ended' ? this.awards() : null,
     };
+  }
+
+  /** Fun titles for the final screen; each is null when nobody earned it. */
+  private awards(): GameAwards {
+    const players = [...this.players.values()];
+    let fastest: GameAwards['fastest'] = null;
+    let streak: GameAwards['streak'] = null;
+    let guesser: GameAwards['guesser'] = null;
+    for (const p of players) {
+      for (const [index, { ms }] of p.answers) {
+        if (!fastest || ms < fastest.ms) fastest = { ...identity(p), ms, question: this.questions[index].title };
+      }
+      const best = longestStreak(p);
+      if (best >= STREAK_MIN && (!streak || best > streak.streak)) streak = { ...identity(p), streak: best };
+      if (p.wrongTotal > 0 && (!guesser || p.wrongTotal > guesser.wrong)) {
+        guesser = { ...identity(p), wrong: p.wrongTotal };
+      }
+    }
+    let hardest: GameAwards['hardest'] = null;
+    for (let i = 0; i <= this.qIndex; i++) {
+      const correct = players.filter((p) => p.answers.has(i)).length;
+      if (!hardest || correct < hardest.correct) {
+        hardest = { title: this.questions[i].title, correct, players: players.length };
+      }
+    }
+    return { fastest, streak, guesser, hardest };
   }
 
   /** One personalised state per connected player; the ranking is computed once. */
@@ -526,6 +559,18 @@ export class Room {
 
 const isOnline = (p: Player) => p.bot || p.socketId !== null;
 const identity = (p: Player) => ({ id: p.id, name: p.name, avatar: p.avatar, color: p.color });
+
+/** Longest run of correct answers over the game. */
+function longestStreak(p: Player): number {
+  let best = 0;
+  for (const index of p.answers.keys()) {
+    if (p.answers.has(index - 1)) continue; // only count from the start of each run
+    let run = 1;
+    while (p.answers.has(index + run)) run++;
+    best = Math.max(best, run);
+  }
+  return best;
+}
 
 /** Correct answers in a row ending at question `index` (0 if that one was missed). */
 function streakAt(p: Player, index: number): number {

@@ -79,6 +79,20 @@ export interface HostState {
   wrongFeed: WrongEntry[];
   /** Filled during the leaderboard phase and at the end. */
   leaderboard: RankRow[];
+  /** Only at the end: fun titles shown after the podium. */
+  awards: GameAwards | null;
+}
+
+/** Each title is null when nobody earned it (e.g. no wrong guesses at all). */
+export interface GameAwards {
+  /** Quickest correct answer of the game. */
+  fastest: (PlayerIdentity & { ms: number; question: string }) | null;
+  /** Longest run of correct answers, from STREAK_MIN. */
+  streak: (PlayerIdentity & { streak: number }) | null;
+  /** Most wrong guesses (a count only: the guesses themselves stay anonymous). */
+  guesser: (PlayerIdentity & { wrong: number }) | null;
+  /** The question the fewest players got right. */
+  hardest: { title: string; correct: number; players: number } | null;
 }
 
 export interface PodiumEntry {

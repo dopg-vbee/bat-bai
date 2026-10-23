@@ -222,6 +222,41 @@ describe('preview room', () => {
     expect(streakOnPhone()).toBe(0);
   });
 
+  it('hands out the end-of-game titles', () => {
+    const titles = ['Lạc Trôi', 'Nơi Này Có Anh', 'Hãy Trao Cho Anh'];
+    const room = new Room({
+      code: '1234', setName: 'Test', questions: titles.map((title) => ({ ...questions[0], title })),
+      durationMs: 10_000, countdownMs: 3000, onChange: () => {},
+    });
+    const lan = room.join('Lan', undefined, 's1');
+    const minh = room.join('Minh', undefined, 's2');
+    if (typeof lan === 'string' || typeof minh === 'string') throw new Error('join');
+    const nextQuestion = () => {
+      room.next(); room.next(); room.next(); // reveal → leaderboard → next question
+      vi.advanceTimersByTime(3000);
+    };
+    room.next();
+    vi.advanceTimersByTime(3000);
+    room.guess(lan.id, titles[0]); // the quickest answer of the game
+    vi.advanceTimersByTime(500);
+    room.guess(minh.id, titles[0]);
+    nextQuestion();
+    room.guess(lan.id, titles[1]);
+    room.guess(minh.id, 'Lạc Trôi');
+    vi.advanceTimersByTime(400);
+    room.guess(minh.id, 'Bạc Phận');
+    nextQuestion();
+    room.guess(lan.id, titles[2]);
+    expect(room.hostView().awards).toBeNull(); // only once the game is over
+    room.finish();
+    expect(room.hostView().awards).toEqual({
+      fastest: expect.objectContaining({ name: 'Lan', ms: 0, question: 'Lạc Trôi' }),
+      streak: expect.objectContaining({ name: 'Lan', streak: 3 }),
+      guesser: expect.objectContaining({ name: 'Minh', wrong: 2 }),
+      hardest: { title: 'Nơi Này Có Anh', correct: 1, players: 2 },
+    });
+  });
+
   it('streak bonus grows from the third answer in a row and stops at the eighth', () => {
     expect([1, 2, 3, 4, 8, 12].map(streakBonus)).toEqual([0, 0, 50, 100, 300, 300]);
   });

@@ -6,7 +6,8 @@ import { Leaderboard } from '../../components/Leaderboard.tsx';
 import { Podium } from '../../components/Podium.tsx';
 import { burst, celebrate, fireworks } from '../../lib/confetti.ts';
 import { Link } from '../../lib/router.tsx';
-import { playDrumroll, playFanfare, playPodiumHit, playWhoosh } from '../../lib/sfx.ts';
+import { playCorrectChime, playDrumroll, playFanfare, playPodiumHit, playWhoosh } from '../../lib/sfx.ts';
+import { AWARD_STAGGER_MS, awardCards, Awards } from './Awards.tsx';
 
 const START_MS = 500;
 /** The spotlight swings onto a place before its drumroll starts. */
@@ -15,6 +16,9 @@ const ROLL_MS = 900;
 const WINNER_ROLL_MS = 1800;
 const AFTER_REVEAL_MS = 900;
 const AFTER_WINNER_MS = 2200;
+/** Each award card chimes as it pops in; everyone else is listed a moment after the last one. */
+const AWARD_CHIME_MS = 150;
+const AFTER_AWARDS_MS = 1500;
 
 interface Spot {
   x: number;
@@ -31,16 +35,19 @@ function spotOn(slot: Element): Spot {
 
 /**
  * Final results: the lights go down, a spotlight swings to 3rd, 2nd and 1st place in turn with a
- * drumroll before each, then the lights come back up on everyone else.
+ * drumroll before each, then the lights come back up on the award titles and everyone else.
  */
 export function HostEnded({ state }: { state: HostState }) {
   const podium = state.leaderboard.slice(0, 3);
   const rest = state.leaderboard.slice(3);
   const [revealFrom, setRevealFrom] = useState(3);
+  const [lightsUp, setLightsUp] = useState(false);
   const [showRest, setShowRest] = useState(false);
   const [spot, setSpot] = useState<Spot | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const places = podium.length;
+  const cards = state.awards ? awardCards(state.awards) : [];
+  const cardCount = cards.length;
 
   useEffect(() => {
     function reveal(place: number) {
@@ -77,17 +84,20 @@ export function HostEnded({ state }: { state: HostState }) {
       t += AIM_MS + roll + (place === 0 ? AFTER_WINNER_MS : AFTER_REVEAL_MS);
     }
     at(t, () => {
-      setShowRest(true);
+      setLightsUp(true);
       if (places) playWhoosh();
     });
+    for (let i = 0; i < cardCount; i++) at(t + i * AWARD_STAGGER_MS + AWARD_CHIME_MS, () => playCorrectChime(i));
+    if (cardCount) t += cardCount * AWARD_STAGGER_MS + AFTER_AWARDS_MS;
+    at(t, () => setShowRest(true));
     return () => timers.forEach(clearTimeout);
-  }, [places]);
+  }, [places, cardCount]);
 
   return (
     <section ref={sectionRef} className="host-ended">
       {spot && (
         <div
-          className={`spotlight${showRest ? ' off' : ''}`}
+          className={`spotlight${lightsUp ? ' off' : ''}`}
           style={
             {
               '--spot-x': `${spot.x}px`,
@@ -109,6 +119,7 @@ export function HostEnded({ state }: { state: HostState }) {
         )}
       </h1>
       <Podium entries={podium} large revealFrom={revealFrom} />
+      {lightsUp && cardCount > 0 && <Awards cards={cards} />}
       {showRest && (
         <>
           {rest.length > 0 && <Leaderboard rows={rest} />}
