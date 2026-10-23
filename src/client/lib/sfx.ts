@@ -62,14 +62,41 @@ export function playFanfare() {
 
 let noise: AudioBuffer | null = null;
 
-/** Snare roll that swells for `seconds`, building up to a reveal. */
-export function playDrumroll(seconds: number) {
-  const ac = audio();
+/** A short buffer of white noise, looped or cut as needed. */
+function whiteNoise(ac: AudioContext): AudioBuffer {
   if (!noise) {
     noise = ac.createBuffer(1, ac.sampleRate * 0.1, ac.sampleRate);
     const samples = noise.getChannelData(0);
     for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
   }
+  return noise;
+}
+
+/** Airy sweep as the spotlight swings to a new place. */
+export function playWhoosh() {
+  const ac = audio();
+  const now = ac.currentTime;
+  const source = ac.createBufferSource();
+  const filter = ac.createBiquadFilter();
+  const gain = ac.createGain();
+  source.buffer = whiteNoise(ac);
+  source.loop = true;
+  filter.type = 'bandpass';
+  filter.Q.value = 1.5;
+  filter.frequency.setValueAtTime(400, now);
+  filter.frequency.exponentialRampToValueAtTime(2400, now + 0.45);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(VOLUME * 0.6, now + 0.2);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+  source.connect(filter).connect(gain).connect(output);
+  source.start(now);
+  source.stop(now + 0.6);
+}
+
+/** Snare roll that swells for `seconds`, building up to a reveal. */
+export function playDrumroll(seconds: number) {
+  const ac = audio();
+  const buffer = whiteNoise(ac);
   const snare = ac.createBiquadFilter();
   snare.type = 'bandpass';
   snare.frequency.value = 1800;
@@ -78,7 +105,7 @@ export function playDrumroll(seconds: number) {
   for (let t = 0; t < seconds; t += 0.045) {
     const hit = ac.createBufferSource();
     const gain = ac.createGain();
-    hit.buffer = noise;
+    hit.buffer = buffer;
     gain.gain.setValueAtTime(VOLUME * (0.3 + (0.7 * t) / seconds), now + t);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.06);
     hit.connect(gain).connect(snare);

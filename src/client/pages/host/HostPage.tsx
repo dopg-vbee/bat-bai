@@ -97,16 +97,16 @@ export function HostPage({ code }: { code: string }) {
   return (
     <main className="screen host-screen">
       <header className="host-bar">
-        {/* Brand and set name only around the game (lobby, results), not while playing. */}
-        {pausable ? (
-          <span className="host-set" />
-        ) : (
+        {/* Brand and set name only in the lobby; the game and the results get the whole screen. */}
+        {state.phase === 'lobby' ? (
           <>
             <span className="host-brand">
               <BrandMark />
             </span>
             <span className="host-set">{state.setName}</span>
           </>
+        ) : (
+          <span className="host-set" />
         )}
         <HostMenu state={state} onEnd={handleEnd} onShowQr={handleShowQr} />
         {pausable && (

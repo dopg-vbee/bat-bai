@@ -1102,6 +1102,70 @@ button {
   }
 }
 
+/* Final screen spotlight: registered so the light glides between places instead of jumping. */
+@property --spot-x {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --spot-y {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --spot-rx {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --spot-ry {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* Darkens the screen except an ellipse of light on the place being revealed. */
+.spotlight {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse var(--spot-rx) var(--spot-ry) at var(--spot-x) var(--spot-y),
+    transparent 55%,
+    rgb(5 4 12 / 0.82) 100%
+  );
+  animation: fade-in 0.6s ease-out;
+  transition:
+    --spot-x 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    --spot-y 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    --spot-rx 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    --spot-ry 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.8s;
+}
+
+/* The beam from the top of the screen down to the foot of the lit place (rx/ry are 0.8/0.7 of the slot). */
+.spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgb(255 240 190 / 0.26), rgb(255 240 190 / 0.04));
+  clip-path: polygon(
+    calc(var(--spot-x) - 28px) 0,
+    calc(var(--spot-x) + 28px) 0,
+    calc(var(--spot-x) + var(--spot-rx) * 0.625) calc(var(--spot-y) + var(--spot-ry) * 0.714),
+    calc(var(--spot-x) - var(--spot-rx) * 0.625) calc(var(--spot-y) + var(--spot-ry) * 0.714)
+  );
+}
+
+/* Lights back up for everyone else. */
+.spotlight.off {
+  opacity: 0;
+}
+
 @keyframes winner-glow {
   50% {
     box-shadow:
