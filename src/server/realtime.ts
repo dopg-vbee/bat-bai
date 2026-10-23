@@ -11,6 +11,7 @@ interface SocketData {
 }
 
 export type GameServer = Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
+type GameSocket = Parameters<Parameters<GameServer['on']>[1]>[0];
 
 export interface RealtimeOptions {
   adminPassword: string;
@@ -60,6 +61,23 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
     }
   }
 
+  /** Unbinds a socket from the room it was in, so that room stops pushing state to it. */
+  function detach(socket: GameSocket, { closingHostScreen = false } = {}) {
+    const { role, code, playerId } = socket.data;
+    const room = rooms.get(code ?? '');
+    socket.data = {};
+    if (!room) return;
+    if (role === 'player' && playerId) room.leave(playerId, socket.id);
+    if (role !== 'host') return;
+    socket.leave(hostChannel(room.code));
+    // A "Chơi thử" room nobody is watching would keep playing itself with bots: drop it.
+    // (A reload disconnects without closing the screen, so the room survives that.)
+    if (closingHostScreen && room.preview && !io.sockets.adapter.rooms.get(hostChannel(room.code))?.size) {
+      room.dispose();
+      rooms.delete(room.code);
+    }
+  }
+
   io.on('connection', (socket) => {
     const hostRoom = () => (socket.data.role === 'host' ? rooms.get(socket.data.code ?? '') : undefined);
 
@@ -102,6 +120,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       if (!room || room.hostToken !== input.hostToken) {
         return cb({ ok: false, error: 'Phòng không còn tồn tại (có thể server vừa khởi động lại)' });
       }
+      if (socket.data.code !== room.code) detach(socket);
       socket.data = { role: 'host', code: room.code };
       socket.join(hostChannel(room.code));
       socket.emit('hostState', room.hostView());
@@ -130,6 +149,8 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       if (typeof cb !== 'function') return;
       const room = rooms.get(String(input?.code));
       if (!room) return cb({ ok: false, error: 'Không tìm thấy phòng, kiểm tra lại mã nhé' });
+      // Joining another room (e.g. "Chơi phòng khác") leaves the previous one.
+      if (socket.data.code && socket.data.code !== room.code) detach(socket);
       const result = room.join(String(input.name ?? ''), input.token ? String(input.token) : undefined, socket.id);
       if (typeof result === 'string') return cb({ ok: false, error: result });
       socket.data = { role: 'player', code: room.code, playerId: result.id };
@@ -144,10 +165,9 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       cb(room.guess(playerId, String(text ?? '')));
     });
 
-    socket.on('disconnect', () => {
-      const { role, code, playerId } = socket.data;
-      if (role === 'player' && playerId) rooms.get(code ?? '')?.leave(playerId, socket.id);
-    });
+    socket.on('host:leave', () => detach(socket, { closingHostScreen: true }));
+    socket.on('player:leave', () => detach(socket));
+    socket.on('disconnect', () => detach(socket));
   });
 
   const sweep = setInterval(() => {

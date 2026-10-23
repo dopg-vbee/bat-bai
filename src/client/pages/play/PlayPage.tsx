@@ -33,11 +33,16 @@ export function PlayPage({ code }: { code: string }) {
       writeStorage(storageKeys.player(code), null);
       setKicked(true);
     };
-    socket.on('playerState', setState);
+    // Only this room: the socket is shared across pages and may still hear an earlier room.
+    const onState = (next: PlayerState) => {
+      if (next.code === code) setState(next);
+    };
+    socket.on('playerState', onState);
     socket.on('kicked', handleKicked);
     return () => {
-      socket.off('playerState', setState);
+      socket.off('playerState', onState);
       socket.off('kicked', handleKicked);
+      socket.emit('player:leave');
     };
   }, [code]);
 

@@ -40,12 +40,17 @@ export function HostPage({ code }: { code: string }) {
       socket.emit('host:join', { code, hostToken }, (res) => {
         if (!res.ok) setError(res.error);
       });
-    socket.on('hostState', setState);
+    // Only this room: the socket is shared across pages and may still hear an earlier room.
+    const onState = (next: HostState) => {
+      if (next.code === code) setState(next);
+    };
+    socket.on('hostState', onState);
     if (socket.connected) join();
     socket.on('connect', join);
     return () => {
-      socket.off('hostState', setState);
+      socket.off('hostState', onState);
       socket.off('connect', join);
+      socket.emit('host:leave');
     };
   }, [code]);
 

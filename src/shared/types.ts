@@ -120,6 +120,8 @@ export interface ClientToServerEvents {
   'host:next': () => void;
   'host:reveal': () => void;
   'host:end': () => void;
+  /** The host screen was closed (navigated away): stop sending it this room's state. */
+  'host:leave': () => void;
   'host:pause': () => void;
   'host:resume': () => void;
   /** The answer video finished playing on the big screen. */
@@ -127,6 +129,7 @@ export interface ClientToServerEvents {
   'host:kick': (playerId: string) => void;
   'player:join': (input: JoinInput, cb: (res: Ack<{ playerId: string; token: string }>) => void) => void;
   'player:guess': (text: string, cb: (res: GuessResult) => void) => void;
+  'player:leave': () => void;
 }
 
 export interface QuestionDto {

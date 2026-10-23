@@ -261,6 +261,67 @@ describe('preview rooms', () => {
   });
 });
 
+describe('switching rooms on the same connection', () => {
+  async function createRoom(host: Client, preview: boolean) {
+    const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
+    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, shuffle: false, preview });
+    if (!created.ok) throw new Error(created.error);
+    return created;
+  }
+
+  it('a host screen stops hearing the "Chơi thử" room it left (no jump into its game)', async () => {
+    const host = client();
+    const codes: string[] = [];
+    host.on('hostState', (s) => codes.push(s.code));
+    const trial = await createRoom(host, true);
+    await host.emitWithAck('host:join', { code: trial.code, hostToken: trial.hostToken });
+    host.emit('host:next'); // bots start playing the trial room
+
+    const real = await createRoom(host, false);
+    await host.emitWithAck('host:join', { code: real.code, hostToken: real.hostToken });
+    codes.length = 0;
+    await sleep(1500); // the trial room keeps changing (countdown, bot answers)
+    expect(codes.every((c) => c === real.code)).toBe(true);
+  });
+
+  it('closing the host screen of a trial room removes it; a real room survives', async () => {
+    const host = client();
+    const trial = await createRoom(host, true);
+    await host.emitWithAck('host:join', { code: trial.code, hostToken: trial.hostToken });
+    host.emit('host:leave');
+    await sleep(100);
+    expect((await host.emitWithAck('host:join', { code: trial.code, hostToken: trial.hostToken })).ok).toBe(false);
+
+    const real = await createRoom(host, false);
+    await host.emitWithAck('host:join', { code: real.code, hostToken: real.hostToken });
+    host.emit('host:leave');
+    await sleep(100);
+    expect((await host.emitWithAck('host:join', { code: real.code, hostToken: real.hostToken })).ok).toBe(true);
+  });
+
+  it('a phone joining another room goes offline in the first and only hears the new one', async () => {
+    const host = client();
+    const first = await createRoom(host, false);
+    let firstState: HostState | null = null;
+    host.on('hostState', (s) => {
+      if (s.code === first.code) firstState = s;
+    });
+    await host.emitWithAck('host:join', { code: first.code, hostToken: first.hostToken });
+    const second = await createRoom(client(), false);
+
+    const phone = client();
+    const codes: string[] = [];
+    phone.on('playerState', (s) => codes.push(s.code));
+    await phone.emitWithAck('player:join', { code: first.code, name: 'Lan' });
+    await phone.emitWithAck('player:join', { code: second.code, name: 'Lan' });
+    await waitFor(() => firstState?.players[0]?.connected === false, 3000, 'offline in the first room');
+    codes.length = 0;
+    host.emit('host:next'); // the first room moves on; the phone must not hear it
+    await sleep(500);
+    expect(codes.every((c) => c === second.code)).toBe(true);
+  });
+});
+
 describe('durability', () => {
   it('keeps every question after the server restarts', async () => {
     const before = await admin<QuestionSetDto[]>('/sets');
