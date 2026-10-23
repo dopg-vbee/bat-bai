@@ -7,6 +7,7 @@ import { api } from '../../lib/api.ts';
 import { useYoutubeDuration } from '../../lib/youtubeApi.ts';
 import { AudioDropzone } from './AudioDropzone.tsx';
 import { ClipRangeEditor } from './ClipRangeEditor.tsx';
+import { useVideoStatus, VideoProblem } from './VideoProblem.tsx';
 
 interface QuestionFormProps {
   setId: string;
@@ -39,6 +40,7 @@ export function QuestionForm({ setId, question, onSaved, onCancel }: QuestionFor
 
   const youtube = parseYoutube(youtubeUrl);
   const duration = useYoutubeDuration(youtube?.id ?? null);
+  const videoStatus = useVideoStatus(youtube?.id ?? null);
   const previewStart = useDebounced(startSec, PREVIEW_DEBOUNCE_MS);
   const previewEnd = useDebounced(endSec, PREVIEW_DEBOUNCE_MS);
   const ready = title.trim() && youtube && (endSec === null || endSec > startSec) && (file || question);
@@ -123,6 +125,7 @@ export function QuestionForm({ setId, question, onSaved, onCancel }: QuestionFor
             onChange={handleYoutubeChange}
           />
           {youtubeUrl && !youtube && <span className="error-text">Link YouTube không hợp lệ</span>}
+          <VideoProblem status={videoStatus} />
         </label>
       </div>
       {youtube && (

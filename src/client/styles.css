@@ -1672,6 +1672,37 @@ button {
   gap: 6px;
 }
 
+.question-list-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.question-list-head h3 {
+  margin-right: auto;
+}
+
+/* A question's answer video that won't play in the game (or couldn't be checked). */
+.video-problem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.video-problem svg {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+}
+
+.video-unknown {
+  color: var(--text-soft);
+}
+
 .empty-state {
   text-align: center;
   display: flex;

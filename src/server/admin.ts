@@ -7,6 +7,9 @@ import { checkPassword } from './auth.ts';
 import { HttpError } from './errors.ts';
 import { audioKey, newId, type Library, type LibraryData, type QuestionSet } from './library.ts';
 import type { BlobStore } from './storage/types.ts';
+import { createVideoChecker } from './youtubeCheck.ts';
+
+const YOUTUBE_ID = /^[\w-]{11}$/;
 
 const toSetDto = (set: QuestionSet): QuestionSetDto => ({
   id: set.id,
@@ -53,6 +56,7 @@ function readQuestionFields(body: Record<string, unknown>) {
 
 export function adminRouter(library: Library, store: BlobStore, password: string): Router {
   const router = Router();
+  const checkVideos = createVideoChecker();
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_AUDIO_MB * 1024 * 1024, files: 1 } });
 
   async function saveAudio(file: Express.Multer.File): Promise<string> {
@@ -86,6 +90,22 @@ export function adminRouter(library: Library, store: BlobStore, password: string
     const set = library.getSet(req.params.id);
     if (!set) throw new HttpError(404, 'Không tìm thấy bộ đề');
     res.json(toSetDto(set));
+  });
+
+  /** Video status of every question of a set, by question id; ?fresh=1 skips the cache. */
+  router.get('/sets/:id/videos', async (req, res) => {
+    const set = library.getSet(req.params.id);
+    if (!set) throw new HttpError(404, 'Không tìm thấy bộ đề');
+    const questions = set.questions.filter((q) => !q.deletedAt);
+    const byVideo = await checkVideos(questions.map((q) => q.youtubeId), { fresh: req.query.fresh === '1' });
+    res.json(Object.fromEntries(questions.map((q) => [q.id, byVideo[q.youtubeId]])));
+  });
+
+  /** One video, checked while a link is typed into the question form. */
+  router.get('/videos/:youtubeId', async (req, res) => {
+    const { youtubeId } = req.params;
+    if (!YOUTUBE_ID.test(youtubeId)) throw new HttpError(400, 'Mã video không hợp lệ');
+    res.json({ status: (await checkVideos([youtubeId]))[youtubeId] });
   });
 
   router.post('/sets', async (req, res) => {

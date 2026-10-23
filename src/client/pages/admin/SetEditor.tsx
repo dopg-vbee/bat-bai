@@ -1,12 +1,18 @@
-import { Eye, Pencil, Play, Trash2, X } from 'lucide-react';
-import { useState } from 'react';
-import { DEFAULT_DURATION_SEC, type QuestionDto, type QuestionSetDto } from '../../../shared/types.ts';
+import { Eye, Pencil, Play, RefreshCw, Trash2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  DEFAULT_DURATION_SEC,
+  type QuestionDto,
+  type QuestionSetDto,
+  type VideoStatus,
+} from '../../../shared/types.ts';
 import { formatRange } from '../../../shared/youtube.ts';
 import { YoutubeClip } from '../../components/YoutubeClip.tsx';
 import { api } from '../../lib/api.ts';
 import { createRoom } from '../../lib/rooms.ts';
 import { CreateRoomPanel } from './CreateRoomPanel.tsx';
 import { QuestionForm } from './QuestionForm.tsx';
+import { VideoProblem } from './VideoProblem.tsx';
 
 interface SetEditorProps {
   set: QuestionSetDto;
@@ -17,12 +23,13 @@ interface SetEditorProps {
 interface QuestionRowProps {
   index: number;
   question: QuestionDto;
+  videoStatus: VideoStatus | undefined;
   onPreview: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (question: QuestionDto) => void;
 }
 
-function QuestionRow({ index, question, onPreview, onEdit, onDelete }: QuestionRowProps) {
+function QuestionRow({ index, question, videoStatus, onPreview, onEdit, onDelete }: QuestionRowProps) {
   const [showClip, setShowClip] = useState(false);
 
   function handleToggleClip() {
@@ -46,6 +53,7 @@ function QuestionRow({ index, question, onPreview, onEdit, onDelete }: QuestionR
           {showClip ? <X /> : <Play />}
           {showClip ? 'Đóng' : 'YouTube'} {formatRange(question.startSec, question.endSec)}
         </button>
+        <VideoProblem status={videoStatus} />
       </div>
       <audio className="question-audio" controls preload="none" src={question.audioUrl} />
       <div className="question-actions">
@@ -76,7 +84,31 @@ function QuestionRow({ index, question, onPreview, onEdit, onDelete }: QuestionR
 export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [videos, setVideos] = useState<Record<string, VideoStatus>>({});
+  const [checkingVideos, setCheckingVideos] = useState(false);
   const editing = set.questions.find((q) => q.id === editingId) ?? null;
+  const brokenVideos = set.questions.filter((q) => videos[q.id] === 'blocked' || videos[q.id] === 'missing').length;
+  // Re-checked whenever a question is added, removed or gets another video.
+  const videoKey = set.questions.map((q) => `${q.id}:${q.youtubeId}`).join();
+
+  async function loadVideos(fresh: boolean) {
+    setCheckingVideos(true);
+    try {
+      setVideos(await api<Record<string, VideoStatus>>(`/sets/${set.id}/videos${fresh ? '?fresh=1' : ''}`));
+    } catch {
+      // Keep the previous badges; the button can try again.
+    } finally {
+      setCheckingVideos(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadVideos(false);
+  }, [set.id, videoKey]);
+
+  function handleRecheckVideos() {
+    void loadVideos(true);
+  }
 
   async function run(action: () => Promise<void>) {
     setError('');
@@ -149,7 +181,7 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
         </div>
       </div>
 
-      <CreateRoomPanel set={set} />
+      <CreateRoomPanel set={set} brokenVideos={brokenVideos} />
 
       {error && <p className="error-text">{error}</p>}
 
@@ -162,7 +194,19 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
       />
 
       <div className="card">
-        <h3>Danh sách câu hỏi</h3>
+        <div className="question-list-head">
+          <h3>Danh sách câu hỏi</h3>
+          <span className="muted">
+            {checkingVideos
+              ? 'Đang kiểm tra video…'
+              : brokenVideos
+                ? `${brokenVideos} câu có video lỗi`
+                : 'Video đều phát được'}
+          </span>
+          <button className="btn btn-ghost-dark btn-sm" onClick={handleRecheckVideos} disabled={checkingVideos}>
+            <RefreshCw /> Kiểm tra video
+          </button>
+        </div>
         {set.questions.length === 0 && <p className="muted">Chưa có câu nào. Thêm câu đầu tiên ở trên nhé!</p>}
         <ol className="question-list">
           {set.questions.map((question, i) => (
@@ -170,6 +214,7 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
               key={question.id}
               index={i}
               question={question}
+              videoStatus={videos[question.id]}
               onPreview={handlePreviewQuestion}
               onEdit={setEditingId}
               onDelete={handleDeleteQuestion}

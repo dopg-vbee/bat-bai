@@ -1,4 +1,4 @@
-import { Eye, Gamepad2 } from 'lucide-react';
+import { Eye, Gamepad2, TriangleAlert } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 import {
   DEFAULT_DURATION_SEC,
@@ -9,7 +9,13 @@ import {
 } from '../../../shared/types.ts';
 import { createRoom } from '../../lib/rooms.ts';
 
-export function CreateRoomPanel({ set }: { set: QuestionSetDto }) {
+interface CreateRoomPanelProps {
+  set: QuestionSetDto;
+  /** Questions whose answer video won't play: worth fixing before a real game. */
+  brokenVideos: number;
+}
+
+export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
   const [durationSec, setDurationSec] = useState(DEFAULT_DURATION_SEC);
   const [shuffle, setShuffle] = useState(true);
   const [bots, setBots] = useState(PREVIEW_BOTS);
@@ -84,6 +90,12 @@ export function CreateRoomPanel({ set }: { set: QuestionSetDto }) {
           <Gamepad2 /> Tạo phòng chơi
         </button>
       </div>
+      {brokenVideos > 0 && (
+        <p className="video-problem">
+          <TriangleAlert /> {brokenVideos} câu có video không phát được: người chơi sẽ không xem được đáp án
+          của các câu đó.
+        </p>
+      )}
       {error && <p className="error-text">{error}</p>}
     </div>
   );
