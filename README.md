@@ -1,0 +1,130 @@
+# Bắt Bài 🎤
+
+Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên bài. Host chiếu màn hình lớn, người chơi dùng điện thoại quét QR là vào, không cần đăng nhập. Mỗi phòng chơi tốt với 60+ người.
+
+## Luật chơi
+
+1. Host vào **/admin**, chọn bộ đề, bấm **Tạo phòng chơi**. Màn hình lớn hiện QR và mã phòng 4 số.
+2. Người chơi quét QR (hoặc vào trang chủ, nhập mã) rồi nhập tên.
+3. Mỗi câu: đếm ngược 3 giây → **MP3 phát trên màn hình host** → người chơi gõ tên bài trên điện thoại.
+   - Sai thì đoán lại được. Không cần gõ dấu, sai chính tả nhẹ vẫn tính.
+   - Đúng càng nhanh càng nhiều điểm: **1000 → 500 điểm**.
+4. Hết giờ (hoặc khi mọi người đều đúng): màn hình lớn hiện đáp án, phát YouTube đúng đoạn đã chọn và hiện top 10.
+   - Mỗi câu đặt được điểm **Phát từ** và **Đến**. Bỏ trống "Đến" thì video phát tiếp cho tới khi host bấm câu tiếp.
+   - Nếu dán link có sẵn `?t=` (hoặc `start=`/`end=`), app tự điền hai ô này.
+   - Ở trang quản lý bấm **▶ Xem trước đoạn YouTube** (trong form) hoặc **▶ YouTube 0:30 – 0:36** (ở từng câu) để nghe đúng đoạn đó.
+5. Host bấm **Câu tiếp**. Hết câu sẽ hiện bục vinh danh top 3. Bằng điểm thì ai trả lời nhanh hơn (tổng thời gian) xếp trên.
+
+**Chơi thử trước:** ở trang quản lý, nút **👁 Chơi thử** tạo một phòng y hệt ván thật, có 8 bot tự vào và tự đoán. Nút **👁 Xem thử** ở từng câu chỉ chạy riêng câu đó, để kiểm MP3 và đoạn YouTube. Trong phòng chơi thử có nút **📱 Mở màn hình người chơi**, mở cửa sổ cỡ điện thoại để tự đoán như người chơi.
+
+Người chơi rớt mạng hoặc khóa màn hình thì mở lại trang là vào tiếp, giữ nguyên điểm. Host có thể mời người chơi ra khỏi phòng (di chuột vào tên ở phòng chờ, bấm ×).
+
+## Chạy trên máy
+
+Cần Node.js 22.18 trở lên.
+
+```bash
+npm install
+npm run build
+npm start            # http://localhost:3000, mật khẩu mặc định: batbai
+```
+
+- Đặt mật khẩu thật: copy `.env.example` thành `.env` và sửa `ADMIN_PASSWORD`.
+- **Chơi trong mạng LAN** (laptop nối TV, mọi người dùng chung wifi): cứ mở `http://localhost:3000` trên laptop. QR tự trỏ sang địa chỉ LAN của máy, điện thoại quét là vào. Nếu Windows hỏi tường lửa thì bấm cho phép.
+- Khi phát triển: `npm run dev` (tự reload khi sửa code).
+
+## Deploy online: Render + Cloudflare R2 (miễn phí)
+
+App là **một service duy nhất** (web + realtime). Câu hỏi và MP3 lưu trên **Cloudflare R2**, nên server khởi động lại, deploy lại hay ngủ đông đều không mất dữ liệu.
+
+### 1. Tạo kho lưu trữ R2
+
+1. Đăng nhập [dash.cloudflare.com](https://dash.cloudflare.com) → **R2 Object Storage**. Cloudflare yêu cầu gắn thẻ hoặc PayPal để bật R2; dùng dưới 10GB thì không mất tiền.
+2. **Create bucket** → đặt tên `bat-bai`.
+3. Vào **R2 → Manage API tokens → Create API token**:
+   - Permissions: **Object Read & Write**
+   - Specify bucket: `bat-bai`
+4. Lưu lại 3 thông tin: **Access Key ID**, **Secret Access Key** và **endpoint** dạng `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`.
+
+### 2. Đưa code lên GitHub
+
+Tạo một repo trên GitHub (để private cũng được), rồi push thư mục này lên.
+
+### 3. Tạo service trên Render
+
+1. Đăng nhập [render.com](https://render.com) bằng GitHub → **New → Blueprint** → chọn repo. Render tự đọc file `render.yaml`.
+2. Điền các biến:
+
+| Biến | Giá trị |
+|---|---|
+| `ADMIN_PASSWORD` | mật khẩu host tự đặt |
+| `S3_ENDPOINT` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
+| `S3_BUCKET` | `bat-bai` |
+| `S3_ACCESS_KEY_ID` | lấy ở bước 1 |
+| `S3_SECRET_ACCESS_KEY` | lấy ở bước 1 |
+
+3. Bấm **Apply**. Vài phút sau có link dạng `https://bat-bai-xxxx.onrender.com`. Mở `/admin` để thêm câu hỏi.
+
+> **Gói free của Render** ngủ sau 15 phút không có ai truy cập, lần mở đầu tiên mất khoảng 1 phút để khởi động. Host chỉ cần mở trang trước giờ chơi một chút. Muốn luôn sẵn sàng thì nâng lên gói Starter ($7/tháng). Ván đang chơi dở sẽ mất nếu server khởi động lại; thư viện câu hỏi thì không bao giờ mất.
+
+## Lưu trữ & sao lưu
+
+Bố cục kho lưu trữ (thư mục `data/` khi chạy trên máy, hoặc bucket R2 khi chạy online):
+
+```
+library.json              toàn bộ bộ đề và câu hỏi
+history/library-*.json    một bản lưu cho mỗi lần sửa (giữ 100 bản gần nhất)
+audio/<sha256>.mp3        file âm thanh, đặt tên theo nội dung, không bao giờ bị ghi đè
+```
+
+Các lớp bảo vệ:
+
+- **Ghi an toàn:** file được ghi trọn vẹn rồi mới thay bản cũ, nên tắt điện giữa chừng cũng không hỏng dữ liệu. Nếu `library.json` hỏng, server tự lấy bản gần nhất trong `history/`.
+- **Xóa mềm:** xóa câu hỏi hoặc bộ đề chỉ là ẩn đi, file MP3 vẫn còn.
+- **Không lộ đáp án:** thẻ ID3 (tên bài, ca sĩ) bị xóa khỏi MP3 khi upload.
+- **Bản sao ngoài:** tải toàn bộ dữ liệu về máy bằng lệnh dưới đây.
+
+### Sao lưu về máy
+
+Tạo `.env` có cùng các biến `S3_*` như trên Render (chạy trên máy thì không cần), rồi chạy:
+
+```bash
+npm run backup                       # → backups/<thời gian>/
+npm run backup -- D:/BatBai-backup   # hoặc chỉ định thư mục (chạy lại chỉ tải MP3 mới)
+```
+
+Nên chạy mỗi tuần một lần, hoặc đặt lịch bằng Windows Task Scheduler.
+
+### Khôi phục
+
+```bash
+npm run restore -- --list                         # xem các phiên bản trong history/
+npm run restore -- --history library-2026-...json # quay về một phiên bản cũ (sửa nhầm, xóa nhầm)
+npm run restore -- backups/2026-10-23T...         # khôi phục toàn bộ từ bản sao lưu
+```
+
+Trước khi khôi phục, script luôn lưu bản hiện tại vào `history/`, nên việc khôi phục cũng hoàn tác được. **Sau khi khôi phục cần khởi động lại server** (trên Render: Manual Deploy → Restart service).
+
+Muốn chuyển dữ liệu từ máy lên R2: chạy `npm run backup` khi chưa có biến S3, sau đó thêm biến `S3_*` vào `.env` và chạy `npm run restore -- backups/<thư mục vừa tạo>`.
+
+## Kiểm thử
+
+```bash
+npm test             # unit test + 1 ván đầy đủ 60 người qua Socket.IO + test khởi động lại server
+npm run typecheck
+npm run loadtest -- --url http://localhost:3000 --rooms 3 --players 60
+```
+
+`loadtest` cần server đang chạy và ít nhất một bộ đề có câu hỏi. Nó cho bot chơi trọn các ván rồi báo độ trễ. Đo trên máy dev với 3 phòng × 60 người: gửi đáp án p95 khoảng 8ms, không lỗi.
+
+## Cấu trúc
+
+```
+src/server/   Express + Socket.IO: phòng chơi, chấm đáp án, API quản lý, lưu trữ (thư mục / S3)
+src/client/   React: trang chủ, màn người chơi, màn host, trang quản lý
+src/shared/   kiểu dữ liệu và xử lý link YouTube dùng chung
+scripts/      backup, restore, loadtest
+tests/        vitest
+```
+
+Server chạy thẳng TypeScript bằng Node (type stripping), không cần bước biên dịch server.

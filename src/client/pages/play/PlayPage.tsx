@@ -1,0 +1,105 @@
+import { useEffect, useState } from 'react';
+import type { PlayerState } from '../../../shared/types.ts';
+import { Avatar } from '../../components/Avatar.tsx';
+import { Link } from '../../lib/router.tsx';
+import { socket, useConnected } from '../../lib/socket.ts';
+import { readJson, storageKeys, writeJson, writeStorage } from '../../lib/storage.ts';
+import { JoinForm } from './JoinForm.tsx';
+import { PlayerEnded } from './PlayerEnded.tsx';
+import { PlayerQuestion } from './PlayerQuestion.tsx';
+import { PlayerReveal } from './PlayerReveal.tsx';
+
+export interface PlayerSession {
+  name: string;
+  token: string;
+}
+
+export function PlayPage({ code }: { code: string }) {
+  const [session, setSession] = useState(() => readJson<PlayerSession>(storageKeys.player(code)));
+  const [state, setState] = useState<PlayerState | null>(null);
+  const [error, setError] = useState('');
+  const [kicked, setKicked] = useState(false);
+  const connected = useConnected();
+
+  useEffect(() => {
+    const handleKicked = () => {
+      writeStorage(storageKeys.player(code), null);
+      setKicked(true);
+    };
+    socket.on('playerState', setState);
+    socket.on('kicked', handleKicked);
+    return () => {
+      socket.off('playerState', setState);
+      socket.off('kicked', handleKicked);
+    };
+  }, [code]);
+
+  // Rejoin with the saved token on every (re)connect: phones sleep and drop sockets often.
+  useEffect(() => {
+    if (!session) return;
+    const rejoin = () =>
+      socket.emit('player:join', { code, name: session.name, token: session.token }, (res) => {
+        if (res.ok) return;
+        writeStorage(storageKeys.player(code), null);
+        setSession(null);
+        setError(res.error);
+      });
+    if (socket.connected) rejoin();
+    socket.on('connect', rejoin);
+    return () => void socket.off('connect', rejoin);
+  }, [code, session]);
+
+  function handleJoined(next: PlayerSession) {
+    writeJson(storageKeys.player(code), next);
+    writeStorage(storageKeys.lastName, next.name);
+    setError('');
+    setSession(next);
+  }
+
+  if (kicked) {
+    return (
+      <main className="screen center">
+        <div className="card stack text-center">
+          <div className="emoji-xl">🚪</div>
+          <h2>Bạn đã bị mời ra khỏi phòng</h2>
+          <Link to="/" className="btn btn-primary">
+            Về trang chủ
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (!session) return <JoinForm code={code} initialError={error} onJoined={handleJoined} />;
+
+  if (!state) {
+    return (
+      <main className="screen center">
+        <div className="spinner" />
+        <p className="muted-light">Đang vào phòng {code}…</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="screen player-screen">
+      <header className="player-bar">
+        <Avatar avatar={state.me.avatar} color={state.me.color} size="sm" />
+        <strong className="player-bar-name">{state.me.name}</strong>
+        <span className="player-bar-score">{state.me.score.toLocaleString('vi-VN')} điểm</span>
+      </header>
+      {!connected && <div className="banner">Mất kết nối, đang nối lại…</div>}
+      {state.phase === 'lobby' && (
+        <section className="player-body center">
+          <div className="emoji-xl bounce">{state.me.avatar}</div>
+          <h2>Bạn đã vào phòng!</h2>
+          <p className="muted-light">Nhìn lên màn hình lớn và chờ host bắt đầu nhé 👀</p>
+          <p className="pill">{state.playerCount} người chơi</p>
+        </section>
+      )}
+      {state.phase === 'question' && <PlayerQuestion key={state.qIndex} state={state} />}
+      {state.phase === 'reveal' && <PlayerReveal state={state} />}
+      {state.phase === 'ended' && <PlayerEnded state={state} />}
+    </main>
+  );
+}
