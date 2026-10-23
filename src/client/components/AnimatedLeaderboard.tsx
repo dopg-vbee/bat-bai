@@ -3,9 +3,11 @@ import type { RankRow } from '../../shared/types.ts';
 import { Avatar } from './Avatar.tsx';
 import { Delta } from './Leaderboard.tsx';
 
-const SETTLE_DELAY_MS = 700;
-/** Rank numbers switch halfway through the 0.9s slide (see .lb-row transition). */
-const RENUMBER_DELAY_MS = 450;
+const SETTLE_DELAY_MS = 500;
+/** Must match the .lb-row transform transition. */
+const MOVE_MS = 1200;
+/** Rank numbers switch halfway through the slide. */
+const RENUMBER_DELAY_MS = MOVE_MS / 2;
 const COUNT_UP_MS = 1200;
 const ROW_GAP = 8;
 const MAX_PITCH = 64;
@@ -57,15 +59,16 @@ export function CountUp({ from, to, run }: { from: number; to: number; run: bool
 export function AnimatedLeaderboard({ rows }: { rows: RankRow[] }) {
   const [settled, setSettled] = useState(false);
   const [renumbered, setRenumbered] = useState(false);
+  const [moved, setMoved] = useState(false);
   const pitch = useRowPitch(rows.length);
 
   useEffect(() => {
-    const settle = setTimeout(() => setSettled(true), SETTLE_DELAY_MS);
-    const renumber = setTimeout(() => setRenumbered(true), SETTLE_DELAY_MS + RENUMBER_DELAY_MS);
-    return () => {
-      clearTimeout(settle);
-      clearTimeout(renumber);
-    };
+    const timers = [
+      setTimeout(() => setSettled(true), SETTLE_DELAY_MS),
+      setTimeout(() => setRenumbered(true), SETTLE_DELAY_MS + RENUMBER_DELAY_MS),
+      setTimeout(() => setMoved(true), SETTLE_DELAY_MS + MOVE_MS),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   return (
@@ -74,13 +77,16 @@ export function AnimatedLeaderboard({ rows }: { rows: RankRow[] }) {
         const prevRank = row.rank + row.delta;
         const fromOutside = prevRank > rows.length;
         const slot = (settled ? row.rank : Math.min(prevRank, rows.length + 1)) - 1;
+        // While sliding, climbers lift above the others and fallers sink behind them.
+        const motion = settled && !moved && row.delta !== 0 ? (row.delta > 0 ? 'moving-up' : 'moving-down') : '';
+        const scale = motion === 'moving-up' ? 1.05 : motion === 'moving-down' ? 0.96 : 1;
         return (
           <li
             key={row.id}
-            className={`leaderboard-row lb-row${settled && row.delta > 0 ? ' climbed' : ''}`}
+            className={`leaderboard-row lb-row ${motion}${settled && row.delta > 0 ? ' climbed' : ''}`}
             style={{
               height: pitch - ROW_GAP,
-              transform: `translateY(${slot * pitch}px)`,
+              transform: `translateY(${slot * pitch}px) scale(${scale})`,
               opacity: !settled && fromOutside ? 0 : 1,
             }}
           >

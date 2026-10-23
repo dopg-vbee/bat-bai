@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Room } from '../src/server/game/room.ts';
-import { PREVIEW_BOTS } from '../src/shared/types.ts';
+import { LEADERBOARD_MS, PREVIEW_BOTS } from '../src/shared/types.ts';
 
 const questions = [
   { title: 'Lạc Trôi', audio: 'a'.repeat(64), youtubeId: 'Llw9Q6akRo4', startSec: 30, endSec: 50 },
@@ -69,14 +69,14 @@ describe('preview room', () => {
     vi.advanceTimersByTime(20_000 + 12_000);
     expect(room.phase).toBe('leaderboard');
     expect(room.hostView().leaderboard).toHaveLength(PREVIEW_BOTS);
-    vi.advanceTimersByTime(6000);
+    vi.advanceTimersByTime(LEADERBOARD_MS);
     expect(room.phase).toBe('question');
     expect(room.qIndex).toBe(1);
 
     room.reveal();
     room.clipEnded(1);
     expect(room.phase).toBe('leaderboard');
-    vi.advanceTimersByTime(6000);
+    vi.advanceTimersByTime(LEADERBOARD_MS);
     expect(room.phase).toBe('ended');
   });
 

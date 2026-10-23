@@ -152,7 +152,7 @@ export const DEFAULT_DURATION_SEC = 20;
 export const PREVIEW_BOTS = 4;
 /** Answer clips without an end mark play this long. */
 export const OPEN_CLIP_SEC = 25;
-export const LEADERBOARD_MS = 6000;
+export const LEADERBOARD_MS = 5000;
 export const MAX_AUDIO_MB = 20;
 
 export const audioUrl = (hash: string) => `/media/${hash}.mp3`;

@@ -10,7 +10,7 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
    - Sai thì đoán lại được. Không cần gõ dấu, sai chính tả nhẹ vẫn tính.
    - Đúng càng nhanh càng nhiều điểm: **1000 → 500 điểm**.
    - Ai đoán đúng thì avatar + tên bật lên màn hình lớn kèm tiếng "ting" (nhiều người đúng liên tiếp thì cao dần như chuỗi nốt nhạc).
-4. Hết giờ (hoặc khi mọi người đều đúng): màn hình lớn hiện đáp án và phát đoạn YouTube cỡ lớn ở giữa màn hình. Phát xong tự chuyển sang **bảng xếp hạng** khoảng 6 giây (các dòng trượt tới hạng mới, điểm đếm tăng), rồi **tự sang câu tiếp**. Host bấm "Bỏ qua" / "Câu tiếp ngay" nếu muốn nhanh hơn.
+4. Hết giờ (hoặc khi mọi người đều đúng): màn hình lớn hiện đáp án và phát đoạn YouTube cỡ lớn ở giữa màn hình. Phát xong tự chuyển sang **bảng xếp hạng** khoảng 5 giây (các dòng trượt tới hạng mới, điểm đếm tăng), rồi **tự sang câu tiếp**. Host bấm "Bỏ qua" / "Câu tiếp ngay" nếu muốn nhanh hơn.
    - Mỗi câu đặt được điểm **Phát từ** và **Đến**. Bỏ trống "Đến" thì phát 25 giây.
    - Nếu dán link có sẵn `?t=` (hoặc `start=`/`end=`), app tự điền hai ô này.
    - Ở trang quản lý bấm **▶ Xem trước đoạn YouTube** (trong form) hoặc **▶ YouTube 0:30 – 0:36** (ở từng câu) để nghe đúng đoạn đó.
