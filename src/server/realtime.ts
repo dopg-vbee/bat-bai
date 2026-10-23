@@ -111,6 +111,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
     socket.on('host:next', () => hostRoom()?.next());
     socket.on('host:reveal', () => hostRoom()?.reveal());
     socket.on('host:end', () => hostRoom()?.finish());
+    socket.on('host:clipEnded', (qIndex) => hostRoom()?.clipEnded(Number(qIndex)));
     socket.on('host:kick', (playerId) => {
       const socketId = hostRoom()?.kick(String(playerId));
       const target = socketId ? io.sockets.sockets.get(socketId) : undefined;

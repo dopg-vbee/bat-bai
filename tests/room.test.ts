@@ -34,7 +34,7 @@ describe('preview room', () => {
     expect(room.phase).toBe('reveal');
     const state = room.hostView();
     expect(state.correctFeed).toHaveLength(8);
-    expect(state.leaderboard[0].score).toBe(775);
+    expect(state.correctFeed[0].points).toBe(775);
   });
 
   it('a missing bot leaves the round to run to the buzzer', () => {
@@ -55,6 +55,28 @@ describe('preview room', () => {
     room.reveal();
     vi.advanceTimersByTime(20_000);
     expect(room.hostView().correctFeed).toHaveLength(0);
+  });
+
+  it('runs the round by itself: reveal → leaderboard → next question → podium', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    const room = makeRoom(true);
+    room.next();
+    vi.advanceTimersByTime(3000 + 4500 + 1300);
+    expect(room.phase).toBe('reveal');
+
+    // No "clip ended" from the big screen: the fallback (20s clip + 12s) still moves on.
+    vi.advanceTimersByTime(20_000 + 12_000);
+    expect(room.phase).toBe('leaderboard');
+    expect(room.hostView().leaderboard).toHaveLength(8);
+    vi.advanceTimersByTime(6000);
+    expect(room.phase).toBe('question');
+    expect(room.qIndex).toBe(1);
+
+    room.reveal();
+    room.clipEnded(1);
+    expect(room.phase).toBe('leaderboard');
+    vi.advanceTimersByTime(6000);
+    expect(room.phase).toBe('ended');
   });
 
   it('a normal room has no bots', () => {

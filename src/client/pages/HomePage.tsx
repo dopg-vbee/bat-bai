@@ -1,4 +1,6 @@
+import { ArrowRight, LogIn } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { Logo } from '../components/Brand.tsx';
 import { Link, navigate } from '../lib/router.tsx';
 
 export function HomePage() {
@@ -15,9 +17,7 @@ export function HomePage() {
 
   return (
     <main className="screen center">
-      <h1 className="logo">
-        Bắt Bài <span className="logo-icon">🎤</span>
-      </h1>
+      <Logo />
       <p className="tagline">Nghe lời – đoán tên bài hát!</p>
       <form className="card stack" onSubmit={handleSubmit}>
         <label className="label" htmlFor="room-code">
@@ -34,11 +34,11 @@ export function HomePage() {
           autoFocus
         />
         <button className="btn btn-primary btn-lg" disabled={code.length !== 4}>
-          Vào phòng
+          <LogIn /> Vào phòng
         </button>
       </form>
       <Link to="/admin" className="link-subtle">
-        Tôi là host →
+        Tôi là host <ArrowRight />
       </Link>
     </main>
   );

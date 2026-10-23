@@ -69,6 +69,19 @@ describe('admin API', () => {
     expect(res.status).toBe(401);
   });
 
+  it('stores clip times to a tenth of a second', async () => {
+    const set = await admin<QuestionSetDto>('/sets', { method: 'POST', body: JSON.stringify({ name: 'Thập phân' }) });
+    const form = new FormData();
+    form.set('title', 'Bài lẻ giây');
+    form.set('youtubeUrl', 'https://youtu.be/Llw9Q6akRo4');
+    form.set('start', '75.3');
+    form.set('end', '1:45.55');
+    form.set('audio', new Blob([new Uint8Array(fakeMp3())]), 'song.mp3');
+    const saved = await admin<QuestionSetDto>(`/sets/${set.id}/questions`, { method: 'POST', body: form });
+    expect(saved.questions[0]).toMatchObject({ startSec: 75.3, endSec: 105.6 });
+    await admin(`/sets/${set.id}`, { method: 'DELETE' });
+  });
+
   it('rejects a non-MP3 upload with a friendly message', async () => {
     const set = await admin<QuestionSetDto>('/sets', { method: 'POST', body: JSON.stringify({ name: 'Rác' }) });
     const form = new FormData();
@@ -94,6 +107,9 @@ describe('a full game with 60 players', () => {
     expect(set.questions).toHaveLength(2);
     expect(set.questions[0]).toMatchObject({ startSec: 75, endSec: 105 });
     expect(set.questions[1].endSec).toBeNull();
+
+    expect(await admin<QuestionSetDto>(`/sets/${set.id}`)).toEqual(set);
+    await expect(admin('/sets/khong-co')).rejects.toThrow('404');
 
     const audio = await fetch(`${base}${set.questions[0].audioUrl}`, { headers: { Range: 'bytes=0-99' } });
     expect(audio.status).toBe(206);
@@ -148,15 +164,25 @@ describe('a full game with 60 players', () => {
     expect(hostState!.answer).toBe('Lạc Trôi');
     expect(hostState!.clip).toMatchObject({ startSec: 75, endSec: 105 });
     expect(hostState!.correctFeed).toHaveLength(PLAYERS);
+    expect(hostState!.leaderboard).toEqual([]); // the video gets the whole screen first
+
+    // A late "clip ended" for another round is ignored; the right one opens the leaderboard.
+    host.emit('host:clipEnded', 5);
+    await sleep(200);
+    expect(hostState!.phase).toBe('reveal');
+    host.emit('host:clipEnded', 0);
+    await waitFor(() => hostState?.phase === 'leaderboard', 3000, 'leaderboard');
+    expect(hostState!.answer).toBe('Lạc Trôi');
+    expect(hostState!.advanceAt).toBeGreaterThan(Date.now());
     expect(hostState!.leaderboard).toHaveLength(10);
     const scores = hostState!.leaderboard.map((r) => r.score);
     expect([...scores].sort((a, b) => b - a)).toEqual(scores);
   });
 
   it('never sends the answer to phones before the reveal', async () => {
-    await waitFor(() => players.every((p) => p.states.at(-1)?.phase === 'reveal'), 3000, 'player reveal');
+    await waitFor(() => players.every((p) => p.states.at(-1)?.phase === 'leaderboard'), 3000, 'player leaderboard');
     for (const p of players) {
-      const leaked = p.states.filter((s) => s.phase !== 'reveal' && JSON.stringify(s).includes('Trôi'));
+      const leaked = p.states.filter((s) => s.phase === 'question' && JSON.stringify(s).includes('Trôi'));
       expect(leaked).toEqual([]);
       expect(p.states.at(-1)!.answer).toBe('Lạc Trôi');
     }
@@ -180,7 +206,7 @@ describe('a full game with 60 players', () => {
   });
 
   it('plays round 2 with a manual reveal, then ends with a podium', async () => {
-    host.emit('host:next');
+    host.emit('host:next'); // skip the rest of the leaderboard
     await waitFor(() => hostState?.phase === 'question' && hostState.qIndex === 1, 3000, 'question 2');
     await sleep(150);
     await players[10].socket.emitWithAck('player:guess', 'noi nay co anh');
@@ -188,7 +214,9 @@ describe('a full game with 60 players', () => {
     await waitFor(() => hostState?.phase === 'reveal', 3000, 'manual reveal');
     expect(hostState!.correctFeed.map((e) => e.name)).toEqual([players[10].name]);
 
-    host.emit('host:next');
+    host.emit('host:next'); // skip the clip
+    await waitFor(() => hostState?.phase === 'leaderboard', 3000, 'leaderboard 2');
+    host.emit('host:next'); // last question: leaderboard → podium
     await waitFor(() => hostState?.phase === 'ended', 3000, 'ended');
     await waitFor(() => players[0].states.at(-1)?.phase === 'ended', 3000, 'player ended');
     const final = players[0].states.at(-1)!;

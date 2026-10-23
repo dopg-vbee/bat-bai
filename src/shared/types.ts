@@ -1,4 +1,5 @@
-export type Phase = 'lobby' | 'question' | 'reveal' | 'ended';
+/** A round: question → reveal (answer video) → leaderboard (a few seconds) → next question. */
+export type Phase = 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'ended';
 
 export interface PlayerIdentity {
   id: string;
@@ -43,14 +44,17 @@ export interface HostState {
   durationMs: number;
   startsAt: number;
   endsAt: number;
+  /** When the leaderboard moves on by itself (0 when nothing is scheduled). */
+  advanceAt: number;
   players: PlayerSummary[];
   audioUrl: string | null;
   nextAudioUrl: string | null;
-  /** Only sent during reveal, so the big screen never spoils the answer. */
+  /** Only sent from the reveal on, so the big screen never spoils the answer. */
   answer: string | null;
   /** Sent from the start of the round so the host can pre-buffer the video in HD (kept hidden). */
   clip: ClipInfo | null;
   correctFeed: CorrectEntry[];
+  /** Filled during the leaderboard phase and at the end. */
   leaderboard: RankRow[];
 }
 
@@ -110,6 +114,8 @@ export interface ClientToServerEvents {
   'host:next': () => void;
   'host:reveal': () => void;
   'host:end': () => void;
+  /** The answer video finished playing on the big screen. */
+  'host:clipEnded': (qIndex: number) => void;
   'host:kick': (playerId: string) => void;
   'player:join': (input: JoinInput, cb: (res: Ack<{ playerId: string; token: string }>) => void) => void;
   'player:guess': (text: string, cb: (res: GuessResult) => void) => void;
@@ -134,6 +140,9 @@ export interface QuestionSetDto {
 
 export const DURATION_OPTIONS = [15, 20, 30, 45, 60];
 export const DEFAULT_DURATION_SEC = 30;
+/** Answer clips without an end mark play this long. */
+export const OPEN_CLIP_SEC = 25;
+export const LEADERBOARD_MS = 6000;
 export const MAX_AUDIO_MB = 20;
 
 export const audioUrl = (hash: string) => `/media/${hash}.mp3`;

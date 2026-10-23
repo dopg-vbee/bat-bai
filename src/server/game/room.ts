@@ -1,12 +1,15 @@
 import { randomBytes } from 'node:crypto';
 import {
   audioUrl,
+  LEADERBOARD_MS,
+  OPEN_CLIP_SEC,
   type GuessResult,
   type HostState,
   type Phase,
   type PlayerState,
   type RankRow,
 } from '../../shared/types.ts';
+import { AVATARS } from '../../shared/emoji.ts';
 import { isCorrect } from './match.ts';
 
 export interface GameQuestion {
@@ -52,8 +55,9 @@ const MAX_GUESS_LENGTH = 100;
 const GUESS_INTERVAL_MS = 300;
 const LATE_GRACE_MS = 300;
 const ALL_CORRECT_DELAY_MS = 1200;
+/** The big screen reports when the answer clip ends; this covers a clip that never does (load error, blocked autoplay). */
+const REVEAL_FALLBACK_EXTRA_MS = 12_000;
 
-const AVATARS = [...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🐔🐧🐤🦆🦉🐺🐴🦄🐝🦋🐞🐢🐙🦀🐬🐳🦈🦓🦒🦔🐲🌵🍄🌻🍉🍕🍩🎃👻👽🤖🦩🦜🐌🦖🐿️'.matchAll(/\p{Extended_Pictographic}️?/gu)].map((m) => m[0]);
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#ec4899'];
 
 const randomToken = () => randomBytes(12).toString('base64url');
@@ -74,6 +78,7 @@ export class Room {
   qIndex = -1;
   startsAt = 0;
   endsAt = 0;
+  advanceAt = 0;
   lastActivity = Date.now();
   private readonly questions: GameQuestion[];
   private readonly countdownMs: number;
@@ -156,12 +161,12 @@ export class Room {
     return player.socketId;
   }
 
-  /** Host "next" button: lobby → Q1, question → reveal, reveal → next question or final results. */
+  /** Host "next"/"skip" button: moves one step along lobby → question → reveal → leaderboard → … → ended. */
   next(): void {
+    if (this.phase === 'lobby') return this.startQuestion(0);
     if (this.phase === 'question') return this.reveal();
-    if (this.phase === 'ended') return;
-    if (this.qIndex + 1 >= this.questions.length) return this.finish();
-    this.startQuestion(this.qIndex + 1);
+    if (this.phase === 'reveal') return this.showLeaderboard();
+    if (this.phase === 'leaderboard') return this.advance();
   }
 
   reveal(): void {
@@ -169,7 +174,15 @@ export class Room {
     this.clearTimer();
     this.clearBotTimers();
     this.phase = 'reveal';
+    const { startSec, endSec } = this.questions[this.qIndex];
+    const clipMs = ((endSec ?? startSec + OPEN_CLIP_SEC) - startSec) * 1000;
+    this.schedule(clipMs + REVEAL_FALLBACK_EXTRA_MS, () => this.showLeaderboard());
     this.changed();
+  }
+
+  /** The big screen finished the answer clip. Ignored if it is about an earlier round. */
+  clipEnded(qIndex: number): void {
+    if (this.phase === 'reveal' && qIndex === this.qIndex) this.showLeaderboard();
   }
 
   finish(): void {
@@ -177,7 +190,21 @@ export class Room {
     this.clearTimer();
     this.clearBotTimers();
     this.phase = 'ended';
+    this.advanceAt = 0;
     this.changed();
+  }
+
+  private showLeaderboard(): void {
+    if (this.phase !== 'reveal') return;
+    this.phase = 'leaderboard';
+    this.advanceAt = Date.now() + LEADERBOARD_MS;
+    this.schedule(LEADERBOARD_MS, () => this.advance());
+    this.changed();
+  }
+
+  private advance(): void {
+    if (this.qIndex + 1 >= this.questions.length) return this.finish();
+    this.startQuestion(this.qIndex + 1);
   }
 
   guess(playerId: string, text: string, now = Date.now()): GuessResult {
@@ -211,12 +238,13 @@ export class Room {
     const question = this.questions[this.qIndex];
     const inRound = this.phase === 'question' || this.phase === 'reveal';
     const upcoming = this.phase === 'ended' ? undefined : this.questions[this.phase === 'lobby' ? 0 : this.qIndex + 1];
-    const showRanking = this.phase === 'reveal' || this.phase === 'ended';
+    const showRanking = this.phase === 'leaderboard' || this.phase === 'ended';
     return {
       ...this.baseView(),
       setName: this.setName,
       preview: this.preview,
       durationMs: this.durationMs,
+      advanceAt: this.advanceAt,
       players: [...this.players.values()].map((p) => ({
         ...identity(p),
         score: p.score,
@@ -225,7 +253,7 @@ export class Room {
       })),
       audioUrl: inRound && question ? audioUrl(question.audio) : null,
       nextAudioUrl: upcoming ? audioUrl(upcoming.audio) : null,
-      answer: this.phase === 'reveal' && question ? question.title : null,
+      answer: this.answerVisible() ? question.title : null,
       clip:
         inRound && question
           ? { youtubeId: question.youtubeId, startSec: question.startSec, endSec: question.endSec }
@@ -242,7 +270,7 @@ export class Room {
   playerViews(): { socketId: string; state: PlayerState }[] {
     const ranked = this.ranking();
     const base = this.baseView();
-    const answer = this.phase === 'reveal' ? this.questions[this.qIndex]?.title ?? null : null;
+    const answer = this.answerVisible() ? this.questions[this.qIndex].title : null;
     const podium =
       this.phase === 'ended'
         ? ranked.slice(0, 3).map((p) => ({ name: p.name, avatar: p.avatar, color: p.color, score: p.score }))
@@ -277,10 +305,15 @@ export class Room {
     };
   }
 
+  private answerVisible(): boolean {
+    return (this.phase === 'reveal' || this.phase === 'leaderboard') && Boolean(this.questions[this.qIndex]);
+  }
+
   private startQuestion(index: number): void {
     this.ranking().forEach((p, i) => (p.prevRank = i + 1));
     this.qIndex = index;
     this.phase = 'question';
+    this.advanceAt = 0;
     this.correctOrder = [];
     const now = Date.now();
     this.startsAt = now + this.countdownMs;

@@ -1,4 +1,6 @@
+import { ArrowLeft, LogIn } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { Logo } from '../../components/Brand.tsx';
 import { api, setAdminPassword } from '../../lib/api.ts';
 import { Link } from '../../lib/router.tsx';
 
@@ -28,9 +30,7 @@ export function AdminLogin({ onLoggedIn }: { onLoggedIn: () => void }) {
 
   return (
     <main className="screen center">
-      <h1 className="logo logo-sm">
-        Bắt Bài <span className="logo-icon">🎤</span>
-      </h1>
+      <Logo small />
       <form className="card stack" onSubmit={handleSubmit}>
         <h2>Khu vực host</h2>
         <label className="label" htmlFor="admin-password">
@@ -47,11 +47,11 @@ export function AdminLogin({ onLoggedIn }: { onLoggedIn: () => void }) {
         />
         {error && <p className="error-text">{error}</p>}
         <button className="btn btn-primary btn-lg" disabled={!password || busy}>
-          Đăng nhập
+          <LogIn /> Đăng nhập
         </button>
       </form>
       <Link to="/" className="link-subtle">
-        ← Trang người chơi
+        <ArrowLeft /> Trang người chơi
       </Link>
     </main>
   );

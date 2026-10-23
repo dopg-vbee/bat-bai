@@ -1,10 +1,29 @@
+import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import type { RankRow } from '../../shared/types.ts';
 import { Avatar } from './Avatar.tsx';
 
-function Delta({ value }: { value: number }) {
-  if (value > 0) return <span className="delta up">▲{value}</span>;
-  if (value < 0) return <span className="delta down">▼{-value}</span>;
-  return <span className="delta">–</span>;
+export function Delta({ value }: { value: number }) {
+  if (value > 0) {
+    return (
+      <span className="delta up">
+        <ArrowUp strokeWidth={3} />
+        {value}
+      </span>
+    );
+  }
+  if (value < 0) {
+    return (
+      <span className="delta down">
+        <ArrowDown strokeWidth={3} />
+        {-value}
+      </span>
+    );
+  }
+  return (
+    <span className="delta">
+      <Minus strokeWidth={3} />
+    </span>
+  );
 }
 
 export function Leaderboard({ rows, showRoundPoints = true }: { rows: RankRow[]; showRoundPoints?: boolean }) {

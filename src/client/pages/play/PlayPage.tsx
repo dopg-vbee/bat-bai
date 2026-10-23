@@ -1,6 +1,9 @@
+import { ArrowLeft, DoorOpen, Users, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { PlayerState } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
+import { Emoji, EmojiText, preloadAnimatedEmoji } from '../../components/Emoji.tsx';
+import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { Link } from '../../lib/router.tsx';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { readJson, storageKeys, writeJson, writeStorage } from '../../lib/storage.ts';
@@ -8,6 +11,9 @@ import { JoinForm } from './JoinForm.tsx';
 import { PlayerEnded } from './PlayerEnded.tsx';
 import { PlayerQuestion } from './PlayerQuestion.tsx';
 import { PlayerReveal } from './PlayerReveal.tsx';
+
+/** Animated emoji shown on correct/missed answers and the podium (see PlayerQuestion/Reveal/Ended). */
+const CELEBRATIONS = ['🎉', '🥳', '😅', '🏆'];
 
 export interface PlayerSession {
   name: string;
@@ -33,6 +39,10 @@ export function PlayPage({ code }: { code: string }) {
       socket.off('kicked', handleKicked);
     };
   }, [code]);
+
+  useEffect(() => {
+    preloadAnimatedEmoji(CELEBRATIONS);
+  }, []);
 
   // Rejoin with the saved token on every (re)connect: phones sleep and drop sockets often.
   useEffect(() => {
@@ -60,10 +70,10 @@ export function PlayPage({ code }: { code: string }) {
     return (
       <main className="screen center">
         <div className="card stack text-center">
-          <div className="emoji-xl">🚪</div>
+          <StatusBadge icon={DoorOpen} />
           <h2>Bạn đã bị mời ra khỏi phòng</h2>
           <Link to="/" className="btn btn-primary">
-            Về trang chủ
+            <ArrowLeft /> Về trang chủ
           </Link>
         </div>
       </main>
@@ -88,17 +98,25 @@ export function PlayPage({ code }: { code: string }) {
         <strong className="player-bar-name">{state.me.name}</strong>
         <span className="player-bar-score">{state.me.score.toLocaleString('vi-VN')} điểm</span>
       </header>
-      {!connected && <div className="banner">Mất kết nối, đang nối lại…</div>}
+      {!connected && (
+        <div className="banner">
+          <WifiOff /> Mất kết nối, đang nối lại…
+        </div>
+      )}
       {state.phase === 'lobby' && (
         <section className="player-body center">
-          <div className="emoji-xl bounce">{state.me.avatar}</div>
+          <Emoji char={state.me.avatar} className="emoji-xl bounce" />
           <h2>Bạn đã vào phòng!</h2>
-          <p className="muted-light">Nhìn lên màn hình lớn và chờ host bắt đầu nhé 👀</p>
-          <p className="pill">{state.playerCount} người chơi</p>
+          <p className="muted-light">
+            <EmojiText text="Nhìn lên màn hình lớn và chờ host bắt đầu nhé 👀" />
+          </p>
+          <p className="pill">
+            <Users /> {state.playerCount} người chơi
+          </p>
         </section>
       )}
       {state.phase === 'question' && <PlayerQuestion key={state.qIndex} state={state} />}
-      {state.phase === 'reveal' && <PlayerReveal state={state} />}
+      {(state.phase === 'reveal' || state.phase === 'leaderboard') && <PlayerReveal key={state.qIndex} state={state} />}
       {state.phase === 'ended' && <PlayerEnded state={state} />}
     </main>
   );

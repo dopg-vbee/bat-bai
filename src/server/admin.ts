@@ -82,6 +82,12 @@ export function adminRouter(library: Library, store: BlobStore, password: string
     res.json(library.sets().map(toSetDto));
   });
 
+  router.get('/sets/:id', (req, res) => {
+    const set = library.getSet(req.params.id);
+    if (!set) throw new HttpError(404, 'Không tìm thấy bộ đề');
+    res.json(toSetDto(set));
+  });
+
   router.post('/sets', async (req, res) => {
     const name = cleanText(req.body?.name, 100);
     if (!name) throw new HttpError(400, 'Hãy nhập tên bộ đề');

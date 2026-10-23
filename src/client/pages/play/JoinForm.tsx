@@ -1,4 +1,6 @@
+import { Music } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { Logo } from '../../components/Brand.tsx';
 import { socket } from '../../lib/socket.ts';
 import { readStorage, storageKeys } from '../../lib/storage.ts';
 import type { PlayerSession } from './PlayPage.tsx';
@@ -36,9 +38,7 @@ export function JoinForm({ code, initialError, onJoined }: JoinFormProps) {
 
   return (
     <main className="screen center">
-      <h1 className="logo logo-sm">
-        Bắt Bài <span className="logo-icon">🎤</span>
-      </h1>
+      <Logo small />
       <form className="card stack" onSubmit={handleSubmit}>
         <p className="pill pill-dark">Phòng {code}</p>
         <label className="label" htmlFor="nickname">
@@ -56,7 +56,13 @@ export function JoinForm({ code, initialError, onJoined }: JoinFormProps) {
         />
         {error && <p className="error-text">{error}</p>}
         <button className="btn btn-primary btn-lg" disabled={!name.trim() || busy}>
-          {busy ? 'Đang vào…' : 'Chơi thôi! 🎶'}
+          {busy ? (
+            'Đang vào…'
+          ) : (
+            <>
+              <Music /> Chơi thôi!
+            </>
+          )}
         </button>
       </form>
     </main>

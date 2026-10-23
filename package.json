@@ -8,8 +8,9 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "dev": "node --env-file-if-exists=.env --watch src/server/index.ts --dev",
-    "build": "vite build",
+    "dev": "npm run emoji && node --env-file-if-exists=.env --watch src/server/index.ts --dev",
+    "build": "npm run emoji && vite build",
+    "emoji": "node scripts/build-emoji.ts",
     "start": "node --env-file-if-exists=.env src/server/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -24,6 +25,8 @@
     "socket.io": "^4.8.4"
   },
   "devDependencies": {
+    "@iconify-json/fluent-emoji": "^1.2.7",
+    "@iconify/utils": "^3.1.7",
     "@types/canvas-confetti": "^1.9.0",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.3.0",
@@ -34,6 +37,7 @@
     "@types/youtube": "^0.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "canvas-confetti": "^1.9.4",
+    "lucide-react": "^1.61.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

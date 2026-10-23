@@ -1,4 +1,6 @@
+import { Clapperboard, ExternalLink, Play, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { OPEN_CLIP_SEC } from '../../shared/types.ts';
 import { formatRange, youtubeWatchUrl } from '../../shared/youtube.ts';
 import { loadYoutubeApi } from '../lib/youtubeApi.ts';
 
@@ -9,8 +11,12 @@ interface YoutubeClipProps {
   title: string;
   /** false = pre-buffer silently (see WARMUP_LEAD_SEC); true = play the clip with sound. */
   active?: boolean;
+  /** false = bare video for the big screen: no range label, no replay buttons. */
+  showControls?: boolean;
   /** Button style for the surface the clip sits on. */
   tone?: 'light' | 'dark';
+  /** The clip reached its end (or cannot play at all). */
+  onEnded?: () => void;
 }
 
 type Status = 'loading' | 'playing' | 'stopped' | 'blocked' | 'error';
@@ -37,18 +43,30 @@ const START_FLASH_MS = 900;
  */
 const WARMUP_LEAD_SEC = 15;
 const WARMUP_STOP_EARLY_SEC = 0.3;
+const ERROR_END_DELAY_MS = 4000;
 
-/** Bare video + audio for [startSec, endSec]: no YouTube chrome, our own replay control. */
-export function YoutubeClip({ youtubeId, startSec, endSec, title, active = true, tone = 'light' }: YoutubeClipProps) {
+/** Bare video + audio for [startSec, endSec] (OPEN_CLIP_SEC when there is no end): no YouTube chrome. */
+export function YoutubeClip({
+  youtubeId,
+  startSec,
+  endSec,
+  title,
+  active = true,
+  showControls = true,
+  tone = 'light',
+  onEnded,
+}: YoutubeClipProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YT.Player | null>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const optionsRef = useRef({ startSec, endSec, active });
+  const onEndedRef = useRef(onEnded);
   const [scale, setScale] = useState(0);
   const [status, setStatus] = useState<Status>('loading');
 
   optionsRef.current = { startSec, endSec, active };
+  onEndedRef.current = onEnded;
 
   function later(fn: () => void, ms: number) {
     timersRef.current.push(setTimeout(fn, ms));
@@ -103,7 +121,7 @@ export function YoutubeClip({ youtubeId, startSec, endSec, title, active = true,
           height: VIDEO_HEIGHT + 2 * CROP,
           host: 'https://www.youtube-nocookie.com',
           playerVars: {
-            start: optionsRef.current.active ? optionsRef.current.startSec : warmupFrom,
+            start: Math.floor(optionsRef.current.active ? optionsRef.current.startSec : warmupFrom),
             autoplay: 0,
             controls: 0,
             disablekb: 1,
@@ -136,7 +154,7 @@ export function YoutubeClip({ youtubeId, startSec, endSec, title, active = true,
           const time = player.getCurrentTime();
           if (!isActive && time >= start - WARMUP_STOP_EARLY_SEC) {
             player.pauseVideo();
-          } else if (isActive && end !== null && time >= end) {
+          } else if (isActive && time >= (end ?? start + OPEN_CLIP_SEC)) {
             player.pauseVideo();
             clearTimers();
             setStatus('stopped');
@@ -161,6 +179,15 @@ export function YoutubeClip({ youtubeId, startSec, endSec, title, active = true,
     if (active) play();
   }, [active, startSec, endSec]);
 
+  // A clip that cannot play still "ends", after a moment so the answer title stays on screen.
+  useEffect(() => {
+    if (!active) return;
+    if (status === 'stopped') onEndedRef.current?.();
+    if (status !== 'error') return;
+    const timer = setTimeout(() => onEndedRef.current?.(), ERROR_END_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [status, active]);
+
   return (
     <div className="yt-clip">
       <div className="video-frame" ref={frameRef}>
@@ -172,32 +199,34 @@ export function YoutubeClip({ youtubeId, startSec, endSec, title, active = true,
         {status !== 'playing' && (
           <div className="yt-cover" style={{ backgroundImage: `url(https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg)` }}>
             {status === 'loading' && <div className="spinner" />}
-            {status === 'stopped' && (
+            {status === 'stopped' && showControls && (
               <button type="button" className="btn btn-primary btn-lg" onClick={play}>
-                ↺ Phát lại
+                <RotateCcw /> Phát lại
               </button>
             )}
             {status === 'blocked' && (
               <button type="button" className="btn btn-primary btn-lg" onClick={play}>
-                ▶ Bấm để phát
+                <Play /> Bấm để phát
               </button>
             )}
             {status === 'error' && (
               <a className="btn btn-ghost" href={youtubeWatchUrl(youtubeId, startSec)} target="_blank" rel="noreferrer">
-                Video này không phát được – mở trên YouTube ↗
+                Video này không phát được – mở trên YouTube <ExternalLink />
               </a>
             )}
           </div>
         )}
       </div>
-      <div className="yt-clip-bar">
-        <span className="yt-clip-range" title={title}>
-          🎬 {formatRange(startSec, endSec)}
-        </span>
-        <button type="button" className={`btn btn-sm ${tone === 'dark' ? 'btn-ghost' : 'btn-ghost-dark'}`} onClick={play}>
-          ↺ Phát lại đoạn này
-        </button>
-      </div>
+      {showControls && (
+        <div className="yt-clip-bar">
+          <span className="yt-clip-range" title={title}>
+            <Clapperboard /> {formatRange(startSec, endSec)}
+          </span>
+          <button type="button" className={`btn btn-sm ${tone === 'dark' ? 'btn-ghost' : 'btn-ghost-dark'}`} onClick={play}>
+            <RotateCcw /> Phát lại đoạn này
+          </button>
+        </div>
+      )}
     </div>
   );
 }

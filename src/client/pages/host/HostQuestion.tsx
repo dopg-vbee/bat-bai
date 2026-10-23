@@ -1,16 +1,15 @@
+import { CircleCheck, RotateCcw, SkipForward, Volume2 } from 'lucide-react';
 import type { HostState } from '../../../shared/types.ts';
-import { Avatar } from '../../components/Avatar.tsx';
+import { EmojiText } from '../../components/Emoji.tsx';
 import { Equalizer } from '../../components/Equalizer.tsx';
 import { TimerRing } from '../../components/TimerRing.tsx';
 import { socket, useServerNow } from '../../lib/socket.ts';
+import { CorrectBubbles } from './CorrectBubbles.tsx';
 import type { QuestionAudio } from './useQuestionAudio.ts';
-
-const FEED_SIZE = 14;
 
 export function HostQuestion({ state, audio }: { state: HostState; audio: QuestionAudio }) {
   const now = useServerNow(true, 100);
   const online = state.players.filter((p) => p.connected).length;
-  const feed = state.correctFeed.slice(-FEED_SIZE).reverse();
 
   function handleReveal() {
     socket.emit('host:reveal');
@@ -40,36 +39,30 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
         <Equalizer playing={audio.playing} />
         <h2 className="host-prompt">Bài hát này tên gì?</h2>
         <p className="host-progress">
-          ✅ <strong>{state.correctFeed.length}</strong>/{online} người đã đoán đúng
+          {state.correctFeed.length ? (
+            <>
+              <CircleCheck /> <strong>{state.correctFeed.length}</strong>/{online} người đã đoán đúng
+            </>
+          ) : (
+            <EmojiText text="Chưa ai đoán ra… 🤔" />
+          )}
         </p>
         <div className="host-actions">
           {audio.blocked ? (
             <button className="btn btn-primary btn-lg" onClick={audio.replay}>
-              🔊 Bấm để phát nhạc
+              <Volume2 /> Bấm để phát nhạc
             </button>
           ) : (
             <button className="btn btn-ghost" onClick={audio.replay}>
-              🔁 Phát lại
+              <RotateCcw /> Phát lại
             </button>
           )}
           <button className="btn btn-ghost" onClick={handleReveal}>
-            ⏭ Hiện đáp án
+            <SkipForward /> Hiện đáp án
           </button>
         </div>
       </div>
-      <aside className="host-feed">
-        <h3>Đoán đúng</h3>
-        {feed.length === 0 && <p className="muted-light">Chưa ai đoán ra… 🤔</p>}
-        <ul>
-          {feed.map((entry) => (
-            <li key={entry.id} className="feed-item">
-              <Avatar avatar={entry.avatar} color={entry.color} size="sm" />
-              <span className="feed-name">{entry.name}</span>
-              <span className="feed-points">+{entry.points}</span>
-            </li>
-          ))}
-        </ul>
-      </aside>
+      <CorrectBubbles feed={state.correctFeed} />
     </section>
   );
 }

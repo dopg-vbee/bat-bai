@@ -1,3 +1,4 @@
+import { Eye, Pencil, Play, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { DEFAULT_DURATION_SEC, type QuestionDto, type QuestionSetDto } from '../../../shared/types.ts';
 import { formatRange } from '../../../shared/youtube.ts';
@@ -42,19 +43,20 @@ function QuestionRow({ index, question, onPreview, onEdit, onDelete }: QuestionR
       <div className="question-info">
         <strong>{question.title}</strong>
         <button type="button" className="link-button" onClick={handleToggleClip}>
-          {showClip ? '✕ Đóng' : '▶'} YouTube {formatRange(question.startSec, question.endSec)}
+          {showClip ? <X /> : <Play />}
+          {showClip ? 'Đóng' : 'YouTube'} {formatRange(question.startSec, question.endSec)}
         </button>
       </div>
       <audio className="question-audio" controls preload="none" src={question.audioUrl} />
       <div className="question-actions">
         <button className="btn btn-ghost-dark btn-sm" onClick={handlePreview} title="Xem câu này như khi chơi thật">
-          👁 Xem thử
+          <Eye /> Xem thử
         </button>
         <button className="btn btn-ghost-dark btn-sm" onClick={handleEdit}>
-          Sửa
+          <Pencil /> Sửa
         </button>
         <button className="btn btn-danger btn-sm" onClick={handleDelete}>
-          Xóa
+          <Trash2 /> Xóa
         </button>
       </div>
       {showClip && (
@@ -139,10 +141,10 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
         </div>
         <div className="set-header-actions">
           <button className="btn btn-ghost-dark btn-sm" onClick={handleRename}>
-            Đổi tên
+            <Pencil /> Đổi tên
           </button>
           <button className="btn btn-danger btn-sm" onClick={handleDeleteSet}>
-            Xóa bộ đề
+            <Trash2 /> Xóa bộ đề
           </button>
         </div>
       </div>

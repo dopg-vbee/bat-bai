@@ -2,5 +2,6 @@ node_modules
 dist
 data
 backups
+src/client/public/emoji
 .env
 *.log

@@ -40,6 +40,10 @@ describe('timestamps', () => {
     ['01:02:03', 3723],
     ['2m', 120],
     ['1h', 3600],
+    ['75.3', 75.3],
+    ['75.34', 75.3],
+    ['1:15.3', 75.3],
+    ['1:02:03.5', 3723.5],
   ])('parses %s', (input, expected) => {
     expect(parseTimestamp(input)).toBe(expected);
   });
@@ -53,6 +57,9 @@ describe('timestamps', () => {
     expect(formatTimestamp(75)).toBe('1:15');
     expect(formatTimestamp(3723)).toBe('1:02:03');
     expect(formatTimestamp(5)).toBe('0:05');
+    expect(formatTimestamp(75.3)).toBe('1:15.3');
+    expect(formatTimestamp(59.96)).toBe('1:00');
+    expect(formatTimestamp(0.1 + 0.2)).toBe('0:00.3');
     expect(formatRange(75, 105)).toBe('1:15 – 1:45');
     expect(formatRange(75, null)).toBe('từ 1:15');
   });

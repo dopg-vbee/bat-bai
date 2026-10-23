@@ -22,6 +22,15 @@ describe('isCorrect', () => {
     expect(isCorrect('NOINAYCOANH', title)).toBe(true);
   });
 
+  it('ignores upper/lower case and punctuation', () => {
+    expect(isCorrect('NƠI NÀY CÓ ANH!!!', title)).toBe(true);
+    expect(isCorrect('"nơi... này, có anh?"', title)).toBe(true);
+    expect(isCorrect('Nơi-Này_Có~Anh', title)).toBe(true);
+    expect(isCorrect('dont cry', "Don't Cry")).toBe(true);
+    expect(isCorrect("DON’T CRY!", "Don't Cry")).toBe(true);
+    expect(isCorrect('em cua ngay hom qua', 'Em Của Ngày Hôm Qua.')).toBe(true);
+  });
+
   it('forgives small typos on long names', () => {
     expect(isCorrect('noi nay co ahn', title)).toBe(true);
     expect(isCorrect('noi nay co em', title)).toBe(false);

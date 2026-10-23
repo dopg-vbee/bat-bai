@@ -1,5 +1,5 @@
+import { SkipForward } from 'lucide-react';
 import type { HostState } from '../../../shared/types.ts';
-import { Leaderboard } from '../../components/Leaderboard.tsx';
 import { socket } from '../../lib/socket.ts';
 
 interface HostRevealProps {
@@ -8,35 +8,22 @@ interface HostRevealProps {
   onVideoSlot: (slot: HTMLElement | null) => void;
 }
 
+/** The answer and its clip, big and centred; the leaderboard follows once the clip ends. */
 export function HostReveal({ state, onVideoSlot }: HostRevealProps) {
-  const isLast = state.qIndex + 1 >= state.qTotal;
-  const correct = state.correctFeed.length;
-
-  function handleNext() {
+  function handleSkip() {
     socket.emit('host:next');
   }
 
   return (
     <section className="host-reveal">
-      <div className="reveal-main">
-        <p className="host-question-no">
-          Câu {state.qIndex + 1}/{state.qTotal} · {correct}/{state.players.length} người đoán đúng
-        </p>
-        <h2 className="reveal-title">{state.answer}</h2>
-        {state.clip && (
-          <div className="video-slot" ref={onVideoSlot}>
-            <div className="video-slot-frame" />
-            <div className="video-slot-bar" />
-          </div>
-        )}
-      </div>
-      <div className="reveal-side">
-        <h3>Bảng xếp hạng</h3>
-        <Leaderboard rows={state.leaderboard} />
-        <button className="btn btn-primary btn-xl" onClick={handleNext}>
-          {isLast ? '🏆 Xem kết quả' : 'Câu tiếp ▶'}
-        </button>
-      </div>
+      <p className="host-question-no">
+        Câu {state.qIndex + 1}/{state.qTotal} · {state.correctFeed.length}/{state.players.length} người đoán đúng
+      </p>
+      <h2 className="reveal-title">{state.answer}</h2>
+      {state.clip && <div className="video-slot" ref={onVideoSlot} />}
+      <button className="btn btn-ghost btn-sm skip-btn" onClick={handleSkip}>
+        Bỏ qua <SkipForward />
+      </button>
     </section>
   );
 }

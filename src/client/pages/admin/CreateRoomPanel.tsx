@@ -1,3 +1,4 @@
+import { Eye, Gamepad2 } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 import { DEFAULT_DURATION_SEC, DURATION_OPTIONS, type QuestionSetDto } from '../../../shared/types.ts';
 import { createRoom } from '../../lib/rooms.ts';
@@ -56,10 +57,10 @@ export function CreateRoomPanel({ set }: { set: QuestionSetDto }) {
           disabled={disabled}
           title="Chơi thử với 8 bot, xem trước đúng như ván thật"
         >
-          👁 Chơi thử
+          <Eye /> Chơi thử
         </button>
         <button className="btn btn-primary btn-lg" onClick={handleCreate} disabled={disabled}>
-          🎮 Tạo phòng chơi
+          <Gamepad2 /> Tạo phòng chơi
         </button>
       </div>
       {error && <p className="error-text">{error}</p>}

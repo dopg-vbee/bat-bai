@@ -1,3 +1,5 @@
+import { Emoji } from './Emoji.tsx';
+
 interface AvatarProps {
   avatar: string;
   color: string;
@@ -7,7 +9,7 @@ interface AvatarProps {
 export function Avatar({ avatar, color, size = 'md' }: AvatarProps) {
   return (
     <span className={`avatar avatar-${size}`} style={{ background: color }} aria-hidden>
-      {avatar}
+      <Emoji char={avatar} />
     </span>
   );
 }

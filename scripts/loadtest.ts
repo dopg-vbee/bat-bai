@@ -95,7 +95,7 @@ async function playRoom(roomNo: number) {
       await sleep(50);
     }
     const s = hostState! as HostState;
-    console.log(`Phòng ${created.code} câu ${round + 1}: ${s.correctFeed.length}/${bots.length} đúng, top: ${s.leaderboard[0]?.name} ${s.leaderboard[0]?.score}`);
+    console.log(`Phòng ${created.code} câu ${round + 1}: ${s.correctFeed.length}/${bots.length} đúng`);
     await sleep(1000);
   }
   host.emit('host:end');

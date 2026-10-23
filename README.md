@@ -9,11 +9,12 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
 3. Mỗi câu: đếm ngược 3 giây → **MP3 phát trên màn hình host** → người chơi gõ tên bài trên điện thoại.
    - Sai thì đoán lại được. Không cần gõ dấu, sai chính tả nhẹ vẫn tính.
    - Đúng càng nhanh càng nhiều điểm: **1000 → 500 điểm**.
-4. Hết giờ (hoặc khi mọi người đều đúng): màn hình lớn hiện đáp án, phát YouTube đúng đoạn đã chọn và hiện top 10.
-   - Mỗi câu đặt được điểm **Phát từ** và **Đến**. Bỏ trống "Đến" thì video phát tiếp cho tới khi host bấm câu tiếp.
+   - Ai đoán đúng thì avatar + tên bật lên màn hình lớn kèm tiếng "ting" (nhiều người đúng liên tiếp thì cao dần như chuỗi nốt nhạc).
+4. Hết giờ (hoặc khi mọi người đều đúng): màn hình lớn hiện đáp án và phát đoạn YouTube cỡ lớn ở giữa màn hình. Phát xong tự chuyển sang **bảng xếp hạng** khoảng 6 giây (các dòng trượt tới hạng mới, điểm đếm tăng), rồi **tự sang câu tiếp**. Host bấm "Bỏ qua" / "Câu tiếp ngay" nếu muốn nhanh hơn.
+   - Mỗi câu đặt được điểm **Phát từ** và **Đến**. Bỏ trống "Đến" thì phát 25 giây.
    - Nếu dán link có sẵn `?t=` (hoặc `start=`/`end=`), app tự điền hai ô này.
    - Ở trang quản lý bấm **▶ Xem trước đoạn YouTube** (trong form) hoặc **▶ YouTube 0:30 – 0:36** (ở từng câu) để nghe đúng đoạn đó.
-5. Host bấm **Câu tiếp**. Hết câu sẽ hiện bục vinh danh top 3. Bằng điểm thì ai trả lời nhanh hơn (tổng thời gian) xếp trên.
+5. Hết câu cuối sẽ hiện bục vinh danh top 3. Bằng điểm thì ai trả lời nhanh hơn (tổng thời gian) xếp trên.
 
 **Chơi thử trước:** ở trang quản lý, nút **👁 Chơi thử** tạo một phòng y hệt ván thật, có 8 bot tự vào và tự đoán. Nút **👁 Xem thử** ở từng câu chỉ chạy riêng câu đó, để kiểm MP3 và đoạn YouTube. Trong phòng chơi thử có nút **📱 Mở màn hình người chơi**, mở cửa sổ cỡ điện thoại để tự đoán như người chơi.
 
@@ -122,9 +123,11 @@ npm run loadtest -- --url http://localhost:3000 --rooms 3 --players 60
 ```
 src/server/   Express + Socket.IO: phòng chơi, chấm đáp án, API quản lý, lưu trữ (thư mục / S3)
 src/client/   React: trang chủ, màn người chơi, màn host, trang quản lý
-src/shared/   kiểu dữ liệu và xử lý link YouTube dùng chung
-scripts/      backup, restore, loadtest
+src/shared/   kiểu dữ liệu, xử lý link YouTube, danh sách emoji dùng chung
+scripts/      backup, restore, loadtest, build-emoji
 tests/        vitest
 ```
 
 Server chạy thẳng TypeScript bằng Node (type stripping), không cần bước biên dịch server.
+
+**Emoji:** icon giao diện dùng [Lucide](https://lucide.dev). Emoji là [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) (MIT), được sinh thành file SVG trong `src/client/public/emoji/` mỗi lần `npm run dev` / `npm run build`. Muốn dùng emoji mới thì thêm vào `src/shared/emoji.ts`. Các khoảnh khắc ăn mừng dùng emoji động [Google Noto](https://googlefonts.github.io/noto-emoji-animation/), nếu không tải được sẽ tự lùi về emoji Fluent tĩnh.

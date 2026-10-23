@@ -1,5 +1,7 @@
+import { Send } from 'lucide-react';
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import type { PlayerState } from '../../../shared/types.ts';
+import { AnimatedEmoji, EmojiText } from '../../components/Emoji.tsx';
 import { burst } from '../../lib/confetti.ts';
 import { socket, useServerNow } from '../../lib/socket.ts';
 
@@ -61,7 +63,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
   if (points !== null) {
     return (
       <section className="player-body center">
-        <div className="emoji-xl pop">✅</div>
+        <AnimatedEmoji char="🎉" className="pop" />
         <h2>Chính xác!</h2>
         <p className="points-gain">+{points}</p>
         <p className="muted-light">Chờ mọi người đoán xong nhé…</p>
@@ -82,7 +84,9 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
       <div className="time-bar">
         <div className="time-bar-fill" style={{ width: `${(remaining / total) * 100}%` }} />
       </div>
-      <h2 className="text-center">Bài hát này tên gì? 🎧</h2>
+      <h2 className="text-center">
+        <EmojiText text="Bài hát này tên gì? 🎧" />
+      </h2>
       <form className="guess-form" onSubmit={handleSubmit}>
         <input
           ref={inputRef}
@@ -98,11 +102,17 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
           autoFocus
         />
         <button className="btn btn-primary btn-lg" disabled={!text.trim() || sending || remaining <= 0}>
-          Gửi
+          <Send /> Gửi
         </button>
       </form>
-      {feedback && <p className={`feedback feedback-${feedback.kind}`}>{feedback.text}</p>}
-      <p className="hint">Không cần gõ dấu, sai chính tả nhẹ vẫn tính 😉</p>
+      {feedback && (
+        <p className={`feedback feedback-${feedback.kind}`}>
+          <EmojiText text={feedback.text} />
+        </p>
+      )}
+      <p className="hint">
+        <EmojiText text="Không phân biệt hoa thường, dấu câu, có dấu hay không 😉" />
+      </p>
     </section>
   );
 }

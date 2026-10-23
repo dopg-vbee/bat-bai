@@ -1,3 +1,4 @@
+import { Play, ScanQrCode, Smartphone, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import type { HostState, PlayerSummary } from '../../../shared/types.ts';
@@ -30,7 +31,7 @@ function PlayerChip({ player }: { player: PlayerSummary }) {
       <Avatar avatar={player.avatar} color={player.color} size="sm" />
       <span className="player-chip-name">{player.name}</span>
       <button className="player-chip-kick" onClick={handleKick} title="Mời ra">
-        ×
+        <X />
       </button>
     </li>
   );
@@ -57,7 +58,9 @@ export function HostLobby({ state }: { state: HostState }) {
   return (
     <section className="host-lobby">
       <div className="card join-card">
-        <p className="join-step">📱 Quét mã để vào chơi</p>
+        <p className="join-step">
+          <ScanQrCode /> Quét mã để vào chơi
+        </p>
         {qr ? <img className="qr" src={qr} alt={`QR vào phòng ${state.code}`} /> : <div className="qr" />}
         <p className="join-or">hoặc vào <strong>{joinUrl.replace(/\/play\/\d+$/, '')}</strong> và nhập mã</p>
         <div className="room-code">{state.code}</div>
@@ -73,7 +76,7 @@ export function HostLobby({ state }: { state: HostState }) {
               để tự trả lời trên "điện thoại".
             </p>
             <button className="btn btn-ghost" onClick={handleOpenPlayer}>
-              📱 Mở màn hình người chơi
+              <Smartphone /> Mở màn hình người chơi
             </button>
           </div>
         )}
@@ -83,7 +86,7 @@ export function HostLobby({ state }: { state: HostState }) {
           ))}
         </ul>
         <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!state.players.length}>
-          Bắt đầu ▶ ({state.qTotal} câu)
+          <Play /> Bắt đầu ({state.qTotal} câu)
         </button>
       </div>
     </section>
