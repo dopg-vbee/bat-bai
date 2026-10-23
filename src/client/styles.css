@@ -1520,7 +1520,7 @@ button {
 
 /* The reveal's video: as large as the screen allows below the title, kept 16:9 and centred. */
 .video-slot {
-  width: min(100%, calc((100dvh - 260px) * 16 / 9));
+  width: min(100%, calc((100dvh - 235px) * 16 / 9));
   aspect-ratio: 16 / 9;
 }
 

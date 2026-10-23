@@ -18,9 +18,6 @@ export function HostReveal({ state, onVideoSlot }: HostRevealProps) {
   return (
     <section className="host-reveal">
       {state.allCorrect && <AllCorrectCelebration />}
-      <p className="host-question-no">
-        Câu {state.qIndex + 1}/{state.qTotal} · {state.correctFeed.length}/{state.players.length} người đoán đúng
-      </p>
       <h2 className="reveal-title">{state.answer}</h2>
       {state.clip && <div className="video-slot" ref={onVideoSlot} />}
       <button className="btn btn-ghost icon-btn skip-btn" onClick={handleSkip} aria-label="Bỏ qua" title="Bỏ qua">
