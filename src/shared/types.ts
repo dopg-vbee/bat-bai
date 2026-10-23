@@ -18,6 +18,12 @@ export interface CorrectEntry extends PlayerIdentity {
   points: number;
 }
 
+/** A wrong guess, shown on the big screen. `key` is unique within the round. */
+export interface WrongEntry extends PlayerIdentity {
+  key: string;
+  text: string;
+}
+
 export interface RankRow extends PlayerIdentity {
   score: number;
   rank: number;
@@ -58,6 +64,8 @@ export interface HostState {
   /** Sent from the start of the round so the host can pre-buffer the video in HD (kept hidden). */
   clip: ClipInfo | null;
   correctFeed: CorrectEntry[];
+  /** Latest wrong guesses of the current round, oldest first. */
+  wrongFeed: WrongEntry[];
   /** Filled during the leaderboard phase and at the end. */
   leaderboard: RankRow[];
 }

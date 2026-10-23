@@ -910,11 +910,11 @@ button {
 
 .host-question {
   flex: 1;
-  display: grid;
-  grid-template-columns: 1fr minmax(300px, 420px) 1fr;
-  gap: 24px;
-  align-items: start;
-  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
 }
 
 .host-question-main {
@@ -1488,79 +1488,165 @@ button {
   margin-top: auto;
 }
 
-/* Correct answers stay on screen, in two columns either side of the timer. Chips are a uniform
-   grid: one per row while names are big, two per row once they shrink (min width is in em). */
-.correct-wall {
+/* Live answers under the question: a row split at the centre line. Correct answers (left) and
+   wrong guesses (right) enter next to the line and push older ones outwards (see AnswerStream). */
+/* --u: scale from the screen height (set by AnswerStream); every size below multiplies it. */
+.answer-stream {
+  --u: 1;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: calc(var(--u) * 190px);
+  margin-top: auto;
+}
+
+.stream-lane {
+  position: relative;
+  flex: 1;
+  height: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5em), 1fr));
-  align-content: start;
-  gap: 6px;
-  max-height: calc(100dvh - 100px);
   overflow: hidden;
 }
 
-/* Everything in a chip scales with its font size, which shrinks as the wall fills up. */
-.correct-chip {
+.stream-slot {
+  position: absolute;
+  bottom: 6px;
   display: flex;
+  justify-content: center;
+  transform-origin: center bottom;
+  transition:
+    transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.55s;
+}
+
+.stream-lane.correct .stream-slot {
+  right: 12px;
+}
+
+.stream-lane.wrong .stream-slot {
+  left: 12px;
+}
+
+.stream-correct {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.45em;
-  min-width: 0;
-  padding: 0.2em 0.75em 0.2em 0.2em;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-weight: 800;
-  font-size: inherit;
-  box-shadow: 0 6px 16px rgb(0 0 0 / 0.25);
+  gap: 4px;
+  max-width: 100%;
+  text-align: center;
 }
 
-.correct-wall.size-lg {
-  font-size: 1.85rem;
+.stream-correct .avatar {
+  width: calc(var(--u) * 84px);
+  height: calc(var(--u) * 84px);
+  font-size: calc(var(--u) * 3rem);
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.15),
+    0 0 0 3px rgb(134 239 172 / 0.6);
 }
 
-.correct-wall.size-md {
-  font-size: 1.4rem;
+.stream-slot.newest .stream-correct .avatar {
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.15),
+    0 0 0 4px #86efac,
+    0 0 28px rgb(34 197 94 / 0.7);
 }
 
-.correct-wall.size-sm {
-  font-size: 1.05rem;
-}
-
-.correct-wall.size-xs {
-  font-size: 0.95rem;
-}
-
-.correct-chip .avatar {
-  width: 1.75em;
-  height: 1.75em;
-  font-size: inherit;
-}
-
-.correct-chip.arriving {
-  animation: chip-pop 0.55s cubic-bezier(0.2, 1.6, 0.4, 1) both;
-}
-
-.correct-chip-name {
-  flex: 1;
-  min-width: 0;
+.stream-name {
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 800;
+  font-size: calc(var(--u) * 1.35rem);
+  line-height: 1.1;
 }
 
-.correct-chip-points {
+.stream-points {
   color: var(--success);
   font-weight: 800;
-  font-size: 0.75em;
+  font-size: calc(var(--u) * 1.1rem);
 }
 
-@keyframes chip-pop {
+.stream-wrong {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.wrong-text {
+  position: relative;
+  padding: 10px 14px;
+  border-radius: 18px 18px 18px 4px;
+  background: rgb(248 113 113 / 0.16);
+  border: 2px solid rgb(248 113 113 / 0.45);
+  color: var(--on-page);
+  font-weight: 700;
+  font-size: calc(var(--u) * 1.15rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-decoration: line-through;
+  text-decoration-color: rgb(248 113 113 / 0.7);
+  text-decoration-thickness: 2px;
+}
+
+.wrong-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: calc(var(--u) * 0.95rem);
+  opacity: 0.85;
+}
+
+.stream-correct.arriving,
+.stream-wrong.arriving {
+  animation: stream-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.stream-divider {
+  position: relative;
+  align-self: stretch;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, var(--white-20) 30%, var(--white-20));
+}
+
+.stream-label {
+  position: absolute;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.stream-label svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.stream-label.correct {
+  right: 10px;
+  color: var(--success-text);
+}
+
+.stream-label.wrong {
+  left: 10px;
+  color: var(--danger-text);
+}
+
+@keyframes stream-pop {
   from {
-    transform: scale(0.3);
+    transform: scale(0.2) translateY(30px);
     opacity: 0;
   }
   to {
@@ -1969,8 +2055,7 @@ span.emoji-animated {
 /* ---------- responsive ---------- */
 
 @media (max-width: 900px) {
-  .host-lobby,
-  .host-question {
+  .host-lobby {
     grid-template-columns: 1fr;
   }
 

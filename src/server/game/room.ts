@@ -54,6 +54,11 @@ const BOT_NAMES = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Mă
   .slice(0, PREVIEW_BOTS)
   .map((n) => `Bot ${n}`);
 const BOT_MISS_RATE = 0.25;
+/** Share of answering bots that first try another song of the set (makes "Chơi thử" lively). */
+const BOT_WRONG_RATE = 0.4;
+/** Wrong guesses kept per round for the big screen (older ones have scrolled off anyway). */
+const WRONG_FEED_SIZE = 40;
+const WRONG_TEXT_LENGTH = 40;
 const MAX_NAME_LENGTH = 20;
 const MAX_GUESS_LENGTH = 100;
 const GUESS_INTERVAL_MS = 300;
@@ -92,6 +97,8 @@ export class Room {
   private readonly onChange: () => void;
   private readonly players = new Map<string, Player>();
   private correctOrder: string[] = [];
+  private wrongGuesses: { key: string; playerId: string; text: string }[] = [];
+  private wrongCount = 0;
   /** 0 while running; when the host paused (round clocks and timers are frozen). */
   pausedAt = 0;
   private readonly timers = new PausableTimers();
@@ -249,7 +256,10 @@ export class Room {
     if (now - player.lastGuessAt < GUESS_INTERVAL_MS) return { status: 'slow' };
     player.lastGuessAt = now;
     this.lastActivity = now;
-    if (!isCorrect(text.slice(0, MAX_GUESS_LENGTH), this.questions[this.qIndex].title)) return { status: 'wrong' };
+    if (!isCorrect(text.slice(0, MAX_GUESS_LENGTH), this.questions[this.qIndex].title)) {
+      this.recordWrong(player.id, text);
+      return { status: 'wrong' };
+    }
 
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
     const points = scoreFor(elapsed, this.durationMs);
@@ -291,6 +301,10 @@ export class Room {
         inRound && question
           ? { youtubeId: question.youtubeId, startSec: question.startSec, endSec: question.endSec }
           : null,
+      wrongFeed: this.wrongGuesses.flatMap(({ key, playerId, text }) => {
+        const p = this.players.get(playerId);
+        return p ? [{ ...identity(p), key, text }] : [];
+      }),
       correctFeed: this.correctOrder.flatMap((id) => {
         const p = this.players.get(id);
         return p ? [{ ...identity(p), points: p.answers.get(this.qIndex)?.points ?? 0 }] : [];
@@ -351,6 +365,7 @@ export class Room {
     this.advanceAt = 0;
     this.allCorrect = false;
     this.correctOrder = [];
+    this.wrongGuesses = [];
     const now = Date.now();
     this.startsAt = now + this.countdownMs;
     this.endsAt = this.startsAt + this.durationMs;
@@ -359,13 +374,27 @@ export class Room {
     this.changed();
   }
 
-  /** Bots answer correctly at a random moment, or sometimes not at all. */
+  private recordWrong(playerId: string, text: string): void {
+    const clean = text.replace(/\s+/g, ' ').trim().slice(0, WRONG_TEXT_LENGTH);
+    if (!clean) return;
+    this.wrongGuesses.push({ key: String(++this.wrongCount), playerId, text: clean });
+    if (this.wrongGuesses.length > WRONG_FEED_SIZE) this.wrongGuesses.shift();
+    this.changed();
+  }
+
+  /** Bots answer correctly at a random moment (some try another song first), or not at all. */
   private scheduleBots(): void {
     this.clearBotTimers();
     const title = this.questions[this.qIndex].title;
+    const otherTitles = this.questions.map((q) => q.title).filter((t) => t !== title);
     for (const p of this.players.values()) {
       if (!p.bot || Math.random() < BOT_MISS_RATE) continue;
       const delay = this.countdownMs + this.durationMs * (0.1 + Math.random() * 0.7);
+      if (otherTitles.length && Math.random() < BOT_WRONG_RATE) {
+        const wrong = otherTitles[Math.floor(Math.random() * otherTitles.length)];
+        const wrongAt = Math.max(this.countdownMs + 200, delay - 1500);
+        this.botTimers.push(this.timers.set(wrongAt, () => this.guess(p.id, wrong)));
+      }
       this.botTimers.push(this.timers.set(delay, () => this.guess(p.id, title)));
     }
   }

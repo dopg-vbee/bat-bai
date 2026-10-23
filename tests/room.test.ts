@@ -141,6 +141,26 @@ describe('preview room', () => {
     expect(room.phase).toBe('reveal');
   });
 
+  it('shows wrong guesses on the big screen only, newest last, reset each round', () => {
+    const room = makeRoom(false);
+    const lan = room.join('Lan', undefined, 'socket-1');
+    if (typeof lan === 'string') throw new Error(lan);
+    room.next();
+    vi.advanceTimersByTime(3000 + 500);
+    room.guess(lan.id, '  nơi   này có anh  ');
+    vi.advanceTimersByTime(400);
+    room.guess(lan.id, 'x'.repeat(80));
+    const wrong = room.hostView().wrongFeed;
+    expect(wrong.map((w) => w.text)).toEqual(['nơi này có anh', 'x'.repeat(40)]);
+    expect(wrong[0]).toMatchObject({ name: 'Lan', key: '1' });
+    expect(JSON.stringify(room.playerViews())).not.toContain('nơi này có anh');
+
+    room.next(); // reveal
+    room.next(); // leaderboard
+    room.next(); // question 2
+    expect(room.hostView().wrongFeed).toEqual([]);
+  });
+
   it('a normal room has no bots', () => {
     expect(makeRoom(false).hostView().players).toHaveLength(0);
   });
