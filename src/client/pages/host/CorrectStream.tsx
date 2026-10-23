@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import type { CorrectEntry } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { playCorrectChime } from '../../lib/sfx.ts';
 
-// The newest correct answer sits in the middle of the screen; each new one pushes the older
-// ones to the left, shrinking and fading them. Items past the left edge are clipped.
+// The row of correct answers stays centred: each new one runs in from the right edge, stops
+// next to the previous one, and the whole row slides left by half a step to stay centred.
+// Once the row is wider than the screen, the newest stays at the right and the oldest leave
+// on the left (faded out by a mask on .correct-stream).
 const ITEM_WIDTH = 150;
 const GAP = 14;
-const SHRINK = 0.88;
-const MIN_SCALE = 0.55;
-const FADE_PER_STEP = 0.07;
-const MIN_OPACITY = 0.3;
+/** Room kept at the right edge once the row overflows. */
+const EDGE_MARGIN = 24;
 /** Answers arriving in the same update pop in one after another. */
 const STAGGER_MS = 160;
 /** Sizes above are for a ~900px tall screen; the strip scales with the screen height. */
@@ -18,22 +18,24 @@ const DESIGN_HEIGHT = 900;
 const MIN_UNIT = 0.8;
 const MAX_UNIT = 1.35;
 
-interface Slot {
-  offset: number;
-  scale: number;
-  opacity: number;
+/** Left edge of each item (oldest first) so the row is centred, or right-aligned if it overflows. */
+function layout(count: number, width: number, containerWidth: number): number[] {
+  const step = width + GAP;
+  const rowWidth = count * width + Math.max(0, count - 1) * GAP;
+  const start = rowWidth <= containerWidth ? (containerWidth - rowWidth) / 2 : containerWidth - EDGE_MARGIN - rowWidth;
+  return Array.from({ length: count }, (_, i) => start + i * step);
 }
 
-/** Slot k = k-th newest: centres are spaced by the (scaled) item width plus a gap. */
-function layout(count: number, width: number): Slot[] {
-  const slots: Slot[] = [];
-  let offset = 0;
-  for (let k = 0; k < count; k++) {
-    const scale = Math.max(MIN_SCALE, SHRINK ** k);
-    if (k > 0) offset += (width * (slots[k - 1].scale + scale)) / 2 + GAP * scale;
-    slots.push({ offset, scale, opacity: Math.max(MIN_OPACITY, 1 - k * FADE_PER_STEP) });
-  }
-  return slots;
+function useWidth(ref: RefObject<HTMLElement | null>) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+  return width;
 }
 
 export function useScreenUnit() {
@@ -72,40 +74,43 @@ export function useArrivals(ids: string[], onArrive?: () => void) {
   return (id: string) => delays.current?.get(id) ?? -1;
 }
 
-/** Correct answers of the round, newest in the middle of the screen, older ones pushed left. */
+/** Correct answers of the round in a centred row; newcomers run in from the right. */
 export function CorrectStream({ entries }: { entries: CorrectEntry[] }) {
   const unit = useScreenUnit();
   const width = ITEM_WIDTH * unit;
+  const listRef = useRef<HTMLOListElement>(null);
+  const containerWidth = useWidth(listRef);
   const chimes = useRef(0);
   const delayOf = useArrivals(
     entries.map((e) => e.id),
     () => playCorrectChime(chimes.current++),
   );
-  const newestFirst = [...entries].reverse();
-  const slots = layout(newestFirst.length, width);
+  const lefts = layout(entries.length, width, containerWidth);
 
   return (
-    <ol className="correct-stream" style={{ '--u': unit } as CSSProperties}>
-      {newestFirst.map((entry, k) => {
-        const { offset, scale, opacity } = slots[k];
-        const delay = delayOf(entry.id);
-        return (
-          <li
-            key={entry.id}
-            className={`stream-slot${k === 0 ? ' newest' : ''}`}
-            style={{ width, left: `calc(50% - ${width / 2}px)`, transform: `translateX(${-offset}px) scale(${scale})`, opacity }}
-          >
-            <div
-              className={`stream-correct${delay >= 0 ? ' arriving' : ''}`}
-              style={delay >= 0 ? { animationDelay: `${delay}ms` } : undefined}
-            >
-              <Avatar avatar={entry.avatar} color={entry.color} size="lg" />
-              <span className="stream-name">{entry.name}</span>
-              <span className="stream-points">+{entry.points}</span>
-            </div>
-          </li>
-        );
-      })}
+    <ol ref={listRef} className="correct-stream" style={{ '--u': unit } as CSSProperties}>
+      {containerWidth > 0 &&
+        entries.map((entry, i) => {
+          const delay = delayOf(entry.id);
+          const style = {
+            width,
+            transform: `translateX(${lefts[i]}px)`,
+            // Where a newcomer starts its run: just past the right edge.
+            '--enter-from': `${containerWidth - lefts[i]}px`,
+          } as CSSProperties;
+          return (
+            <li key={entry.id} className={`stream-slot${i === entries.length - 1 ? ' newest' : ''}`} style={style}>
+              <div
+                className={`stream-correct${delay >= 0 ? ' arriving' : ''}`}
+                style={delay >= 0 ? { animationDelay: `${delay}ms` } : undefined}
+              >
+                <Avatar avatar={entry.avatar} color={entry.color} size="lg" />
+                <span className="stream-name">{entry.name}</span>
+                <span className="stream-points">+{entry.points}</span>
+              </div>
+            </li>
+          );
+        })}
     </ol>
   );
 }

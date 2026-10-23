@@ -1489,8 +1489,8 @@ button {
   margin-top: auto;
 }
 
-/* Correct answers under the question: newest in the middle of the screen, older ones pushed left
-   (see CorrectStream). --u scales everything with the screen height. */
+/* Correct answers under the question: a centred row, newcomers run in from the right (see
+   CorrectStream). --u scales everything with the screen height. */
 .correct-stream {
   --u: 1;
   position: relative;
@@ -1500,17 +1500,17 @@ button {
   padding: 0;
   list-style: none;
   overflow: hidden;
+  /* Players leaving on the left fade out instead of being cut. */
+  mask-image: linear-gradient(to right, transparent 0, #000 120px);
 }
 
 .stream-slot {
   position: absolute;
   bottom: 6px;
+  left: 0;
   display: flex;
   justify-content: center;
-  transform-origin: center bottom;
-  transition:
-    transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 0.55s;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .stream-correct {
@@ -1554,8 +1554,15 @@ button {
   font-size: calc(var(--u) * 1.1rem);
 }
 
+/* Runs in from the right edge to its place next to the previous player. */
 .stream-correct.arriving {
-  animation: stream-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  animation: stream-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes stream-enter {
+  from {
+    transform: translateX(var(--enter-from));
+  }
 }
 
 /* Latest wrong guesses down the left edge: newest on top, older ones pushed down and fading. */
@@ -1618,17 +1625,6 @@ button {
   from {
     transform: translateY(-16px) scale(0.9);
     opacity: 0;
-  }
-}
-
-@keyframes stream-pop {
-  from {
-    transform: scale(0.2) translateY(30px);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
   }
 }
 
