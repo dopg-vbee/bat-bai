@@ -43,11 +43,28 @@ function levenshtein(a: string, b: string, max = Infinity): number {
   return prev[b.length];
 }
 
-export function isCorrect(guess: string, title: string): boolean {
+/** A few more typos than allowed still earns a "so close" on the phone (still a wrong guess). */
+const closeTypos = (length: number) => allowedTypos(length) + (length < 5 ? 1 : 2);
+/** "lạc trôi sơn tùng" counts for "Lạc Trôi": extra words after a name this long are ignored. */
+const PREFIX_MIN_LENGTH = 5;
+
+export type GuessMatch = 'correct' | 'close' | 'wrong';
+
+export function checkGuess(guess: string, title: string): GuessMatch {
   const attempt = compact(guess);
-  if (!attempt) return false;
-  return acceptedForms(title).some((form) => {
+  if (!attempt) return 'wrong';
+  let close = false;
+  for (const form of acceptedForms(title)) {
     const max = allowedTypos(form.length);
-    return levenshtein(attempt, form, max) <= max;
-  });
+    if (levenshtein(attempt, form, max) <= max) return 'correct';
+    const startsWithName =
+      form.length >= PREFIX_MIN_LENGTH &&
+      attempt.length > form.length &&
+      levenshtein(attempt.slice(0, form.length), form, max) <= max;
+    if (startsWithName) return 'correct';
+    // Half the name at least, so a stray letter or two isn't "close" to every short title.
+    const near = closeTypos(form.length);
+    if (attempt.length * 2 >= form.length && levenshtein(attempt, form, near) <= near) close = true;
+  }
+  return close ? 'close' : 'wrong';
 }

@@ -124,7 +124,8 @@ type Ack<T extends object = object> = ({ ok: true } & T) | { ok: false; error: s
 
 export type GuessResult =
   | { status: 'correct'; points: number; gift: number; streak: number }
-  | { status: 'wrong' | 'closed' | 'slow' | 'already' | 'paused' };
+  /** close: wrong, but nearly the name (a typo or two too many, a word missing). */
+  | { status: 'wrong' | 'close' | 'closed' | 'slow' | 'already' | 'paused' };
 
 export interface CreateRoomInput {
   password: string;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isCorrect, normalize } from '../src/server/game/match.ts';
+import { checkGuess, normalize } from '../src/server/game/match.ts';
 import { scoreFor } from '../src/server/game/room.ts';
 
 describe('normalize', () => {
@@ -13,7 +13,9 @@ describe('normalize', () => {
   });
 });
 
-describe('isCorrect', () => {
+const isCorrect = (guess: string, title: string) => checkGuess(guess, title) === 'correct';
+
+describe('checkGuess', () => {
   const title = 'Nơi Này Có Anh';
 
   it('accepts exact, unaccented, spacing and case variants', () => {
@@ -50,6 +52,22 @@ describe('isCorrect', () => {
     expect(isCorrect('', title)).toBe(false);
     expect(isCorrect('!!!', title)).toBe(false);
     expect(isCorrect('Lạc Trôi', title)).toBe(false);
+    expect(checkGuess('Lạc Trôi', title)).toBe('wrong');
+  });
+
+  it('accepts the name followed by extra words such as the artist', () => {
+    expect(isCorrect('lạc trôi sơn tùng', 'Lạc Trôi')).toBe(true);
+    expect(isCorrect('lac troj son tung mtp', 'Lạc Trôi')).toBe(true); // a typo in the name is still forgiven
+    expect(isCorrect('bong dua', 'Bông')).toBe(false); // too short a name to take a prefix
+    expect(isCorrect('noi nay', title)).toBe(false); // the start of the name is not enough
+  });
+
+  it('calls a guess a few typos or a word away close, still not correct', () => {
+    expect(checkGuess('noi nay co em', title)).toBe('close');
+    expect(checkGuess('noi nay co', title)).toBe('close');
+    expect(checkGuess('Bang', 'Bông')).toBe('close');
+    expect(checkGuess('no', title)).toBe('wrong'); // a couple of letters are close to nothing
+    expect(checkGuess('hay trao cho anh', title)).toBe('wrong');
   });
 });
 

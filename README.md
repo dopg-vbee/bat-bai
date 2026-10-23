@@ -7,8 +7,9 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
 1. Host vào **/admin**, chọn bộ đề, bấm **Tạo phòng chơi**. Màn hình lớn hiện QR và mã phòng 4 số.
 2. Người chơi quét QR (hoặc vào trang chủ, nhập mã) rồi nhập tên.
 3. Mỗi câu: đếm ngược 3 giây → **MP3 phát trên màn hình host** → người chơi gõ tên bài trên điện thoại.
-   - Sai thì đoán lại được. Không cần gõ dấu, sai chính tả nhẹ vẫn tính.
+   - Sai thì đoán lại được. Không cần gõ dấu, sai chính tả nhẹ vẫn tính, gõ thêm tên ca sĩ sau tên bài cũng tính. Đoán sát mà chưa đúng thì điện thoại báo **"Gần đúng rồi!"**.
    - Đúng càng nhanh càng nhiều điểm: **1000 → 500 điểm**.
+   - **🔥 Chuỗi đúng:** từ câu đúng thứ 3 liên tiếp, avatar bốc cháy và mỗi câu được thưởng **+50**, tăng dần tới **+300** (chuỗi 8). Trượt một câu là mất chuỗi.
    - **⚡ Câu may mắn:** khoảng 1/5 số câu (không bao giờ là câu đầu) được chọn ngẫu nhiên tính **x2 điểm**. Chỉ lộ ra lúc đếm ngược câu đó.
    - **🎁 Hộp quà:** mỗi lần đoán đúng có 15% cơ hội được thưởng thêm ngẫu nhiên **+100 đến +300** điểm.
    - Ai đoán đúng thì avatar + tên bật lên màn hình lớn kèm tiếng "ting" (nhiều người đúng liên tiếp thì cao dần như chuỗi nốt nhạc).

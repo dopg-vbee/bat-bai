@@ -433,6 +433,11 @@ button {
   color: #fecaca;
 }
 
+/* Wrong, but nearly the name. */
+.feedback-close {
+  color: #fde68a;
+}
+
 .hint {
   text-align: center;
   opacity: 0.75;

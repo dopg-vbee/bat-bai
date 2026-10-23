@@ -7,7 +7,7 @@ import { DoubleTag, GiftTag, LuckyBanner } from '../../components/Luck.tsx';
 import { burst } from '../../lib/confetti.ts';
 import { socket, useServerNow } from '../../lib/socket.ts';
 
-type Feedback = { kind: 'wrong' | 'info'; text: string } | null;
+type Feedback = { kind: 'wrong' | 'close' | 'info'; text: string } | null;
 
 const SHAKE = [0, -10, 10, -8, 8, 0].map((x) => ({ transform: `translateX(${x}px)` }));
 
@@ -35,8 +35,12 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
       if (res.status === 'correct') {
         setEarned({ points: res.points, gift: res.gift, streak: res.streak });
         burst();
-      } else if (res.status === 'wrong') {
-        setFeedback({ kind: 'wrong', text: 'Chưa đúng rồi, thử lại!' });
+      } else if (res.status === 'wrong' || res.status === 'close') {
+        setFeedback(
+          res.status === 'close'
+            ? { kind: 'close', text: 'Gần đúng rồi, thử lại!' }
+            : { kind: 'wrong', text: 'Chưa đúng rồi, thử lại!' },
+        );
         inputRef.current?.animate(SHAKE, { duration: 400 });
         inputRef.current?.select();
       } else if (res.status === 'slow') {

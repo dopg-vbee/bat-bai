@@ -15,7 +15,7 @@ import {
   type WrongEntry,
 } from '../../shared/types.ts';
 import { AVATARS } from '../../shared/emoji.ts';
-import { isCorrect } from './match.ts';
+import { checkGuess } from './match.ts';
 import { PausableTimers, type TimerEntry } from './timers.ts';
 
 export interface GameQuestion {
@@ -302,10 +302,11 @@ export class Room {
     if (now - player.lastGuessAt < GUESS_INTERVAL_MS) return { status: 'slow' };
     player.lastGuessAt = now;
     this.lastActivity = now;
-    if (!isCorrect(text.slice(0, MAX_GUESS_LENGTH), this.questions[this.qIndex].title)) {
+    const match = checkGuess(text.slice(0, MAX_GUESS_LENGTH), this.questions[this.qIndex].title);
+    if (match !== 'correct') {
       player.wrongTotal++;
       this.recordWrong(text);
-      return { status: 'wrong' };
+      return { status: match };
     }
 
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
