@@ -41,7 +41,7 @@ interface Player {
   answers: Map<number, { points: number; gift: number; ms: number }>;
 }
 
-export interface RoomOptions {
+interface RoomOptions {
   code: string;
   setName: string;
   questions: GameQuestion[];
@@ -78,7 +78,7 @@ export function pickLuck(questionCount: number, random = Math.random): Luck {
 }
 
 /** Room size: ~60 players expected, with headroom for 100-bot load tests plus real players. */
-export const MAX_PLAYERS = 150;
+const MAX_PLAYERS = 150;
 const BOT_FRUITS = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Măng Cụt', 'Sầu Riêng'];
 const botName = (i: number) => `Bot ${BOT_FRUITS[i] ?? i + 1}`;
 const BOT_MISS_RATE = 0.25;
@@ -355,6 +355,9 @@ export class Room {
       this.phase === 'ended'
         ? ranked.slice(0, 3).map((p) => ({ name: p.name, avatar: p.avatar, color: p.color, score: p.score }))
         : null;
+    // Phones only show the rank after the reveal; holding it during the question keeps everyone
+    // else's state unchanged when one player scores, so it isn't re-sent to all of them.
+    const holdRank = this.phase === 'question';
     return ranked.flatMap((p, i) =>
       p.socketId
         ? [
@@ -363,7 +366,12 @@ export class Room {
               state: {
                 ...base,
                 playerCount: this.players.size,
-                me: { ...identity(p), score: p.score, rank: i + 1, delta: p.prevRank - (i + 1) },
+                me: {
+                  ...identity(p),
+                  score: p.score,
+                  rank: holdRank ? p.prevRank : i + 1,
+                  delta: holdRank ? 0 : p.prevRank - (i + 1),
+                },
                 round: {
                   correct: p.answers.has(this.qIndex),
                   points: p.answers.get(this.qIndex)?.points ?? 0,

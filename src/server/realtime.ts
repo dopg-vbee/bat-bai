@@ -13,7 +13,7 @@ interface SocketData {
 export type GameServer = Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
 type GameSocket = Parameters<Parameters<GameServer['on']>[1]>[0];
 
-export interface RealtimeOptions {
+interface RealtimeOptions {
   adminPassword: string;
   countdownMs: number;
 }
@@ -39,12 +39,22 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
   let flushTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Changes are coalesced: a burst of 60 joins or correct answers becomes one push per client.
+  /** Last state sent to each phone, per room: a phone whose state did not change gets nothing. */
+  const sentToPhones = new WeakMap<Room, Map<string, string>>();
+
   function flush() {
     flushTimer = null;
     for (const room of dirty) {
       if (rooms.get(room.code) !== room) continue;
       io.to(hostChannel(room.code)).emit('hostState', room.hostView());
-      for (const { socketId, state } of room.playerViews()) io.to(socketId).emit('playerState', state);
+      const previous = sentToPhones.get(room);
+      const current = new Map<string, string>();
+      for (const { socketId, state } of room.playerViews()) {
+        const json = JSON.stringify(state);
+        current.set(socketId, json);
+        if (previous?.get(socketId) !== json) io.to(socketId).emit('playerState', state);
+      }
+      sentToPhones.set(room, current);
     }
     dirty.clear();
   }
@@ -156,6 +166,8 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       const result = room.join(String(input.name ?? ''), input.token ? String(input.token) : undefined, socket.id);
       if (typeof result === 'string') return cb({ ok: false, error: result });
       socket.data = { role: 'player', code: room.code, playerId: result.id };
+      // A (re)joining screen has no state yet: make the next flush send it even if unchanged.
+      sentToPhones.get(room)?.delete(socket.id);
       cb({ ok: true, playerId: result.id, token: result.token });
     });
 

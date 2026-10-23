@@ -4,7 +4,7 @@ import type { BlobStore } from './storage/types.ts';
 
 export const DEFAULT_ADMIN_PASSWORD = 'batbai';
 
-export interface Config {
+interface Config {
   port: number;
   adminPassword: string;
   publicUrl?: string;

@@ -261,6 +261,48 @@ describe('preview rooms', () => {
   });
 });
 
+describe('phone updates', () => {
+  it('a phone re-joining on the same connection gets its state again', async () => {
+    const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
+    const host = client();
+    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, shuffle: false });
+    if (!created.ok) throw new Error(created.error);
+    const phone = client();
+    const states: PlayerState[] = [];
+    phone.on('playerState', (s) => states.push(s));
+    const joined = await phone.emitWithAck('player:join', { code: created.code, name: 'Lan' });
+    if (!joined.ok) throw new Error(joined.error);
+    await waitFor(() => states.length === 1, 3000, 'first state');
+    await phone.emitWithAck('player:join', { code: created.code, name: 'Lan', token: joined.token });
+    await waitFor(() => states.length === 2, 3000, 'state after re-join');
+  });
+
+  it('only the phone whose state changed is sent an update during a question', async () => {
+    const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
+    const host = client();
+    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, shuffle: false });
+    if (!created.ok) throw new Error(created.error);
+    await host.emitWithAck('host:join', { code: created.code, hostToken: created.hostToken });
+    const phones = await Promise.all(
+      Array.from({ length: 5 }, async (_, i) => {
+        const socket = client();
+        const states: PlayerState[] = [];
+        socket.on('playerState', (s) => states.push(s));
+        await socket.emitWithAck('player:join', { code: created.code, name: `Máy ${i}` });
+        return { socket, states };
+      }),
+    );
+    host.emit('host:next');
+    await waitFor(() => phones.every((p) => p.states.at(-1)?.phase === 'question'), 3000, 'question');
+    await sleep(200);
+    const before = phones.map((p) => p.states.length);
+    await phones[0].socket.emitWithAck('player:guess', 'lac troi');
+    await phones[1].socket.emitWithAck('player:guess', 'sai bét');
+    await sleep(300);
+    expect(phones.map((p, i) => p.states.length - before[i])).toEqual([1, 0, 0, 0, 0]);
+  });
+});
+
 describe('switching rooms on the same connection', () => {
   async function createRoom(host: Client, preview: boolean) {
     const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;

@@ -1,15 +1,23 @@
+import { lazy, Suspense } from 'react';
 import { usePath } from './lib/router.tsx';
-import { AdminPage } from './pages/admin/AdminPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
-import { HostPage } from './pages/host/HostPage.tsx';
 import { PlayPage } from './pages/play/PlayPage.tsx';
+
+// Phones only need the home and play pages; the admin and big-screen code loads on demand.
+const AdminPage = lazy(() => import('./pages/admin/AdminPage.tsx').then((m) => ({ default: m.AdminPage })));
+const HostPage = lazy(() => import('./pages/host/HostPage.tsx').then((m) => ({ default: m.HostPage })));
+
+const loading = (
+  <main className="screen center">
+    <div className="spinner" />
+  </main>
+);
 
 export function App() {
   const path = usePath();
   const host = /^\/host\/(\d{4})\/?$/.exec(path);
   const play = /^\/play\/(\d{4})\/?$/.exec(path);
-  if (path.startsWith('/admin')) return <AdminPage />;
-  if (host) return <HostPage key={host[1]} code={host[1]} />;
   if (play) return <PlayPage key={play[1]} code={play[1]} />;
-  return <HomePage />;
+  if (!host && !path.startsWith('/admin')) return <HomePage />;
+  return <Suspense fallback={loading}>{host ? <HostPage key={host[1]} code={host[1]} /> : <AdminPage />}</Suspense>;
 }

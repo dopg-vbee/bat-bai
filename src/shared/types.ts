@@ -1,7 +1,7 @@
 /** A round: question → reveal (answer video) → leaderboard (a few seconds) → next question. */
 export type Phase = 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'ended';
 
-export interface PlayerIdentity {
+interface PlayerIdentity {
   id: string;
   name: string;
   avatar: string;
@@ -101,7 +101,7 @@ export interface PlayerState {
   podium: PodiumEntry[] | null;
 }
 
-export type Ack<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
+type Ack<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
 
 export type GuessResult =
   | { status: 'correct'; points: number; gift: number }
@@ -119,7 +119,7 @@ export interface CreateRoomInput {
   questionId?: string;
 }
 
-export interface JoinInput {
+interface JoinInput {
   code: string;
   name: string;
   token?: string;

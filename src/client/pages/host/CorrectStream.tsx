@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { memo, useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import type { CorrectEntry } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { GiftTag } from '../../components/Luck.tsx';
@@ -80,8 +80,9 @@ export function useArrivals(ids: string[], onArrive?: () => void) {
   return (id: string) => delays.current?.get(id) ?? -1;
 }
 
-/** Correct answers of the round in a centred row; newcomers run in from the right. */
-export function CorrectStream({ entries }: { entries: CorrectEntry[] }) {
+/** Correct answers of the round in a centred row; newcomers run in from the right. Memoised:
+ * the question screen re-renders ten times a second for its clock. */
+export const CorrectStream = memo(function CorrectStream({ entries }: { entries: CorrectEntry[] }) {
   const listRef = useRef<HTMLOListElement>(null);
   const { width: containerWidth, height } = useSize(listRef);
   const width = Math.min(MAX_ITEM_WIDTH, Math.max(MIN_ITEM_WIDTH, height * WIDTH_PER_HEIGHT));
@@ -121,4 +122,4 @@ export function CorrectStream({ entries }: { entries: CorrectEntry[] }) {
         })}
     </ol>
   );
-}
+});

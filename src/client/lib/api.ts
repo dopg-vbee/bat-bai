@@ -1,14 +1,5 @@
 import { readStorage, storageKeys, writeStorage } from './storage.ts';
 
-export class ApiError extends Error {
-  readonly status: number;
-
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
-
 export const getAdminPassword = () => readStorage(storageKeys.adminPassword) ?? '';
 export const setAdminPassword = (password: string | null) => writeStorage(storageKeys.adminPassword, password);
 
@@ -17,6 +8,6 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (init.body && !(init.body instanceof FormData)) headers['Content-Type'] = 'application/json';
   const res = await fetch(`/api/admin${path}`, { ...init, headers });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, data.error ?? 'Có lỗi xảy ra, thử lại nhé');
+  if (!res.ok) throw new Error(data.error ?? 'Có lỗi xảy ra, thử lại nhé');
   return data as T;
 }

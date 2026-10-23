@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import type { CSSProperties } from 'react';
+import { memo, type CSSProperties } from 'react';
 import type { WrongEntry } from '../../../shared/types.ts';
 import { useArrivals, useScreenUnit } from './CorrectStream.tsx';
 
@@ -7,7 +7,7 @@ const VISIBLE = 10;
 const FADE_PER_STEP = 0.08;
 
 /** The latest wrong guesses (text only, anonymous) down the left edge, newest on top, fading out. */
-export function WrongList({ entries }: { entries: WrongEntry[] }) {
+export const WrongList = memo(function WrongList({ entries }: { entries: WrongEntry[] }) {
   const unit = useScreenUnit();
   const delayOf = useArrivals(entries.map((e) => e.key));
   const latest = entries.slice(-VISIBLE).reverse();
@@ -32,4 +32,4 @@ export function WrongList({ entries }: { entries: WrongEntry[] }) {
       </ol>
     </aside>
   );
-}
+});

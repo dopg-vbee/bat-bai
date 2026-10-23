@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { readStorage, storageKeys, writeStorage } from './storage.ts';
 
-export type Theme = 'dark' | 'light';
+type Theme = 'dark' | 'light';
 
 // Matches the theme-color meta / first paint set by the inline script in index.html.
 const BROWSER_BAR_COLOR: Record<Theme, string> = { dark: '#0c0a18', light: '#6d28d9' };

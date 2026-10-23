@@ -345,12 +345,6 @@ button {
   animation: spin 0.8s linear infinite;
 }
 
-.spinner-dark {
-  border-color: var(--surface-3);
-  border-top-color: var(--accent);
-  margin: 12px auto;
-}
-
 /* ---------- player ---------- */
 
 .player-screen {
@@ -984,13 +978,6 @@ button {
   font-size: clamp(2rem, 4vw, 3.2rem);
 }
 
-.host-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
 .host-reveal {
   flex: 1;
   display: flex;
@@ -1209,23 +1196,6 @@ button {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.yt-preview {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--accent);
-  font-weight: 700;
-  text-decoration: none;
-  align-self: flex-start;
-}
-
-.yt-preview img {
-  width: 120px;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: 8px;
 }
 
 .dropzone-field {

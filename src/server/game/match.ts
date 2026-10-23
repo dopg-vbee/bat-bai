@@ -12,15 +12,22 @@ export function normalize(text: string): string {
 const compact = (text: string) => normalize(text).replace(/ /g, '');
 
 /** "Lạc Trôi (Remix)" also accepts "Lạc Trôi"; "See Tình - Hoàng Thùy Linh" also accepts "See Tình". */
+/** Computed once per title: every guess of the round is checked against the same forms. */
+const formsCache = new Map<string, string[]>();
 function acceptedForms(title: string): string[] {
-  const forms = [title, title.replace(/\([^)]*\)|\[[^\]]*\]/g, ' '), title.split(/\s[-–—|]\s/)[0]];
-  return [...new Set(forms.map(compact).filter(Boolean))];
+  let forms = formsCache.get(title);
+  if (!forms) {
+    const variants = [title, title.replace(/\([^)]*\)|\[[^\]]*\]/g, ' '), title.split(/\s[-–—|]\s/)[0]];
+    forms = [...new Set(variants.map(compact).filter(Boolean))];
+    formsCache.set(title, forms);
+  }
+  return forms;
 }
 
 /** Typos forgiven grow with the answer length; short names must be exact. */
 const allowedTypos = (length: number) => (length < 5 ? 0 : length < 9 ? 1 : length < 15 ? 2 : 3);
 
-export function levenshtein(a: string, b: string, max = Infinity): number {
+function levenshtein(a: string, b: string, max = Infinity): number {
   if (Math.abs(a.length - b.length) > max) return max + 1;
   let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {

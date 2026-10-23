@@ -12,7 +12,7 @@ import { lanAddresses } from './network.ts';
 import { setupRealtime, type GameServer } from './realtime.ts';
 import type { BlobStore } from './storage/types.ts';
 
-export interface AppOptions {
+interface AppOptions {
   store: BlobStore;
   adminPassword: string;
   countdownMs?: number;
@@ -23,7 +23,8 @@ export interface AppOptions {
 }
 
 const CLIENT_DIR = path.resolve(import.meta.dirname, '../../dist/client');
-const AUDIO_CACHE_SIZE = 40;
+/** MP3s kept in memory (oldest dropped first); clips are ~0.2–1MB, uploads up to 20MB. */
+const AUDIO_CACHE_BYTES = 64 * 1024 * 1024;
 
 /** Only live questions matter: deleted ones keep their (possibly gone) audio for history. */
 async function warnMissingAudio(library: Library, store: BlobStore) {
@@ -37,6 +38,7 @@ async function warnMissingAudio(library: Library, store: BlobStore) {
 /** Serves stored MP3s with Range support (Safari requires 206 responses for media). */
 function mediaHandler(store: BlobStore): RequestHandler {
   const cache = new Map<string, Buffer>();
+  let cachedBytes = 0;
   return async (req, res) => {
     const match = /^([a-f0-9]{64})\.mp3$/.exec(String(req.params.file));
     if (!match) return void res.sendStatus(404);
@@ -45,7 +47,12 @@ function mediaHandler(store: BlobStore): RequestHandler {
       data = (await store.get(audioKey(match[1]))) ?? undefined;
       if (!data) return void res.sendStatus(404);
       cache.set(match[1], data);
-      if (cache.size > AUDIO_CACHE_SIZE) cache.delete(cache.keys().next().value!);
+      cachedBytes += data.length;
+      for (const [hash, old] of cache) {
+        if (cachedBytes <= AUDIO_CACHE_BYTES || cache.size === 1) break;
+        cache.delete(hash);
+        cachedBytes -= old.length;
+      }
     }
     res.set({
       'Content-Type': 'audio/mpeg',
