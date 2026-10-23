@@ -1,38 +1,39 @@
 // Sound effects synthesised with Web Audio: no files to download, no licensing.
 
 let context: AudioContext | null = null;
+let output: AudioNode;
 
 function audio(): AudioContext {
-  context ??= new AudioContext();
+  if (!context) {
+    context = new AudioContext();
+    // Overlapping sounds (a burst of correct answers) are squeezed instead of clipping harshly.
+    output = context.createDynamicsCompressor();
+    output.connect(context.destination);
+  }
   // Starts suspended until the page has had a click; the host has clicked "Bắt đầu" by now.
   if (context.state === 'suspended') void context.resume();
   return context;
 }
 
-const MAJOR_SCALE = [0, 2, 4, 5, 7, 9, 11, 12];
-const BASE_HZ = 784; // G5
+const PENTATONIC = [0, 2, 4, 7, 9, 12];
+const BASE_HZ = 523.25; // C5
 const VOLUME = 0.22;
+const CHIME_VOLUME = 0.12;
+/** Answers landing closer than this share one chime. */
+const CHIME_MIN_GAP_SEC = 0.09;
+let lastChimeAt = -Infinity;
 
 /**
- * Bright two-note "ting" for a correct answer. `step` walks up a major scale, so a burst
+ * Soft two-note "ting" for a correct answer. `step` walks up a pentatonic scale, so a burst
  * of correct answers climbs like an arpeggio instead of repeating the same beep.
  */
 export function playCorrectChime(step = 0) {
   const ac = audio();
-  const root = BASE_HZ * 2 ** (MAJOR_SCALE[step % MAJOR_SCALE.length] / 12);
-  [1, 1.5].forEach((ratio, i) => {
-    const start = ac.currentTime + i * 0.07;
-    const osc = ac.createOscillator();
-    const gain = ac.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = root * ratio;
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(VOLUME, start + 0.012);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.4);
-    osc.connect(gain).connect(ac.destination);
-    osc.start(start);
-    osc.stop(start + 0.45);
-  });
+  if (ac.currentTime - lastChimeAt < CHIME_MIN_GAP_SEC) return;
+  lastChimeAt = ac.currentTime;
+  const root = BASE_HZ * 2 ** (PENTATONIC[step % PENTATONIC.length] / 12);
+  note(ac, root, ac.currentTime, 0.4, CHIME_VOLUME, 'sine');
+  note(ac, root * 1.5, ac.currentTime + 0.07, 0.4, CHIME_VOLUME * 0.7, 'sine');
 }
 
 const FANFARE_NOTES = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
@@ -45,7 +46,7 @@ function note(ac: AudioContext, hz: number, start: number, length: number, volum
   gain.gain.setValueAtTime(0.0001, start);
   gain.gain.exponentialRampToValueAtTime(volume, start + 0.015);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + length);
-  osc.connect(gain).connect(ac.destination);
+  osc.connect(gain).connect(output);
   osc.start(start);
   osc.stop(start + length + 0.05);
 }

@@ -8,8 +8,8 @@ import { playCorrectChime } from '../../lib/sfx.ts';
 // next to the previous one, and the whole row slides left by half a step to stay centred.
 // Once the row is wider than the screen, the newest stays at the right and the oldest leave
 // on the left (faded out by a mask on .correct-stream).
-/** Item width and avatar size as a share of the row's height (it fills the space left). */
-const WIDTH_PER_HEIGHT = 0.9;
+/** Item width as a share of the row's height; leaves headroom for the newest avatar's ring. */
+const WIDTH_PER_HEIGHT = 0.85;
 const MIN_ITEM_WIDTH = 120;
 const MAX_ITEM_WIDTH = 380;
 const GAP = 14;
