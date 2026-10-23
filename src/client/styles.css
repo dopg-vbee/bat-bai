@@ -914,8 +914,8 @@ button {
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  /* The answer row gets a third of the screen; the top row takes the rest, content centred. */
-  grid-template-rows: minmax(0, 1fr) clamp(180px, 34vh, 420px);
+  /* The answer row gets ~30% of the screen; the top row takes the rest, content centred. */
+  grid-template-rows: minmax(0, 1fr) clamp(170px, 29vh, 360px);
   grid-template-areas:
     'wrong main stats'
     'stream stream stream';
