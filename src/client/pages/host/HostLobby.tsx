@@ -47,7 +47,7 @@ export function HostLobby({ state }: { state: HostState }) {
   const [qr, setQr] = useState('');
 
   useEffect(() => {
-    QRCode.toDataURL(joinUrl, { width: 480, margin: 1 })
+    QRCode.toDataURL(joinUrl, { width: 900, margin: 1 })
       .then(setQr)
       .catch(() => setQr(''));
   }, [joinUrl]);

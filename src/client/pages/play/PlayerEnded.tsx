@@ -16,7 +16,7 @@ export function PlayerEnded({ state }: { state: PlayerState }) {
 
   return (
     <section className="player-body center">
-      {onPodium && <AnimatedEmoji char="🏆" className="pop" />}
+      {onPodium && <AnimatedEmoji char="🏆" className="pop" once />}
       <h2>{onPodium ? 'Bạn lên bục vinh danh!' : 'Kết thúc rồi!'}</h2>
       <div className="rank-line">
         <span>Bạn hạng</span>

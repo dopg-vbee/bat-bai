@@ -47,7 +47,7 @@ export function PlayPage({ code }: { code: string }) {
   }, [code]);
 
   useEffect(() => {
-    preloadAnimatedEmoji(CELEBRATIONS);
+    preloadAnimatedEmoji(CELEBRATIONS, { once: true });
   }, []);
 
   // Rejoin with the saved token on every (re)connect: phones sleep and drop sockets often.

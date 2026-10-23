@@ -10,10 +10,12 @@ const MOVE_MS = 1200;
 const RENUMBER_DELAY_MS = MOVE_MS / 2;
 const COUNT_UP_MS = 1200;
 const ROW_GAP = 8;
-const MAX_PITCH = 64;
+const MAX_PITCH = 96;
 const MIN_PITCH = 40;
 /** Header, title, progress bar and button around the list on the host screen. */
-const RESERVED_HEIGHT = 250;
+const RESERVED_HEIGHT = 310;
+/** Text size as a share of the row pitch: everything in a row scales with it. */
+const FONT_PER_PITCH = 0.46;
 
 /** Row height plus gap, shrunk so the whole list fits the screen height. Rows are absolutely positioned. */
 function useRowPitch(count: number) {
@@ -72,7 +74,7 @@ export function AnimatedLeaderboard({ rows }: { rows: RankRow[] }) {
   }, []);
 
   return (
-    <ol className="lb-anim" style={{ height: rows.length * pitch }}>
+    <ol className="lb-anim" style={{ height: rows.length * pitch, fontSize: Math.round(pitch * FONT_PER_PITCH) }}>
       {rows.map((row) => {
         const prevRank = row.rank + row.delta;
         const fromOutside = prevRank > rows.length;

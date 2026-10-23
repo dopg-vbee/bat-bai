@@ -646,12 +646,12 @@ button {
     opacity 0.3s,
     transform 0.3s;
   color: var(--success);
-  font-size: 0.95rem;
+  font-size: 0.8em;
 }
 
 .leaderboard-score {
   font-weight: 800;
-  min-width: 70px;
+  min-width: 4em;
   text-align: right;
 }
 
@@ -770,12 +770,14 @@ button {
 .host-lobby {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(280px, 420px) 1fr;
+  grid-template-columns: auto 1fr;
   gap: 24px;
   align-items: start;
 }
 
+/* Sized by the screen height so the QR is as big as fits with the room code below it. */
 .join-card {
+  width: clamp(320px, calc(100dvh - 290px), 760px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -790,7 +792,6 @@ button {
 
 .qr {
   width: 100%;
-  max-width: 340px;
   aspect-ratio: 1;
   border-radius: 12px;
   background: #fff; /* QR codes need a light quiet zone to scan */
@@ -1575,7 +1576,7 @@ button {
   align-items: center;
   gap: 12px;
   width: 100%;
-  max-width: 760px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -1596,7 +1597,8 @@ button {
   top: 0;
   left: 0;
   right: 0;
-  font-size: 1.3rem;
+  font-size: inherit;
+  gap: 0.55em;
   animation: none;
   transition:
     transform 1.2s cubic-bezier(0.65, 0, 0.35, 1),
@@ -1892,6 +1894,20 @@ body,
 
 /* ---------- emoji (Fluent static, Noto animated) ---------- */
 
+.lb-row .avatar {
+  width: 1.45em;
+  height: 1.45em;
+  font-size: inherit;
+}
+
+.lb-row .leaderboard-rank {
+  width: 1.5em;
+}
+
+span.emoji-animated {
+  display: inline-block;
+}
+
 .emoji {
   display: inline-block;
   width: 1.25em;
@@ -1956,6 +1972,10 @@ body,
   .host-lobby,
   .host-question {
     grid-template-columns: 1fr;
+  }
+
+  .join-card {
+    width: 100%;
   }
 
   .lobby-side {

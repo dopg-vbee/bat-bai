@@ -7,7 +7,7 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
   const { round, me } = state;
   return (
     <section className="player-body center">
-      <AnimatedEmoji char={round.correct ? '🥳' : '😅'} className="pop" />
+      <AnimatedEmoji char={round.correct ? '🥳' : '😅'} className="pop" once />
       <h2>{round.correct ? `+${round.points} điểm` : 'Tiếc quá!'}</h2>
       <div className="card answer-card">
         <span className="label">Đáp án</span>

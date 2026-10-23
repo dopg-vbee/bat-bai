@@ -67,7 +67,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
   if (points !== null) {
     return (
       <section className="player-body center">
-        <AnimatedEmoji char="🎉" className="pop" />
+        <AnimatedEmoji char="🎉" className="pop" once />
         <h2>Chính xác!</h2>
         <p className="points-gain">+{points}</p>
         <p className="muted-light">Chờ mọi người đoán xong nhé…</p>
