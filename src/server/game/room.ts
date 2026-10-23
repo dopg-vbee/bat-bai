@@ -82,6 +82,8 @@ export function pickLuck(questionCount: number, random = Math.random): Luck {
 const MAX_PLAYERS = 150;
 const BOT_FRUITS = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Măng Cụt', 'Sầu Riêng'];
 const botName = (i: number) => `Bot ${BOT_FRUITS[i] ?? i + 1}`;
+/** The first preview bot never misses, so a streak (and its fire) can be watched growing. */
+const SURE_BOT_NAME = 'Bot Luôn Đúng';
 const BOT_MISS_RATE = 0.25;
 /** Share of answering bots that first try another song of the set (makes "Chơi thử" lively). */
 const BOT_WRONG_RATE = 0.4;
@@ -137,6 +139,7 @@ export class Room {
   private readonly luck: Luck;
   private timer: TimerEntry | null = null;
   private botTimers: TimerEntry[] = [];
+  private sureBotId: string | null = null;
   private joinCount = 0;
 
   constructor(options: RoomOptions) {
@@ -149,7 +152,10 @@ export class Room {
     this.onChange = options.onChange;
     this.luck = options.luck ?? { doubleRounds: [], giftChance: 0 };
     const bots = this.preview ? Math.min(MAX_PLAYERS - 10, options.bots ?? PREVIEW_BOTS) : 0;
-    for (let i = 0; i < bots; i++) this.addPlayer(botName(i), null, true);
+    for (let i = 0; i < bots; i++) {
+      const bot = this.addPlayer(i === 0 ? SURE_BOT_NAME : botName(i - 1), null, true);
+      if (i === 0) this.sureBotId = bot.id;
+    }
   }
 
   /** Returns the player, or an error message for the joiner. */
@@ -446,15 +452,19 @@ export class Room {
     this.changed();
   }
 
-  /** Bots answer correctly at a random moment (some try another song first), or not at all. */
+  /**
+   * Bots answer correctly at a random moment (some try another song first), or not at all;
+   * the sure bot always answers, right the first time.
+   */
   private scheduleBots(): void {
     this.clearBotTimers();
     const title = this.questions[this.qIndex].title;
     const otherTitles = this.questions.map((q) => q.title).filter((t) => t !== title);
     for (const p of this.players.values()) {
-      if (!p.bot || Math.random() < BOT_MISS_RATE) continue;
+      const sure = p.id === this.sureBotId;
+      if (!p.bot || (!sure && Math.random() < BOT_MISS_RATE)) continue;
       const delay = this.countdownMs + this.durationMs * (0.1 + Math.random() * 0.7);
-      if (otherTitles.length && Math.random() < BOT_WRONG_RATE) {
+      if (!sure && otherTitles.length && Math.random() < BOT_WRONG_RATE) {
         const wrong = otherTitles[Math.floor(Math.random() * otherTitles.length)];
         const wrongAt = Math.max(this.countdownMs + 200, delay - 1500);
         this.botTimers.push(this.timers.set(wrongAt, () => this.guess(p.id, wrong)));

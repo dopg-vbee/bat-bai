@@ -39,7 +39,7 @@ export function HostLobby({ state }: { state: HostState }) {
         {state.preview && (
           <div className="preview-note">
             <p>
-              Đây là phòng <strong>chơi thử</strong>: {state.players.filter((p) => p.bot).length} bot sẽ tự đoán như người thật. Mở thêm màn hình người chơi
+              Đây là phòng <strong>chơi thử</strong>: {state.players.filter((p) => p.bot).length} bot sẽ tự đoán như người thật; riêng <strong>Bot Luôn Đúng</strong> câu nào cũng đúng để xem chuỗi lửa. Mở thêm màn hình người chơi
               để tự trả lời trên "điện thoại".
             </p>
             <button className="btn btn-ghost" onClick={handleOpenPlayer}>

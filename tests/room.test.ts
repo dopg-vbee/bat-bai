@@ -38,15 +38,15 @@ describe('preview room', () => {
     expect(state.correctFeed[0].points).toBe(775);
   });
 
-  it('a missing bot leaves the round to run to the buzzer', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.1); // below the miss rate: nobody answers
+  it('missing bots leave the round to run to the buzzer; the sure bot still answers', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.1); // below the miss rate: every other bot misses
     const room = makeRoom(true);
     room.next();
     vi.advanceTimersByTime(3000 + 9000);
     expect(room.phase).toBe('question');
     vi.advanceTimersByTime(1500);
     expect(room.phase).toBe('reveal');
-    expect(room.hostView().correctFeed).toHaveLength(0);
+    expect(room.hostView().correctFeed.map((e) => e.name)).toEqual(['Bot Luôn Đúng']);
   });
 
   it('pending bot answers are cancelled by an early reveal', () => {
@@ -252,8 +252,8 @@ describe('preview bot count', () => {
     const players = room.hostView().players;
     expect(players).toHaveLength(100);
     expect(players.every((p) => p.bot)).toBe(true);
-    expect(players[0].name).toBe('Bot Mít');
-    expect(players[99].name).toBe('Bot 100');
+    expect(players.slice(0, 2).map((p) => p.name)).toEqual(['Bot Luôn Đúng', 'Bot Mít']);
+    expect(players[99].name).toBe('Bot 99');
     expect(typeof room.join('Lan', undefined, 's1')).not.toBe('string'); // real players still fit
   });
 });
