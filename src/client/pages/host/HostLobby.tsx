@@ -1,31 +1,9 @@
-import { Play, ScanQrCode, Smartphone, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import QRCode from 'qrcode';
+import { Play, Smartphone, X } from 'lucide-react';
 import type { HostState, PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { openPlayerWindow } from '../../lib/rooms.ts';
 import { socket } from '../../lib/socket.ts';
-
-const isLocalhost = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-
-/**
- * Where phones should go. PUBLIC_URL (server config) wins; on localhost (unreachable from a phone)
- * the server's best LAN address is used; otherwise whatever address the host screen is on.
- */
-function useJoinUrl(code: string) {
-  const [base, setBase] = useState(location.origin);
-  useEffect(() => {
-    fetch('/api/info')
-      .then((res) => res.json())
-      .then((info: { publicUrl: string | null; lanAddresses: string[] }) => {
-        if (info.publicUrl) return setBase(info.publicUrl);
-        const ip = info.lanAddresses[0];
-        if (ip && isLocalhost()) setBase(`${location.protocol}//${ip}${location.port ? `:${location.port}` : ''}`);
-      })
-      .catch(() => undefined);
-  }, []);
-  return `${base}/play/${code}`;
-}
+import { JoinCard } from './JoinCard.tsx';
 
 function PlayerChip({ player }: { player: PlayerSummary }) {
   function handleKick() {
@@ -43,15 +21,6 @@ function PlayerChip({ player }: { player: PlayerSummary }) {
 }
 
 export function HostLobby({ state }: { state: HostState }) {
-  const joinUrl = useJoinUrl(state.code);
-  const [qr, setQr] = useState('');
-
-  useEffect(() => {
-    QRCode.toDataURL(joinUrl, { width: 900, margin: 1 })
-      .then(setQr)
-      .catch(() => setQr(''));
-  }, [joinUrl]);
-
   function handleStart() {
     socket.emit('host:next');
   }
@@ -62,14 +31,7 @@ export function HostLobby({ state }: { state: HostState }) {
 
   return (
     <section className="host-lobby">
-      <div className="card join-card">
-        <p className="join-step">
-          <ScanQrCode /> Quét mã để vào chơi
-        </p>
-        {qr ? <img className="qr" src={qr} alt={`QR vào phòng ${state.code}`} /> : <div className="qr" />}
-        <p className="join-or">hoặc vào <strong>{joinUrl.replace(/\/play\/\d+$/, '')}</strong> và nhập mã</p>
-        <div className="room-code">{state.code}</div>
-      </div>
+      <JoinCard code={state.code} />
       <div className="lobby-side">
         <h2 className="lobby-title">
           {state.players.length ? `${state.players.length} người đã vào` : 'Đang chờ người chơi…'}

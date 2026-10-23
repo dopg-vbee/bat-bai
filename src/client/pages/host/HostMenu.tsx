@@ -1,4 +1,4 @@
-import { ArrowLeft, Eye, Flag, Menu, Moon, Sun, Users } from 'lucide-react';
+import { ArrowLeft, Eye, Flag, Menu, Moon, QrCode, Sun, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { HostState } from '../../../shared/types.ts';
 import { Link } from '../../lib/router.tsx';
@@ -7,10 +7,11 @@ import { toggleTheme, useTheme } from '../../lib/theme.ts';
 interface HostMenuProps {
   state: HostState;
   onEnd: () => void;
+  onShowQr: () => void;
 }
 
 /** Room info and host actions behind one icon; opens on hover (or tap on touch screens). */
-export function HostMenu({ state, onEnd }: HostMenuProps) {
+export function HostMenu({ state, onEnd, onShowQr }: HostMenuProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -25,6 +26,11 @@ export function HostMenu({ state, onEnd }: HostMenuProps) {
     setOpen(false);
     const focused = document.activeElement;
     if (focused instanceof HTMLElement && menuRef.current?.contains(focused)) focused.blur();
+  }
+
+  function handleShowQr() {
+    handleLeave();
+    onShowQr();
   }
 
   return (
@@ -48,6 +54,12 @@ export function HostMenu({ state, onEnd }: HostMenuProps) {
           <Link to="/admin" className="host-menu-item">
             <ArrowLeft /> Về trang quản lý
           </Link>
+        )}
+        {/* The lobby already shows the QR code. */}
+        {state.phase !== 'lobby' && state.phase !== 'ended' && (
+          <button className="host-menu-item" role="menuitem" onClick={handleShowQr}>
+            <QrCode /> Mã QR vào phòng
+          </button>
         )}
         <button className="host-menu-item" role="menuitem" onClick={toggleTheme}>
           {theme === 'dark' ? <Sun /> : <Moon />} {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}

@@ -14,6 +14,7 @@ import { HostLobby } from './HostLobby.tsx';
 import { HostMenu } from './HostMenu.tsx';
 import { HostQuestion } from './HostQuestion.tsx';
 import { HostReveal } from './HostReveal.tsx';
+import { QrOverlay } from './JoinCard.tsx';
 import { PauseOverlay } from './PauseOverlay.tsx';
 import { useQuestionAudio } from './useQuestionAudio.ts';
 
@@ -21,6 +22,7 @@ export function HostPage({ code }: { code: string }) {
   const [state, setState] = useState<HostState | null>(null);
   const [error, setError] = useState('');
   const [videoSlot, setVideoSlot] = useState<HTMLElement | null>(null);
+  const [showQr, setShowQr] = useState(false);
   const connected = useConnected();
   const audio = useQuestionAudio(state);
   const paused = Boolean(state?.pausedAt);
@@ -56,6 +58,14 @@ export function HostPage({ code }: { code: string }) {
 
   function handleTogglePause() {
     socket.emit(paused ? 'host:resume' : 'host:pause');
+  }
+
+  function handleShowQr() {
+    setShowQr(true);
+  }
+
+  function handleHideQr() {
+    setShowQr(false);
   }
 
   function handleEnd() {
@@ -98,7 +108,7 @@ export function HostPage({ code }: { code: string }) {
             <span className="host-set">{state.setName}</span>
           </>
         )}
-        <HostMenu state={state} onEnd={handleEnd} />
+        <HostMenu state={state} onEnd={handleEnd} onShowQr={handleShowQr} />
         {pausable && (
           <button
             className="btn btn-ghost icon-btn pause-btn"
@@ -131,6 +141,7 @@ export function HostPage({ code }: { code: string }) {
           slot={videoSlot}
         />
       )}
+      {showQr && state.phase !== 'ended' && <QrOverlay code={state.code} onClose={handleHideQr} />}
       {paused && <PauseOverlay onResume={handleTogglePause} />}
     </main>
   );
