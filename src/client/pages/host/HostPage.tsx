@@ -1,12 +1,10 @@
 import { ArrowLeft, CircleAlert, Pause, Play, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { HostState } from '../../../shared/types.ts';
 import { BrandMark } from '../../components/Brand.tsx';
 import { preloadAnimatedEmoji } from '../../components/Emoji.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { Link } from '../../lib/router.tsx';
 import { socket, useConnected } from '../../lib/socket.ts';
-import { readStorage, storageKeys } from '../../lib/storage.ts';
 import { HostClip } from './HostClip.tsx';
 import { HostEnded } from './HostEnded.tsx';
 import { HostLeaderboard } from './HostLeaderboard.tsx';
@@ -14,15 +12,15 @@ import { HostLobby } from './HostLobby.tsx';
 import { HostMenu } from './HostMenu.tsx';
 import { HostQuestion } from './HostQuestion.tsx';
 import { HostReveal } from './HostReveal.tsx';
-import { QrOverlay } from './JoinCard.tsx';
+import { JoinCard, QrOverlay, RemoteCard } from './JoinCard.tsx';
 import { PauseOverlay } from './PauseOverlay.tsx';
+import { useHostRoom } from './useHostRoom.ts';
 import { useQuestionAudio } from './useQuestionAudio.ts';
 
 export function HostPage({ code }: { code: string }) {
-  const [state, setState] = useState<HostState | null>(null);
-  const [error, setError] = useState('');
+  const { state, error } = useHostRoom(code);
   const [videoSlot, setVideoSlot] = useState<HTMLElement | null>(null);
-  const [showQr, setShowQr] = useState(false);
+  const [showRemote, setShowRemote] = useState(false);
   const connected = useConnected();
   const audio = useQuestionAudio(state);
   const paused = Boolean(state?.pausedAt);
@@ -32,40 +30,25 @@ export function HostPage({ code }: { code: string }) {
     preloadAnimatedEmoji(['💯', '🏆', '🔥']);
   }, []);
 
-  useEffect(() => {
-    const hostToken = readStorage(storageKeys.host(code));
-    if (!hostToken) {
-      setError('Trình duyệt này không phải host của phòng ' + code);
-      return;
-    }
-    const join = () =>
-      socket.emit('host:join', { code, hostToken }, (res) => {
-        if (!res.ok) setError(res.error);
-      });
-    // Only this room: the socket is shared across pages and may still hear an earlier room.
-    const onState = (next: HostState) => {
-      if (next.code === code) setState(next);
-    };
-    socket.on('hostState', onState);
-    if (socket.connected) join();
-    socket.on('connect', join);
-    return () => {
-      socket.off('hostState', onState);
-      socket.off('connect', join);
-      socket.emit('host:leave');
-    };
-  }, [code]);
-
   function handleTogglePause() {
     socket.emit(paused ? 'host:resume' : 'host:pause');
   }
 
+  // The join QR lives on the server, so a phone remote can show and hide it too.
   function handleShowQr() {
-    setShowQr(true);
+    socket.emit('host:joinQr', true);
   }
 
   function handleHideQr() {
-    setShowQr(false);
+    socket.emit('host:joinQr', false);
+  }
+
+  function handleShowRemote() {
+    setShowRemote(true);
+  }
+
+  function handleHideRemote() {
+    setShowRemote(false);
   }
 
   function handleEnd() {
@@ -108,7 +91,7 @@ export function HostPage({ code }: { code: string }) {
         ) : (
           <span className="host-set" />
         )}
-        <HostMenu state={state} onEnd={handleEnd} onShowQr={handleShowQr} />
+        <HostMenu state={state} onEnd={handleEnd} onShowQr={handleShowQr} onShowRemote={handleShowRemote} />
         {pausable && (
           <button
             className="btn btn-ghost icon-btn pause-btn"
@@ -141,7 +124,16 @@ export function HostPage({ code }: { code: string }) {
           slot={videoSlot}
         />
       )}
-      {showQr && state.phase !== 'ended' && <QrOverlay code={state.code} onClose={handleHideQr} />}
+      {state.joinQr && state.phase !== 'lobby' && state.phase !== 'ended' && (
+        <QrOverlay onClose={handleHideQr}>
+          <JoinCard code={state.code} />
+        </QrOverlay>
+      )}
+      {showRemote && (
+        <QrOverlay onClose={handleHideRemote}>
+          <RemoteCard code={state.code} />
+        </QrOverlay>
+      )}
       {paused && <PauseOverlay onResume={handleTogglePause} />}
     </main>
   );

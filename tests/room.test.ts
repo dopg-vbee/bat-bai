@@ -261,6 +261,18 @@ describe('preview room', () => {
     expect([1, 2, 3, 4, 8, 12].map(streakBonus)).toEqual([0, 0, 50, 100, 300, 300]);
   });
 
+  it('shows and hides the join QR code for every host screen', () => {
+    const changes = vi.fn();
+    const room = new Room({ code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000, onChange: changes });
+    expect(room.hostView().joinQr).toBe(false);
+    room.showJoinQr(true);
+    room.showJoinQr(true); // already shown: nothing to push
+    expect(room.hostView().joinQr).toBe(true);
+    expect(changes).toHaveBeenCalledTimes(1);
+    room.showJoinQr(false);
+    expect(room.hostView().joinQr).toBe(false);
+  });
+
   it('a normal room has no bots', () => {
     expect(makeRoom(false).hostView().players).toHaveLength(0);
   });

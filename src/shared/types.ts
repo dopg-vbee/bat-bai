@@ -67,6 +67,8 @@ export interface HostState {
   double: boolean;
   /** 0 while running; otherwise when the host paused. Clocks show this instant until resumed. */
   pausedAt: number;
+  /** The join QR code is shown over the game (toggled from the host menu or a phone remote). */
+  joinQr: boolean;
   players: PlayerSummary[];
   audioUrl: string | null;
   nextAudioUrl: string | null;
@@ -161,6 +163,7 @@ export interface ClientToServerEvents {
   /** The host screen was closed (navigated away): stop sending it this room's state. */
   'host:leave': () => void;
   'host:pause': () => void;
+  'host:joinQr': (shown: boolean) => void;
   'host:resume': () => void;
   /** The answer video finished playing on the big screen. */
   'host:clipEnded': (qIndex: number) => void;

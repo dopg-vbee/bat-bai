@@ -347,6 +347,34 @@ button {
 
 /* ---------- player ---------- */
 
+/* Phone remote for the host: status on top, big buttons below. */
+.remote-screen {
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 20px;
+}
+
+.remote-head h1 {
+  font-size: 1.6rem;
+}
+
+.remote-status {
+  color: var(--text-soft);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.remote-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.remote-actions .btn {
+  width: 100%;
+}
+
 .player-screen {
   max-width: 520px;
   margin: 0 auto;
@@ -783,6 +811,17 @@ button {
   align-items: center;
   gap: 10px;
   text-align: center;
+}
+
+/* Small on purpose: easy to scan up close, hard from the audience if the screen is projected. */
+.join-card.remote-card {
+  width: min(360px, 90vw);
+  /* Room for the close button in the corner. */
+  padding-top: 28px;
+}
+
+.remote-card .join-or {
+  word-break: normal;
 }
 
 .join-step {

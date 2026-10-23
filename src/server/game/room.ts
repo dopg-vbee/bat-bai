@@ -139,6 +139,7 @@ export class Room {
   private wrongCount = 0;
   /** 0 while running; when the host paused (round clocks and timers are frozen). */
   pausedAt = 0;
+  joinQr = false;
   private readonly timers = new PausableTimers();
   private readonly luck: Luck;
   private timer: TimerEntry | null = null;
@@ -249,6 +250,13 @@ export class Room {
     if (this.phase === 'reveal' && qIndex === this.qIndex && !this.pausedAt) this.showLeaderboard();
   }
 
+  /** Shows or hides the join QR code over the game for latecomers. */
+  showJoinQr(shown: boolean): void {
+    if (this.joinQr === shown) return;
+    this.joinQr = shown;
+    this.changed();
+  }
+
   /** Freezes the round: clocks, timers, bots and guesses. Only while a round is running. */
   pause(): void {
     if (this.pausedAt || !['question', 'reveal', 'leaderboard'].includes(this.phase)) return;
@@ -339,6 +347,7 @@ export class Room {
       preview: this.preview,
       durationMs: this.durationMs,
       advanceAt: this.advanceAt,
+      joinQr: this.joinQr,
       players: [...this.players.values()].map((p) => ({
         ...identity(p),
         score: p.score,

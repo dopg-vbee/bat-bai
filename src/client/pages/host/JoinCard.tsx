@@ -1,6 +1,7 @@
-import { ScanQrCode, X } from 'lucide-react';
-import { useEffect, useState, type MouseEvent } from 'react';
+import { ScanQrCode, Smartphone, X } from 'lucide-react';
+import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import QRCode from 'qrcode';
+import { readStorage, storageKeys } from '../../lib/storage.ts';
 
 const isLocalhost = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 
@@ -8,7 +9,7 @@ const isLocalhost = () => ['localhost', '127.0.0.1', '[::1]'].includes(location.
  * Where phones should go. PUBLIC_URL (server config) wins; on localhost (unreachable from a phone)
  * the server's best LAN address is used; otherwise whatever address the host screen is on.
  */
-function useJoinUrl(code: string) {
+function usePhoneBaseUrl() {
   const [base, setBase] = useState(location.origin);
   useEffect(() => {
     fetch('/api/info')
@@ -20,36 +21,79 @@ function useJoinUrl(code: string) {
       })
       .catch(() => undefined);
   }, []);
-  return `${base}/play/${code}`;
+  return base;
 }
 
-/** QR code, address and room code for phones to join. */
-export function JoinCard({ code }: { code: string }) {
-  const joinUrl = useJoinUrl(code);
+interface QrCardProps {
+  url: string;
+  title: ReactNode;
+  alt: string;
+  className?: string;
+  children: ReactNode;
+}
+
+/** A QR code for `url` under a title, with whatever else the card needs below. */
+function QrCard({ url, title, alt, className = '', children }: QrCardProps) {
   const [qr, setQr] = useState('');
 
   useEffect(() => {
-    QRCode.toDataURL(joinUrl, { width: 900, margin: 1 })
+    QRCode.toDataURL(url, { width: 900, margin: 1 })
       .then(setQr)
       .catch(() => setQr(''));
-  }, [joinUrl]);
+  }, [url]);
 
   return (
-    <div className="card join-card">
-      <p className="join-step">
-        <ScanQrCode /> Quét mã để vào chơi
-      </p>
-      {qr ? <img className="qr" src={qr} alt={`QR vào phòng ${code}`} /> : <div className="qr" />}
-      <p className="join-or">
-        hoặc vào <strong>{joinUrl.replace(/\/play\/\d+$/, '')}</strong> và nhập mã
-      </p>
-      <div className="room-code">{code}</div>
+    <div className={`card join-card ${className}`}>
+      <p className="join-step">{title}</p>
+      {qr ? <img className="qr" src={qr} alt={alt} /> : <div className="qr" />}
+      {children}
     </div>
   );
 }
 
-/** The join card over the game, for latecomers; the round keeps running underneath. */
-export function QrOverlay({ code, onClose }: { code: string; onClose: () => void }) {
+/** QR code, address and room code for phones to join. */
+export function JoinCard({ code }: { code: string }) {
+  const base = usePhoneBaseUrl();
+  return (
+    <QrCard
+      url={`${base}/play/${code}`}
+      alt={`QR vào phòng ${code}`}
+      title={
+        <>
+          <ScanQrCode /> Quét mã để vào chơi
+        </>
+      }
+    >
+      <p className="join-or">
+        hoặc vào <strong>{base}</strong> và nhập mã
+      </p>
+      <div className="room-code">{code}</div>
+    </QrCard>
+  );
+}
+
+/** QR code opening the phone remote; it carries the host token, so whoever scans it controls the room. */
+export function RemoteCard({ code }: { code: string }) {
+  const base = usePhoneBaseUrl();
+  const hostToken = readStorage(storageKeys.host(code)) ?? '';
+  return (
+    <QrCard
+      url={`${base}/host/${code}/remote#${hostToken}`}
+      className="remote-card"
+      alt={`QR điều khiển phòng ${code}`}
+      title={
+        <>
+          <Smartphone /> Quét để điều khiển
+        </>
+      }
+    >
+      <p className="join-or">Ai quét mã này cũng điều khiển được phòng: đừng để người chơi thấy.</p>
+    </QrCard>
+  );
+}
+
+/** A card over the game; the round keeps running underneath. */
+export function QrOverlay({ onClose, children }: { onClose: () => void; children: ReactNode }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -63,12 +107,12 @@ export function QrOverlay({ code, onClose }: { code: string; onClose: () => void
   }
 
   return (
-    <div className="qr-overlay" role="dialog" aria-label="Mã QR vào phòng" onClick={handleBackdrop}>
+    <div className="qr-overlay" role="dialog" onClick={handleBackdrop}>
       <div className="qr-overlay-body">
         <button className="btn btn-ghost icon-btn qr-overlay-close" onClick={onClose} aria-label="Đóng" title="Đóng">
           <X />
         </button>
-        <JoinCard code={code} />
+        {children}
       </div>
     </div>
   );

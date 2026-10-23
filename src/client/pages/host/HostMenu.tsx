@@ -1,4 +1,4 @@
-import { ArrowLeft, Eye, Flag, Menu, Moon, QrCode, Sun, Users } from 'lucide-react';
+import { ArrowLeft, Eye, Flag, Menu, Moon, QrCode, Smartphone, Sun, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { HostState } from '../../../shared/types.ts';
 import { Link } from '../../lib/router.tsx';
@@ -8,10 +8,11 @@ interface HostMenuProps {
   state: HostState;
   onEnd: () => void;
   onShowQr: () => void;
+  onShowRemote: () => void;
 }
 
 /** Room info and host actions behind one icon; opens on hover (or tap on touch screens). */
-export function HostMenu({ state, onEnd, onShowQr }: HostMenuProps) {
+export function HostMenu({ state, onEnd, onShowQr, onShowRemote }: HostMenuProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -31,6 +32,11 @@ export function HostMenu({ state, onEnd, onShowQr }: HostMenuProps) {
   function handleShowQr() {
     handleLeave();
     onShowQr();
+  }
+
+  function handleShowRemote() {
+    handleLeave();
+    onShowRemote();
   }
 
   return (
@@ -59,6 +65,11 @@ export function HostMenu({ state, onEnd, onShowQr }: HostMenuProps) {
         {state.phase !== 'lobby' && state.phase !== 'ended' && (
           <button className="host-menu-item" role="menuitem" onClick={handleShowQr}>
             <QrCode /> Mã QR vào phòng
+          </button>
+        )}
+        {state.phase !== 'ended' && (
+          <button className="host-menu-item" role="menuitem" onClick={handleShowRemote}>
+            <Smartphone /> Điều khiển bằng điện thoại
           </button>
         )}
         <button className="host-menu-item" role="menuitem" onClick={toggleTheme}>
