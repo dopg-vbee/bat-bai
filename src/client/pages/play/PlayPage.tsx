@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { PlayerState } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { Emoji, EmojiText, preloadAnimatedEmoji } from '../../components/Emoji.tsx';
+import { OnFire } from '../../components/Fire.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { ThemeToggle } from '../../components/ThemeToggle.tsx';
 import { Link } from '../../lib/router.tsx';
@@ -100,7 +101,9 @@ export function PlayPage({ code }: { code: string }) {
   return (
     <main className="screen player-screen">
       <header className="player-bar">
-        <Avatar avatar={state.me.avatar} color={state.me.color} size="sm" />
+        <OnFire streak={state.round.streak}>
+          <Avatar avatar={state.me.avatar} color={state.me.color} size="sm" />
+        </OnFire>
         <strong className="player-bar-name">{state.me.name}</strong>
         <span className="player-bar-score">{state.me.score.toLocaleString('vi-VN')} điểm</span>
         <ThemeToggle />

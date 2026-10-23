@@ -21,6 +21,8 @@ export interface CorrectEntry extends PlayerIdentity {
   points: number;
   /** Bonus from a lucky gift box, 0 if none. */
   gift: number;
+  /** Correct answers in a row, this one included. */
+  streak: number;
 }
 
 /** A wrong guess, shown anonymously on the big screen. `key` is unique within the round. */
@@ -35,6 +37,8 @@ export interface RankRow extends PlayerIdentity {
   /** Positive = moved up since the start of the round. */
   delta: number;
   roundPoints: number;
+  /** Correct answers in a row up to this round; 0 once one is missed. */
+  streak: number;
 }
 
 export interface ClipInfo {
@@ -96,7 +100,8 @@ export interface PlayerState {
   pausedAt: number;
   playerCount: number;
   me: PlayerIdentity & { score: number; rank: number; delta: number };
-  round: { correct: boolean; points: number; gift: number };
+  /** streak: correct answers in a row, still counting the previous ones while this question is open. */
+  round: { correct: boolean; points: number; gift: number; streak: number };
   answer: string | null;
   podium: PodiumEntry[] | null;
 }
@@ -104,7 +109,7 @@ export interface PlayerState {
 type Ack<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
 
 export type GuessResult =
-  | { status: 'correct'; points: number; gift: number }
+  | { status: 'correct'; points: number; gift: number; streak: number }
   | { status: 'wrong' | 'closed' | 'slow' | 'already' | 'paused' };
 
 export interface CreateRoomInput {
@@ -176,6 +181,14 @@ export const PREVIEW_BOT_OPTIONS = [4, 20, 50, 100];
 /** Answer clips without an end mark play this long. */
 export const OPEN_CLIP_SEC = 25;
 export const LEADERBOARD_MS = 5000;
+/** From MIN correct answers in a row: fire on the avatar (four sizes) and a bonus per answer, growing until MAX. */
+export const STREAK_MIN = 3;
+export const STREAK_MAX = 8;
+const STREAK_BONUS_STEP = 50;
+
+/** +50 at STREAK_MIN in a row, +50 more per answer, capped at STREAK_MAX (+300). */
+export const streakBonus = (streak: number) =>
+  streak < STREAK_MIN ? 0 : (Math.min(streak, STREAK_MAX) - STREAK_MIN + 1) * STREAK_BONUS_STEP;
 export const MAX_AUDIO_MB = 20;
 
 export const audioUrl = (hash: string) => `/media/${hash}.mp3`;

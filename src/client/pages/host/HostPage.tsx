@@ -29,7 +29,7 @@ export function HostPage({ code }: { code: string }) {
   const pausable = state !== null && ['question', 'reveal', 'leaderboard'].includes(state.phase);
 
   useEffect(() => {
-    preloadAnimatedEmoji(['💯', '🏆']);
+    preloadAnimatedEmoji(['💯', '🏆', '🔥']);
   }, []);
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import { Send } from 'lucide-react';
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import type { PlayerState } from '../../../shared/types.ts';
 import { AnimatedEmoji, EmojiText } from '../../components/Emoji.tsx';
+import { StreakTag } from '../../components/Fire.tsx';
 import { DoubleTag, GiftTag, LuckyBanner } from '../../components/Luck.tsx';
 import { burst } from '../../lib/confetti.ts';
 import { socket, useServerNow } from '../../lib/socket.ts';
@@ -17,7 +18,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
-  const [earned, setEarned] = useState<{ points: number; gift: number } | null>(null);
+  const [earned, setEarned] = useState<{ points: number; gift: number; streak: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleTextChange(event: ChangeEvent<HTMLInputElement>) {
@@ -32,7 +33,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
     try {
       const res = await socket.timeout(5000).emitWithAck('player:guess', guess);
       if (res.status === 'correct') {
-        setEarned({ points: res.points, gift: res.gift });
+        setEarned({ points: res.points, gift: res.gift, streak: res.streak });
         burst();
       } else if (res.status === 'wrong') {
         setFeedback({ kind: 'wrong', text: 'Chưa đúng rồi, thử lại!' });
@@ -73,6 +74,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
         <p className="points-gain">+{result.points}</p>
         {result.gift > 0 && <GiftTag gift={result.gift} className="gift-tag-lg" />}
         {state.double && <DoubleTag />}
+        <StreakTag streak={result.streak} long className="streak-tag-lg" />
         <p className="muted-light">Chờ mọi người đoán xong nhé…</p>
       </section>
     );

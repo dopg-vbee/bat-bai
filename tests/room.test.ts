@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { pickLuck, Room } from '../src/server/game/room.ts';
-import { LEADERBOARD_MS, PREVIEW_BOTS } from '../src/shared/types.ts';
+import { LEADERBOARD_MS, PREVIEW_BOTS, streakBonus } from '../src/shared/types.ts';
 
 const questions = [
   { title: 'Lạc Trôi', audio: 'a'.repeat(64), youtubeId: 'Llw9Q6akRo4', startSec: 30, endSec: 50 },
@@ -171,12 +171,12 @@ describe('preview room', () => {
     room.next();
     expect(room.hostView().double).toBe(false);
     vi.advanceTimersByTime(3000);
-    expect(room.guess(lan.id, 'Lạc Trôi')).toEqual({ status: 'correct', points: 1000, gift: 0 });
+    expect(room.guess(lan.id, 'Lạc Trôi')).toEqual({ status: 'correct', points: 1000, gift: 0, streak: 1 });
     room.next(); room.next(); room.next(); // reveal → leaderboard → question 2
     expect(room.hostView().double).toBe(true);
     expect(room.playerViews()[0].state.double).toBe(true);
     vi.advanceTimersByTime(3000);
-    expect(room.guess(lan.id, 'Nơi Này Có Anh')).toEqual({ status: 'correct', points: 2000, gift: 0 });
+    expect(room.guess(lan.id, 'Nơi Này Có Anh')).toEqual({ status: 'correct', points: 2000, gift: 0, streak: 2 });
   });
 
   it('a gift box adds a random bonus shown with the answer', () => {
@@ -189,9 +189,41 @@ describe('preview room', () => {
     room.next();
     vi.advanceTimersByTime(3000);
     vi.spyOn(Math, 'random').mockReturnValue(0.99); // the largest gift
-    expect(room.guess(lan.id, 'lac troi')).toEqual({ status: 'correct', points: 1300, gift: 300 });
+    expect(room.guess(lan.id, 'lac troi')).toEqual({ status: 'correct', points: 1300, gift: 300, streak: 1 });
     expect(room.hostView().correctFeed[0]).toMatchObject({ points: 1300, gift: 300 });
-    expect(room.playerViews()[0].state.round).toEqual({ correct: true, points: 1300, gift: 300 });
+    expect(room.playerViews()[0].state.round).toEqual({ correct: true, points: 1300, gift: 300, streak: 1 });
+  });
+
+  it('counts correct answers in a row: a bonus from the third, kept while a question is open, reset by a miss', () => {
+    const titles = ['Lạc Trôi', 'Nơi Này Có Anh', 'Hãy Trao Cho Anh', 'Bạc Phận'];
+    const room = new Room({
+      code: '1234', setName: 'Test', questions: titles.map((title) => ({ ...questions[0], title })),
+      durationMs: 10_000, countdownMs: 3000, onChange: () => {},
+    });
+    const lan = room.join('Lan', undefined, 's1');
+    if (typeof lan === 'string') throw new Error(lan);
+    const streakOnPhone = () => room.playerViews()[0].state.round.streak;
+    const answer = (index: number) => {
+      vi.advanceTimersByTime(3000); // countdown: answering at once scores the full 1000
+      return room.guess(lan.id, titles[index]);
+    };
+    room.next();
+    expect(answer(0)).toMatchObject({ points: 1000, streak: 1 });
+    room.next(); room.next(); room.next(); // reveal → leaderboard → question 2
+    expect(answer(1)).toMatchObject({ points: 1000, streak: 2 });
+    room.next(); room.next(); room.next();
+    expect(answer(2)).toMatchObject({ points: 1050, streak: 3 }); // + streak bonus
+    expect(room.hostView().correctFeed[0].streak).toBe(3);
+    room.next(); room.next(); // reveal → leaderboard
+    expect(room.hostView().leaderboard[0].streak).toBe(3);
+    room.next(); // question 4, not answered yet
+    expect(streakOnPhone()).toBe(3);
+    room.next(); // reveal: missed
+    expect(streakOnPhone()).toBe(0);
+  });
+
+  it('streak bonus grows from the third answer in a row and stops at the eighth', () => {
+    expect([1, 2, 3, 4, 8, 12].map(streakBonus)).toEqual([0, 0, 50, 100, 300, 300]);
   });
 
   it('a normal room has no bots', () => {

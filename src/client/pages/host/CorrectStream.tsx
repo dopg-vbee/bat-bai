@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import type { CorrectEntry } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
+import { OnFire, StreakTag } from '../../components/Fire.tsx';
 import { GiftTag } from '../../components/Luck.tsx';
 import { playCorrectChime } from '../../lib/sfx.ts';
 
@@ -111,9 +112,12 @@ export const CorrectStream = memo(function CorrectStream({ entries }: { entries:
                 style={delay >= 0 ? { animationDelay: `${delay}ms` } : undefined}
               >
                 <span className="stream-avatar">
-                <Avatar avatar={entry.avatar} color={entry.color} size="lg" />
-                {entry.gift > 0 && <GiftTag gift={entry.gift} className="stream-gift" />}
-              </span>
+                  <OnFire streak={entry.streak}>
+                    <Avatar avatar={entry.avatar} color={entry.color} size="lg" />
+                  </OnFire>
+                  <StreakTag streak={entry.streak} className="stream-streak" />
+                  {entry.gift > 0 && <GiftTag gift={entry.gift} className="stream-gift" />}
+                </span>
                 <span className="stream-name">{entry.name}</span>
                 <span className="stream-points">+{entry.points}</span>
               </div>

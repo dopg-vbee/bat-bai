@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { RankRow } from '../../shared/types.ts';
 import { Avatar } from './Avatar.tsx';
+import { OnFire, StreakTag } from './Fire.tsx';
 import { Delta } from './Leaderboard.tsx';
 
 const SETTLE_DELAY_MS = 500;
@@ -93,8 +94,11 @@ export function AnimatedLeaderboard({ rows }: { rows: RankRow[] }) {
             }}
           >
             <span className="leaderboard-rank">{renumbered ? row.rank : prevRank}</span>
-            <Avatar avatar={row.avatar} color={row.color} size="sm" />
+            <OnFire streak={row.streak}>
+              <Avatar avatar={row.avatar} color={row.color} size="sm" />
+            </OnFire>
             <span className="leaderboard-name">{row.name}</span>
+            <StreakTag streak={row.streak} />
             {row.roundPoints > 0 && <span className={`leaderboard-gain${settled ? ' show' : ''}`}>+{row.roundPoints}</span>}
             {renumbered && <Delta value={row.delta} />}
             <span className="leaderboard-score">

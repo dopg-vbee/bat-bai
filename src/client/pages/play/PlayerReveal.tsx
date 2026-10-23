@@ -1,6 +1,7 @@
 import type { PlayerState } from '../../../shared/types.ts';
 import { CountUp } from '../../components/AnimatedLeaderboard.tsx';
 import { AnimatedEmoji, Emoji, EmojiText } from '../../components/Emoji.tsx';
+import { StreakTag } from '../../components/Fire.tsx';
 import { Delta } from '../../components/Leaderboard.tsx';
 import { DoubleTag, GiftTag } from '../../components/Luck.tsx';
 
@@ -10,6 +11,7 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
     <section className="player-body center">
       <AnimatedEmoji char={round.correct ? '🥳' : '😅'} className="pop" once />
       <h2>{round.correct ? `+${round.points} điểm` : 'Tiếc quá!'}</h2>
+      <StreakTag streak={round.streak} long className="streak-tag-lg" />
       {(round.gift > 0 || (state.double && round.correct)) && (
         <p className="luck-line">
           {state.double && round.correct && <DoubleTag />}

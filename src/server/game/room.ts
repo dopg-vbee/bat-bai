@@ -4,6 +4,7 @@ import {
   LEADERBOARD_MS,
   OPEN_CLIP_SEC,
   PREVIEW_BOTS,
+  streakBonus,
   type GuessResult,
   type HostState,
   type Phase,
@@ -37,7 +38,7 @@ interface Player {
   lastGuessAt: number;
   socketId: string | null;
   bot: boolean;
-  /** points = speed score (doubled on lucky rounds) + gift. */
+  /** points = speed score (doubled on lucky rounds) + gift + streak bonus. */
   answers: Map<number, { points: number; gift: number; ms: number }>;
 }
 
@@ -298,14 +299,15 @@ export class Room {
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
     const speed = scoreFor(elapsed, this.durationMs) * (this.isDouble() ? 2 : 1);
     const gift = Math.random() < this.luck.giftChance ? GIFT_STEPS[Math.floor(Math.random() * GIFT_STEPS.length)] : 0;
-    const points = speed + gift;
+    const streak = streakAt(player, this.qIndex - 1) + 1;
+    const points = speed + gift + streakBonus(streak);
     player.answers.set(this.qIndex, { points, gift, ms: elapsed });
     player.score += points;
     player.totalMs += elapsed;
     this.correctOrder.push(player.id);
     this.revealIfEveryoneCorrect();
     this.changed();
-    return { status: 'correct', points, gift };
+    return { status: 'correct', points, gift, streak };
   }
 
   dispose(): void {
@@ -342,7 +344,9 @@ export class Room {
       correctFeed: this.correctOrder.flatMap((id) => {
         const p = this.players.get(id);
         const answer = p?.answers.get(this.qIndex);
-        return p && answer ? [{ ...identity(p), points: answer.points, gift: answer.gift }] : [];
+        return p && answer
+          ? [{ ...identity(p), points: answer.points, gift: answer.gift, streak: streakAt(p, this.qIndex) }]
+          : [];
       }),
       leaderboard: showRanking
         ? this.ranking()
@@ -382,6 +386,9 @@ export class Room {
                   correct: p.answers.has(this.qIndex),
                   points: p.answers.get(this.qIndex)?.points ?? 0,
                   gift: p.answers.get(this.qIndex)?.gift ?? 0,
+                  // While the question is open an unanswered one hasn't broken the streak yet.
+                  streak:
+                    holdRank && !p.answers.has(this.qIndex) ? streakAt(p, this.qIndex - 1) : streakAt(p, this.qIndex),
                 },
                 answer,
                 podium,
@@ -487,6 +494,7 @@ export class Room {
       rank,
       delta: p.prevRank - rank,
       roundPoints: p.answers.get(this.qIndex)?.points ?? 0,
+      streak: streakAt(p, this.qIndex),
     };
   }
 
@@ -508,3 +516,10 @@ export class Room {
 
 const isOnline = (p: Player) => p.bot || p.socketId !== null;
 const identity = (p: Player) => ({ id: p.id, name: p.name, avatar: p.avatar, color: p.color });
+
+/** Correct answers in a row ending at question `index` (0 if that one was missed). */
+function streakAt(p: Player, index: number): number {
+  let streak = 0;
+  while (p.answers.has(index - streak)) streak++;
+  return streak;
+}

@@ -1635,12 +1635,14 @@ button {
    CorrectStream). --u scales everything with the screen height. */
 .correct-stream {
   --item: 150px;
+  /* Extra room above the row for the flames of a streak; padding keeps it out of the measured height. */
+  --headroom: 150px;
   grid-area: stream;
   position: relative;
   width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+  height: calc(100% + var(--headroom));
+  margin: calc(-1 * var(--headroom)) 0 0;
+  padding: var(--headroom) 0 0;
   list-style: none;
   overflow: hidden;
   /* Players leaving on the left fade out instead of being cut. */
@@ -2027,8 +2029,152 @@ button {
   display: inline-flex;
 }
 
+/* ---------- correct-answer streak ---------- */
+
+/* An avatar burning on a streak. --fire (0–1) grows everything from STREAK_MIN to STREAK_MAX
+   in a row; sizes are in % so it fits any avatar. */
+.on-fire {
+  --fire: 0;
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.on-fire > .avatar {
+  position: relative;
+  z-index: 1;
+  animation: fire-glow 1.2s ease-in-out infinite alternate;
+}
+
+.flames {
+  position: absolute;
+  left: 50%;
+  bottom: -12%;
+  width: calc(100% * (1.45 + 0.4 * var(--fire)));
+  aspect-ratio: 1;
+  translate: -50% 0;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  animation: ignite 0.7s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+/* Small avatars (leaderboard rows, the phone bar) sit close to their neighbours: smaller flames. */
+.on-fire:has(> .avatar-sm) .flames {
+  width: calc(100% * (1.25 + 0.35 * var(--fire)));
+  bottom: -6%;
+}
+
+.flames img {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 calc(4px + 10px * var(--fire)) rgb(255 120 30 / 0.7));
+}
+
+/* Embers drifting up from the flames; brighter on a longer streak. */
+.flames i {
+  position: absolute;
+  bottom: 40%;
+  left: 50%;
+  width: 4%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffd36b;
+  box-shadow: 0 0 6px 2px rgb(255 140 30 / 0.9);
+  opacity: 0;
+  animation: ember 1.6s ease-out infinite;
+}
+
+.flames i:nth-of-type(1) {
+  left: 30%;
+  animation-delay: 0.1s;
+}
+
+.flames i:nth-of-type(2) {
+  --drift: -1;
+  left: 62%;
+  animation-delay: 0.5s;
+  animation-duration: 1.3s;
+}
+
+.flames i:nth-of-type(3) {
+  left: 44%;
+  animation-delay: 0.9s;
+}
+
+.flames i:nth-of-type(4) {
+  --drift: -1;
+  left: 72%;
+  animation-delay: 1.2s;
+  animation-duration: 1.8s;
+}
+
+.flames i:nth-of-type(5) {
+  left: 22%;
+  animation-delay: 0.7s;
+  animation-duration: 1.4s;
+}
+
+@keyframes ignite {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes ember {
+  15% {
+    opacity: calc(0.6 + 0.4 * var(--fire));
+  }
+  to {
+    transform: translate(calc(var(--drift, 1) * 150%), -900%);
+    opacity: 0;
+  }
+}
+
+@keyframes fire-glow {
+  from {
+    box-shadow: 0 0 calc(6px + 12px * var(--fire)) rgb(255 110 20 / 0.55);
+  }
+  to {
+    box-shadow: 0 0 calc(12px + 26px * var(--fire)) rgb(255 150 30 / 0.85);
+  }
+}
+
+.streak-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+  background: rgb(255 106 26 / 0.22);
+  color: #fdba74;
+  border: 1px solid rgb(255 106 26 / 0.6);
+}
+
+.streak-tag-lg {
+  font-size: 1.3rem;
+  padding: 4px 16px;
+  animation: lucky-in 0.6s 0.2s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+/* Bottom-left of the avatar in the correct-answer row; the gift sits bottom-right. */
+.stream-streak {
+  position: absolute;
+  z-index: 2;
+  bottom: 2%;
+  left: -16%;
+  font-size: calc(var(--item) * 0.1);
+  background: #c2410c;
+  color: #fff;
+  border-color: #fdba74;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.4);
+}
+
 .stream-gift {
   position: absolute;
+  z-index: 2;
   bottom: 2%;
   right: -16%;
   font-size: calc(var(--item) * 0.1);
