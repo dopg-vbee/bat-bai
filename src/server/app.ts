@@ -25,10 +25,13 @@ export interface AppOptions {
 const CLIENT_DIR = path.resolve(import.meta.dirname, '../../dist/client');
 const AUDIO_CACHE_SIZE = 40;
 
+/** Only live questions matter: deleted ones keep their (possibly gone) audio for history. */
 async function warnMissingAudio(library: Library, store: BlobStore) {
   const stored = new Set(await store.list(AUDIO_PREFIX));
-  const missing = [...library.referencedAudio()].filter((hash) => !stored.has(audioKey(hash)));
-  if (missing.length) console.warn(`⚠️  Thiếu ${missing.length} file MP3 trong kho lưu trữ: ${missing.join(', ')}`);
+  const broken = library
+    .sets()
+    .flatMap((set) => set.questions.filter((q) => !stored.has(audioKey(q.audio))).map((q) => `"${q.title}" (bộ ${set.name})`));
+  if (broken.length) console.warn(`⚠️  ${broken.length} câu thiếu file MP3, hãy upload lại: ${broken.join(', ')}`);
 }
 
 /** Serves stored MP3s with Range support (Safari requires 206 responses for media). */

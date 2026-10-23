@@ -1,4 +1,4 @@
-import { readdir, writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Library, newId } from '../src/server/library.ts';
@@ -65,7 +65,7 @@ describe('Library persistence', () => {
     expect(recovered.getSet(set.id)?.name).toBe('Quan trọng');
   });
 
-  it('soft-deletes: hidden from sets() but still referenced', async () => {
+  it('soft-deletes: hidden from sets() but kept in the saved data', async () => {
     const dir = await setup();
     const library = await Library.load(new FsStore(dir));
     const set = await addSet(library, 'Xóa thử');
@@ -73,7 +73,8 @@ describe('Library persistence', () => {
       data.sets[0].deletedAt = new Date().toISOString();
     });
     expect(library.getSet(set.id)).toBeUndefined();
-    expect(library.referencedAudio().has('a'.repeat(64))).toBe(true);
+    const saved = JSON.parse(await readFile(path.join(dir, 'library.json'), 'utf8'));
+    expect(saved.sets[0].questions[0].audio).toBe('a'.repeat(64));
   });
 
   it('does not apply a change whose save failed', async () => {

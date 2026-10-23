@@ -97,11 +97,6 @@ export class Library {
     return this.sets().find((set) => set.id === id);
   }
 
-  /** Every audio hash referenced, including soft-deleted questions. */
-  referencedAudio(): Set<string> {
-    return new Set(this.data.sets.flatMap((set) => set.questions.map((q) => q.audio)));
-  }
-
   /** Applies `change` to a copy, persists it, then swaps it in. Changes run one at a time. */
   mutate<T>(change: (draft: LibraryData) => T): Promise<T> {
     const run = async () => {
