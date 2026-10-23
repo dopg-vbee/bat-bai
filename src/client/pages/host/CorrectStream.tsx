@@ -7,7 +7,10 @@ import { playCorrectChime } from '../../lib/sfx.ts';
 // next to the previous one, and the whole row slides left by half a step to stay centred.
 // Once the row is wider than the screen, the newest stays at the right and the oldest leave
 // on the left (faded out by a mask on .correct-stream).
-const ITEM_WIDTH = 150;
+/** Item width and avatar size as a share of the row's height (it fills the space left). */
+const WIDTH_PER_HEIGHT = 0.9;
+const MIN_ITEM_WIDTH = 120;
+const MAX_ITEM_WIDTH = 380;
 const GAP = 14;
 /** Room kept at the right edge once the row overflows. */
 const EDGE_MARGIN = 24;
@@ -26,16 +29,18 @@ function layout(count: number, width: number, containerWidth: number): number[] 
   return Array.from({ length: count }, (_, i) => start + i * step);
 }
 
-function useWidth(ref: RefObject<HTMLElement | null>) {
-  const [width, setWidth] = useState(0);
+function useSize(ref: RefObject<HTMLElement | null>) {
+  const [size, setSize] = useState({ width: 0, height: 0 });
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    const observer = new ResizeObserver(([entry]) =>
+      setSize({ width: entry.contentRect.width, height: entry.contentRect.height }),
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, [ref]);
-  return width;
+  return size;
 }
 
 export function useScreenUnit() {
@@ -76,10 +81,9 @@ export function useArrivals(ids: string[], onArrive?: () => void) {
 
 /** Correct answers of the round in a centred row; newcomers run in from the right. */
 export function CorrectStream({ entries }: { entries: CorrectEntry[] }) {
-  const unit = useScreenUnit();
-  const width = ITEM_WIDTH * unit;
   const listRef = useRef<HTMLOListElement>(null);
-  const containerWidth = useWidth(listRef);
+  const { width: containerWidth, height } = useSize(listRef);
+  const width = Math.min(MAX_ITEM_WIDTH, Math.max(MIN_ITEM_WIDTH, height * WIDTH_PER_HEIGHT));
   const chimes = useRef(0);
   const delayOf = useArrivals(
     entries.map((e) => e.id),
@@ -88,7 +92,7 @@ export function CorrectStream({ entries }: { entries: CorrectEntry[] }) {
   const lefts = layout(entries.length, width, containerWidth);
 
   return (
-    <ol ref={listRef} className="correct-stream" style={{ '--u': unit } as CSSProperties}>
+    <ol ref={listRef} className="correct-stream" style={{ '--item': `${width}px` } as CSSProperties}>
       {containerWidth > 0 &&
         entries.map((entry, i) => {
           const delay = delayOf(entry.id);

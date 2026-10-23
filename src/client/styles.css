@@ -908,37 +908,73 @@ button {
   font-weight: 700;
 }
 
+/* Wrong guesses | timer + prompt | progress, then the row of correct answers filling the rest. */
 .host-question {
-  position: relative;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
   min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  /* The answer row gets a third of the screen; the top row takes the rest, content centred. */
+  grid-template-rows: minmax(0, 1fr) clamp(180px, 34vh, 420px);
+  grid-template-areas:
+    'wrong main stats'
+    'stream stream stream';
+  column-gap: 32px;
+  row-gap: 12px;
 }
 
 .host-question-main {
+  grid-area: main;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 14px;
   text-align: center;
+}
+
+.question-stats {
+  grid-area: stats;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.stats-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  font-size: clamp(3.5rem, 9vh, 7rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stats-count svg {
+  width: 0.6em;
+  height: 0.6em;
+  margin-right: 0.15em;
+  color: #86efac;
+}
+
+.stats-count strong {
+  color: #fde047;
+}
+
+.stats-count span {
+  font-size: 0.55em;
+  opacity: 0.8;
+}
+
+.stats-label {
+  font-size: clamp(1.3rem, 2.6vh, 2rem);
+  font-weight: 700;
 }
 
 .host-prompt {
   font-size: clamp(2rem, 4vw, 3.2rem);
-}
-
-.host-progress {
-  font-size: 1.6rem;
-  font-weight: 700;
-}
-
-.host-progress strong {
-  font-size: 2.2rem;
-  color: #fde047;
 }
 
 .host-actions {
@@ -1492,11 +1528,12 @@ button {
 /* Correct answers under the question: a centred row, newcomers run in from the right (see
    CorrectStream). --u scales everything with the screen height. */
 .correct-stream {
-  --u: 1;
+  --item: 150px;
+  grid-area: stream;
   position: relative;
   width: 100%;
-  height: calc(var(--u) * 190px);
-  margin: auto 0 0;
+  height: 100%;
+  margin: 0;
   padding: 0;
   list-style: none;
   overflow: hidden;
@@ -1523,9 +1560,9 @@ button {
 }
 
 .stream-correct .avatar {
-  width: calc(var(--u) * 84px);
-  height: calc(var(--u) * 84px);
-  font-size: calc(var(--u) * 3rem);
+  width: calc(var(--item) * 0.74);
+  height: calc(var(--item) * 0.74);
+  font-size: calc(var(--item) * 0.3);
   box-shadow:
     inset 0 -3px 0 rgb(0 0 0 / 0.15),
     0 0 0 3px rgb(134 239 172 / 0.6);
@@ -1534,8 +1571,8 @@ button {
 .stream-slot.newest .stream-correct .avatar {
   box-shadow:
     inset 0 -3px 0 rgb(0 0 0 / 0.15),
-    0 0 0 4px #86efac,
-    0 0 28px rgb(34 197 94 / 0.7);
+    0 0 0 5px #86efac,
+    0 0 36px rgb(34 197 94 / 0.7);
 }
 
 .stream-name {
@@ -1544,14 +1581,14 @@ button {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 800;
-  font-size: calc(var(--u) * 1.35rem);
+  font-size: calc(var(--item) * 0.13);
   line-height: 1.1;
 }
 
 .stream-points {
   color: var(--success);
   font-weight: 800;
-  font-size: calc(var(--u) * 1.1rem);
+  font-size: calc(var(--item) * 0.1);
 }
 
 /* Runs in from the right edge to its place next to the previous player. */
@@ -1568,10 +1605,12 @@ button {
 /* Latest wrong guesses down the left edge: newest on top, older ones pushed down and fading. */
 .wrong-list {
   --u: 1;
-  position: absolute;
-  top: calc(var(--u) * 16px);
-  left: 0;
-  width: calc(var(--u) * 280px);
+  grid-area: wrong;
+  /* Takes the row's height without growing it; extra items are cut and faded at the bottom. */
+  contain: size;
+  min-height: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 80%, transparent);
   pointer-events: none;
 }
 
@@ -1591,7 +1630,7 @@ button {
   margin-bottom: calc(var(--u) * 8px);
   color: var(--danger-text);
   font-weight: 800;
-  font-size: calc(var(--u) * 1rem);
+  font-size: calc(var(--u) * 1.3rem);
 }
 
 .wrong-list-title svg {
@@ -1600,13 +1639,13 @@ button {
 }
 
 .wrong-item {
-  padding: calc(var(--u) * 8px) calc(var(--u) * 14px);
+  padding: calc(var(--u) * 9px) calc(var(--u) * 16px);
   border-radius: 14px;
   background: rgb(248 113 113 / 0.14);
   border-left: 4px solid rgb(248 113 113 / 0.6);
   color: var(--on-page);
-  font-weight: 700;
-  font-size: calc(var(--u) * 1.15rem);
+  font-weight: 800;
+  font-size: calc(var(--u) * 1.6rem);
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1881,7 +1920,6 @@ body,
 .link-subtle svg,
 .link-button svg,
 .join-step svg,
-.host-progress svg,
 .yt-clip-range svg,
 .clip-preview-actions a svg,
 .icon-heading svg,
@@ -1895,7 +1933,6 @@ body,
 .link-subtle,
 .link-button,
 .join-step,
-.host-progress,
 .yt-clip-range,
 .clip-preview-actions a,
 .icon-heading {
@@ -1922,10 +1959,6 @@ body,
   width: 1.15em;
   height: 1.15em;
   color: #fde047;
-}
-
-.host-progress svg {
-  color: #86efac;
 }
 
 .delta {
@@ -2030,6 +2063,12 @@ span.emoji-animated {
 @media (max-width: 900px) {
   .wrong-list {
     display: none;
+  }
+
+  .host-question {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'main' 'stats' 'stream';
+    grid-template-rows: auto auto minmax(0, 1fr);
   }
 
   .host-lobby {
