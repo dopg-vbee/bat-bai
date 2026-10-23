@@ -14,7 +14,7 @@ import { PlayerQuestion } from './PlayerQuestion.tsx';
 import { PlayerReveal } from './PlayerReveal.tsx';
 
 /** Animated emoji shown on correct/missed answers and the podium (see PlayerQuestion/Reveal/Ended). */
-const CELEBRATIONS = ['🎉', '🥳', '😅', '🏆'];
+const CELEBRATIONS = ['🎉', '🎁', '🥳', '😅', '🏆'];
 
 export interface PlayerSession {
   name: string;

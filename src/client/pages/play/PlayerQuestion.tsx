@@ -2,6 +2,7 @@ import { Send } from 'lucide-react';
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import type { PlayerState } from '../../../shared/types.ts';
 import { AnimatedEmoji, EmojiText } from '../../components/Emoji.tsx';
+import { DoubleTag, GiftTag, LuckyBanner } from '../../components/Luck.tsx';
 import { burst } from '../../lib/confetti.ts';
 import { socket, useServerNow } from '../../lib/socket.ts';
 
@@ -16,7 +17,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
-  const [earned, setEarned] = useState<number | null>(null);
+  const [earned, setEarned] = useState<{ points: number; gift: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleTextChange(event: ChangeEvent<HTMLInputElement>) {
@@ -31,7 +32,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
     try {
       const res = await socket.timeout(5000).emitWithAck('player:guess', guess);
       if (res.status === 'correct') {
-        setEarned(res.points);
+        setEarned({ points: res.points, gift: res.gift });
         burst();
       } else if (res.status === 'wrong') {
         setFeedback({ kind: 'wrong', text: 'Chưa đúng rồi, thử lại!' });
@@ -58,18 +59,20 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
         <div className="countdown-number" key={Math.ceil((state.startsAt - now) / 1000)}>
           {Math.ceil((state.startsAt - now) / 1000)}
         </div>
-        <p className="muted-light">Chuẩn bị nghe…</p>
+        {state.double ? <LuckyBanner /> : <p className="muted-light">Chuẩn bị nghe…</p>}
       </section>
     );
   }
 
-  const points = earned ?? (state.round.correct ? state.round.points : null);
-  if (points !== null) {
+  const result = earned ?? (state.round.correct ? state.round : null);
+  if (result) {
     return (
       <section className="player-body center">
-        <AnimatedEmoji char="🎉" className="pop" once />
-        <h2>Chính xác!</h2>
-        <p className="points-gain">+{points}</p>
+        <AnimatedEmoji char={result.gift ? '🎁' : '🎉'} className="pop" once />
+        <h2>{result.gift ? 'Chính xác! Trúng hộp quà!' : 'Chính xác!'}</h2>
+        <p className="points-gain">+{result.points}</p>
+        {result.gift > 0 && <GiftTag gift={result.gift} className="gift-tag-lg" />}
+        {state.double && <DoubleTag />}
         <p className="muted-light">Chờ mọi người đoán xong nhé…</p>
       </section>
     );
@@ -81,7 +84,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
     <section className="player-body">
       <div className="question-head">
         <span>
-          Câu {state.qIndex + 1}/{state.qTotal}
+          Câu {state.qIndex + 1}/{state.qTotal} {state.double && <DoubleTag />}
         </span>
         <span className={remaining <= 5000 ? 'urgent-text' : ''}>{Math.ceil(remaining / 1000)}s</span>
       </div>

@@ -1814,6 +1814,123 @@ button {
   }
 }
 
+/* ---------- luck: double rounds, gift boxes ---------- */
+
+.lucky-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 26px 14px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgb(250 204 21 / 0.25), rgb(244 114 182 / 0.25));
+  border: 2px solid rgb(250 204 21 / 0.6);
+  box-shadow: 0 0 40px rgb(250 204 21 / 0.35);
+  animation: lucky-in 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both, lucky-glow 1.2s ease-in-out 0.6s infinite;
+}
+
+.lucky-bolt {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.lucky-title {
+  font-weight: 800;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lucky-x2 {
+  font-weight: 800;
+  font-size: 2.2rem;
+  line-height: 1;
+  color: #fde047;
+}
+
+.lucky-banner.large .lucky-bolt {
+  width: 4rem;
+  height: 4rem;
+}
+
+.lucky-banner.large .lucky-title {
+  font-size: 2rem;
+}
+
+.lucky-banner.large .lucky-x2 {
+  font-size: 4rem;
+}
+
+@keyframes lucky-in {
+  from {
+    transform: scale(0.3) rotate(-10deg);
+    opacity: 0;
+  }
+}
+
+@keyframes lucky-glow {
+  50% {
+    box-shadow: 0 0 70px rgb(250 204 21 / 0.6);
+  }
+}
+
+.double-tag,
+.gift-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.double-tag {
+  background: rgb(250 204 21 / 0.2);
+  color: #fde047;
+  border: 1px solid rgb(250 204 21 / 0.5);
+}
+
+.question-stats .double-tag {
+  font-size: clamp(1.1rem, 2.4vh, 1.7rem);
+}
+
+.gift-tag {
+  background: rgb(244 114 182 / 0.22);
+  color: #f9a8d4;
+  border: 1px solid rgb(244 114 182 / 0.55);
+}
+
+.gift-tag-lg {
+  font-size: 1.5rem;
+  padding: 4px 16px;
+  animation: lucky-in 0.6s 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.luck-line {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* Gift badge on the bottom-right of a correct-answer avatar (the row clips anything above it). */
+.stream-avatar {
+  position: relative;
+  display: inline-flex;
+}
+
+.stream-gift {
+  position: absolute;
+  bottom: 2%;
+  right: -16%;
+  font-size: calc(var(--item) * 0.1);
+  background: #be185d;
+  color: #fff;
+  border-color: #f9a8d4;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.4);
+  animation: lucky-in 0.5s 0.15s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
 /* ---------- host menu, icon buttons ---------- */
 
 .icon-btn {

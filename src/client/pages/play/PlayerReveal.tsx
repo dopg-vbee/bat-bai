@@ -2,6 +2,7 @@ import type { PlayerState } from '../../../shared/types.ts';
 import { CountUp } from '../../components/AnimatedLeaderboard.tsx';
 import { AnimatedEmoji, Emoji, EmojiText } from '../../components/Emoji.tsx';
 import { Delta } from '../../components/Leaderboard.tsx';
+import { DoubleTag, GiftTag } from '../../components/Luck.tsx';
 
 export function PlayerReveal({ state }: { state: PlayerState }) {
   const { round, me } = state;
@@ -9,6 +10,12 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
     <section className="player-body center">
       <AnimatedEmoji char={round.correct ? '🥳' : '😅'} className="pop" once />
       <h2>{round.correct ? `+${round.points} điểm` : 'Tiếc quá!'}</h2>
+      {(round.gift > 0 || (state.double && round.correct)) && (
+        <p className="luck-line">
+          {state.double && round.correct && <DoubleTag />}
+          {round.gift > 0 && <GiftTag gift={round.gift} />}
+        </p>
+      )}
       <div className="card answer-card">
         <span className="label">Đáp án</span>
         <strong className="answer-title">{state.answer}</strong>

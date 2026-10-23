@@ -1,7 +1,7 @@
 import type { Server } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents } from '../shared/types.ts';
 import { checkPassword } from './auth.ts';
-import { Room, type GameQuestion } from './game/room.ts';
+import { pickLuck, Room, type GameQuestion } from './game/room.ts';
 import type { Library } from './library.ts';
 
 interface SocketData {
@@ -108,6 +108,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
         durationMs: clamp(Math.round(Number(input.durationSec) || 30), 10, 120) * 1000,
         countdownMs: options.countdownMs,
         preview: Boolean(input.preview),
+        luck: pickLuck(questions.length),
         onChange: () => markDirty(room),
       });
       rooms.set(room.code, room);

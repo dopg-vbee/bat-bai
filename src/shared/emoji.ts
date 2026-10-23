@@ -63,6 +63,8 @@ export const EMOJI_NAMES: Record<string, string> = {
   '🎉': 'party-popper',
   '🥳': 'partying-face',
   '💯': 'hundred-points',
+  '⚡': 'high-voltage',
+  '🎁': 'wrapped-gift',
   '😅': 'grinning-face-with-sweat',
   // Inside sentences
   '🤔': 'thinking-face',

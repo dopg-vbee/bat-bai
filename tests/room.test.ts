@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Room } from '../src/server/game/room.ts';
+import { pickLuck, Room } from '../src/server/game/room.ts';
 import { LEADERBOARD_MS, PREVIEW_BOTS } from '../src/shared/types.ts';
 
 const questions = [
@@ -161,7 +161,55 @@ describe('preview room', () => {
     expect(room.hostView().wrongFeed).toEqual([]);
   });
 
+  it('lucky rounds score double, and are only revealed when they start', () => {
+    const room = new Room({
+      code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
+      luck: { doubleRounds: [1], giftChance: 0 }, onChange: () => {},
+    });
+    const lan = room.join('Lan', undefined, 's1');
+    if (typeof lan === 'string') throw new Error(lan);
+    room.next();
+    expect(room.hostView().double).toBe(false);
+    vi.advanceTimersByTime(3000);
+    expect(room.guess(lan.id, 'Lạc Trôi')).toEqual({ status: 'correct', points: 1000, gift: 0 });
+    room.next(); room.next(); room.next(); // reveal → leaderboard → question 2
+    expect(room.hostView().double).toBe(true);
+    expect(room.playerViews()[0].state.double).toBe(true);
+    vi.advanceTimersByTime(3000);
+    expect(room.guess(lan.id, 'Nơi Này Có Anh')).toEqual({ status: 'correct', points: 2000, gift: 0 });
+  });
+
+  it('a gift box adds a random bonus shown with the answer', () => {
+    const room = new Room({
+      code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
+      luck: { doubleRounds: [], giftChance: 1 }, onChange: () => {},
+    });
+    const lan = room.join('Lan', undefined, 's1');
+    if (typeof lan === 'string') throw new Error(lan);
+    room.next();
+    vi.advanceTimersByTime(3000);
+    vi.spyOn(Math, 'random').mockReturnValue(0.99); // the largest gift
+    expect(room.guess(lan.id, 'lac troi')).toEqual({ status: 'correct', points: 1300, gift: 300 });
+    expect(room.hostView().correctFeed[0]).toMatchObject({ points: 1300, gift: 300 });
+    expect(room.playerViews()[0].state.round).toEqual({ correct: true, points: 1300, gift: 300 });
+  });
+
   it('a normal room has no bots', () => {
     expect(makeRoom(false).hostView().players).toHaveLength(0);
+  });
+});
+
+describe('pickLuck', () => {
+  it('picks about a fifth of the questions, never the first, no duplicates', () => {
+    for (let run = 0; run < 50; run++) {
+      const { doubleRounds, giftChance } = pickLuck(10);
+      expect(doubleRounds).toHaveLength(2);
+      expect(new Set(doubleRounds).size).toBe(2);
+      expect(doubleRounds).not.toContain(0);
+      expect(doubleRounds.every((i) => i >= 1 && i <= 9)).toBe(true);
+      expect(giftChance).toBe(0.15);
+    }
+    expect(pickLuck(3).doubleRounds).toHaveLength(1);
+    expect(pickLuck(2).doubleRounds).toEqual([]);
   });
 });

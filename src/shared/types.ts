@@ -15,7 +15,10 @@ export interface PlayerSummary extends PlayerIdentity {
 }
 
 export interface CorrectEntry extends PlayerIdentity {
+  /** Everything earned this round, gift included. */
   points: number;
+  /** Bonus from a lucky gift box, 0 if none. */
+  gift: number;
 }
 
 /** A wrong guess, shown anonymously on the big screen. `key` is unique within the round. */
@@ -54,6 +57,8 @@ export interface HostState {
   advanceAt: number;
   /** The round ended early because everyone answered correctly. */
   allCorrect: boolean;
+  /** Lucky round: points count double. */
+  double: boolean;
   /** 0 while running; otherwise when the host paused. Clocks show this instant until resumed. */
   pausedAt: number;
   players: PlayerSummary[];
@@ -85,10 +90,11 @@ export interface PlayerState {
   startsAt: number;
   endsAt: number;
   allCorrect: boolean;
+  double: boolean;
   pausedAt: number;
   playerCount: number;
   me: PlayerIdentity & { score: number; rank: number; delta: number };
-  round: { correct: boolean; points: number };
+  round: { correct: boolean; points: number; gift: number };
   answer: string | null;
   podium: PodiumEntry[] | null;
 }
@@ -96,7 +102,7 @@ export interface PlayerState {
 export type Ack<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
 
 export type GuessResult =
-  | { status: 'correct'; points: number }
+  | { status: 'correct'; points: number; gift: number }
   | { status: 'wrong' | 'closed' | 'slow' | 'already' | 'paused' };
 
 export interface CreateRoomInput {

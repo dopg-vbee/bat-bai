@@ -37,7 +37,8 @@ interface Player {
   lastGuessAt: number;
   socketId: string | null;
   bot: boolean;
-  answers: Map<number, { points: number; ms: number }>;
+  /** points = speed score (doubled on lucky rounds) + gift. */
+  answers: Map<number, { points: number; gift: number; ms: number }>;
 }
 
 export interface RoomOptions {
@@ -47,7 +48,31 @@ export interface RoomOptions {
   durationMs: number;
   countdownMs: number;
   preview?: boolean;
+  /** Random twists; omitted = none (tests). See pickLuck. */
+  luck?: Luck;
   onChange: () => void;
+}
+
+export interface Luck {
+  /** Question indexes worth double points. */
+  doubleRounds: number[];
+  /** Chance (0–1) that a correct answer also opens a gift box. */
+  giftChance: number;
+}
+
+const DOUBLE_SHARE = 0.2;
+const GIFT_CHANCE = 0.15;
+const GIFT_STEPS = [100, 150, 200, 250, 300];
+
+/** About a fifth of the questions (never the first) score double; 15% of correct answers get a gift. */
+export function pickLuck(questionCount: number, random = Math.random): Luck {
+  const candidates = Array.from({ length: Math.max(0, questionCount - 1) }, (_, i) => i + 1);
+  const count = questionCount >= 3 ? Math.max(1, Math.round(questionCount * DOUBLE_SHARE)) : 0;
+  const doubleRounds: number[] = [];
+  while (doubleRounds.length < count && candidates.length) {
+    doubleRounds.push(candidates.splice(Math.floor(random() * candidates.length), 1)[0]);
+  }
+  return { doubleRounds: doubleRounds.sort((a, b) => a - b), giftChance: GIFT_CHANCE };
 }
 
 export const MAX_PLAYERS = 100;
@@ -104,6 +129,7 @@ export class Room {
   /** 0 while running; when the host paused (round clocks and timers are frozen). */
   pausedAt = 0;
   private readonly timers = new PausableTimers();
+  private readonly luck: Luck;
   private timer: TimerEntry | null = null;
   private botTimers: TimerEntry[] = [];
   private joinCount = 0;
@@ -116,6 +142,7 @@ export class Room {
     this.countdownMs = options.countdownMs;
     this.preview = options.preview ?? false;
     this.onChange = options.onChange;
+    this.luck = options.luck ?? { doubleRounds: [], giftChance: 0 };
     if (this.preview) for (const name of BOT_NAMES) this.addPlayer(name, null, true);
   }
 
@@ -264,14 +291,16 @@ export class Room {
     }
 
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
-    const points = scoreFor(elapsed, this.durationMs);
-    player.answers.set(this.qIndex, { points, ms: elapsed });
+    const speed = scoreFor(elapsed, this.durationMs) * (this.isDouble() ? 2 : 1);
+    const gift = Math.random() < this.luck.giftChance ? GIFT_STEPS[Math.floor(Math.random() * GIFT_STEPS.length)] : 0;
+    const points = speed + gift;
+    player.answers.set(this.qIndex, { points, gift, ms: elapsed });
     player.score += points;
     player.totalMs += elapsed;
     this.correctOrder.push(player.id);
     this.revealIfEveryoneCorrect();
     this.changed();
-    return { status: 'correct', points };
+    return { status: 'correct', points, gift };
   }
 
   dispose(): void {
@@ -306,7 +335,8 @@ export class Room {
       wrongFeed: this.wrongGuesses,
       correctFeed: this.correctOrder.flatMap((id) => {
         const p = this.players.get(id);
-        return p ? [{ ...identity(p), points: p.answers.get(this.qIndex)?.points ?? 0 }] : [];
+        const answer = p?.answers.get(this.qIndex);
+        return p && answer ? [{ ...identity(p), points: answer.points, gift: answer.gift }] : [];
       }),
       leaderboard: showRanking ? this.ranking().slice(0, 10).map((p, i) => this.rankRow(p, i + 1)) : [],
     };
@@ -330,7 +360,11 @@ export class Room {
                 ...base,
                 playerCount: this.players.size,
                 me: { ...identity(p), score: p.score, rank: i + 1, delta: p.prevRank - (i + 1) },
-                round: { correct: p.answers.has(this.qIndex), points: p.answers.get(this.qIndex)?.points ?? 0 },
+                round: {
+                  correct: p.answers.has(this.qIndex),
+                  points: p.answers.get(this.qIndex)?.points ?? 0,
+                  gift: p.answers.get(this.qIndex)?.gift ?? 0,
+                },
                 answer,
                 podium,
               },
@@ -349,8 +383,14 @@ export class Room {
       startsAt: this.startsAt,
       endsAt: this.endsAt,
       allCorrect: this.allCorrect,
+      double: this.isDouble(),
       pausedAt: this.pausedAt,
     };
+  }
+
+  /** Only revealed once the question starts (countdown), so nobody knows in advance. */
+  private isDouble(): boolean {
+    return this.phase !== 'lobby' && this.luck.doubleRounds.includes(this.qIndex);
   }
 
   private answerVisible(): boolean {

@@ -1,6 +1,7 @@
 import { CircleCheck, Volume2 } from 'lucide-react';
 import type { HostState } from '../../../shared/types.ts';
 import { EmojiText } from '../../components/Emoji.tsx';
+import { DoubleTag, LuckyBanner } from '../../components/Luck.tsx';
 import { Equalizer } from '../../components/Equalizer.tsx';
 import { TimerRing } from '../../components/TimerRing.tsx';
 import { useServerNow } from '../../lib/socket.ts';
@@ -30,7 +31,7 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
         <div className="countdown-number countdown-xl" key={Math.ceil((state.startsAt - now) / 1000)}>
           {Math.ceil((state.startsAt - now) / 1000)}
         </div>
-        <p className="host-sub">Lắng nghe thật kỹ nhé…</p>
+        {state.double ? <LuckyBanner large /> : <p className="host-sub">Lắng nghe thật kỹ nhé…</p>}
       </section>
     );
   }
@@ -53,6 +54,7 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
         <p className="host-question-no">
           Câu {state.qIndex + 1}/{state.qTotal}
         </p>
+        {state.double && <DoubleTag />}
         {state.correctFeed.length ? (
           <>
             <p className="stats-count">
