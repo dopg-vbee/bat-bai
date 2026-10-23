@@ -1,4 +1,4 @@
-import { ArrowRight, Trophy } from 'lucide-react';
+import { SkipForward, Trophy } from 'lucide-react';
 import { LEADERBOARD_MS, type HostState } from '../../../shared/types.ts';
 import { AnimatedLeaderboard } from '../../components/AnimatedLeaderboard.tsx';
 import { socket, useServerNow } from '../../lib/socket.ts';
@@ -25,16 +25,13 @@ export function HostLeaderboard({ state }: { state: HostState }) {
       <div className="advance-bar">
         <div className="advance-bar-fill" style={{ width: `${(remaining / LEADERBOARD_MS) * 100}%` }} />
       </div>
-      <button className="btn btn-ghost btn-sm skip-btn" onClick={handleNext}>
-        {isLast ? (
-          <>
-            <Trophy /> Xem kết quả
-          </>
-        ) : (
-          <>
-            Câu tiếp ngay <ArrowRight />
-          </>
-        )}
+      <button
+        className="btn btn-ghost icon-btn skip-btn"
+        onClick={handleNext}
+        aria-label={isLast ? 'Xem kết quả' : 'Câu tiếp'}
+        title={isLast ? 'Xem kết quả' : 'Câu tiếp'}
+      >
+        {isLast ? <Trophy /> : <SkipForward />}
       </button>
     </section>
   );

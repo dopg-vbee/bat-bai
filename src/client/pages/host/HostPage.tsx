@@ -1,10 +1,9 @@
-import { ArrowLeft, CircleAlert, Eye, Flag, Pause, Play, Users, WifiOff } from 'lucide-react';
+import { ArrowLeft, CircleAlert, Pause, Play, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { HostState } from '../../../shared/types.ts';
 import { BrandMark } from '../../components/Brand.tsx';
 import { preloadAnimatedEmoji } from '../../components/Emoji.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
-import { ThemeToggle } from '../../components/ThemeToggle.tsx';
 import { Link } from '../../lib/router.tsx';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { readStorage, storageKeys } from '../../lib/storage.ts';
@@ -12,6 +11,7 @@ import { HostClip } from './HostClip.tsx';
 import { HostEnded } from './HostEnded.tsx';
 import { HostLeaderboard } from './HostLeaderboard.tsx';
 import { HostLobby } from './HostLobby.tsx';
+import { HostMenu } from './HostMenu.tsx';
 import { HostQuestion } from './HostQuestion.tsx';
 import { HostReveal } from './HostReveal.tsx';
 import { PauseOverlay } from './PauseOverlay.tsx';
@@ -98,29 +98,10 @@ export function HostPage({ code }: { code: string }) {
             <span className="host-set">{state.setName}</span>
           </>
         )}
-        {state.preview && (
-          <>
-            <span className="pill pill-preview">
-              <Eye /> Chơi thử
-            </span>
-            <Link to="/admin" className="btn btn-ghost btn-sm">
-              <ArrowLeft /> Quản lý
-            </Link>
-          </>
-        )}
-        <span className="pill">Phòng {state.code}</span>
-        <span className="pill">
-          <Users /> {state.players.filter((p) => p.connected).length}
-        </span>
-        {state.phase !== 'ended' && (
-          <button className="btn btn-ghost btn-sm" onClick={handleEnd}>
-            <Flag /> Kết thúc
-          </button>
-        )}
-        <ThemeToggle />
+        <HostMenu state={state} onEnd={handleEnd} />
         {pausable && (
           <button
-            className="btn btn-ghost pause-btn"
+            className="btn btn-ghost icon-btn pause-btn"
             onClick={handleTogglePause}
             aria-label={paused ? 'Tiếp tục' : 'Tạm dừng'}
             title={paused ? 'Tiếp tục' : 'Tạm dừng'}

@@ -23,8 +23,8 @@ export function HostReveal({ state, onVideoSlot }: HostRevealProps) {
       </p>
       <h2 className="reveal-title">{state.answer}</h2>
       {state.clip && <div className="video-slot" ref={onVideoSlot} />}
-      <button className="btn btn-ghost btn-sm skip-btn" onClick={handleSkip}>
-        Bỏ qua <SkipForward />
+      <button className="btn btn-ghost icon-btn skip-btn" onClick={handleSkip} aria-label="Bỏ qua" title="Bỏ qua">
+        <SkipForward />
       </button>
     </section>
   );

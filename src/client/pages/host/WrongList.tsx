@@ -13,10 +13,10 @@ export function WrongList({ entries }: { entries: WrongEntry[] }) {
   const latest = entries.slice(-VISIBLE).reverse();
 
   return (
-    <aside className="wrong-list" style={{ '--u': unit } as CSSProperties} aria-label="Đáp án sai gần đây">
+    <aside className="wrong-list" style={{ '--u': unit } as CSSProperties} aria-label="Câu trả lời sai gần đây">
       {latest.length > 0 && (
         <p className="wrong-list-title">
-          <X /> Đáp án sai
+          <X /> Câu trả lời sai
         </p>
       )}
       <ol>
