@@ -5,7 +5,9 @@ import { socket, useServerNow } from '../../lib/socket.ts';
 
 /** A few seconds between rounds: rank changes animate, then the next question starts by itself. */
 export function HostLeaderboard({ state }: { state: HostState }) {
-  const now = useServerNow(true, 100);
+  // While paused the clock stands still at the moment the host paused.
+  const live = useServerNow(!state.pausedAt, 100);
+  const now = state.pausedAt || live;
   const isLast = state.qIndex + 1 >= state.qTotal;
   const remaining = Math.max(0, state.advanceAt - now);
 

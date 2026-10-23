@@ -17,6 +17,8 @@ interface YoutubeClipProps {
   tone?: 'light' | 'dark';
   /** The clip reached its end (or cannot play at all). */
   onEnded?: () => void;
+  /** Host paused the game: hold the video where it is, continue when false again. */
+  paused?: boolean;
 }
 
 type Status = 'loading' | 'playing' | 'stopped' | 'blocked' | 'error';
@@ -55,6 +57,7 @@ export function YoutubeClip({
   showControls = true,
   tone = 'light',
   onEnded,
+  paused = false,
 }: YoutubeClipProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -178,6 +181,13 @@ export function YoutubeClip({
   useEffect(() => {
     if (active) play();
   }, [active, startSec, endSec]);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player || !active) return;
+    if (paused) player.pauseVideo();
+    else if (status !== 'stopped' && status !== 'error') player.playVideo();
+  }, [paused]);
 
   // A clip that cannot play still "ends", after a moment so the answer title stays on screen.
   useEffect(() => {

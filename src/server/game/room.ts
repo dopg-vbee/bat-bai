@@ -12,6 +12,7 @@ import {
 } from '../../shared/types.ts';
 import { AVATARS } from '../../shared/emoji.ts';
 import { isCorrect } from './match.ts';
+import { PausableTimers, type TimerEntry } from './timers.ts';
 
 export interface GameQuestion {
   title: string;
@@ -91,8 +92,11 @@ export class Room {
   private readonly onChange: () => void;
   private readonly players = new Map<string, Player>();
   private correctOrder: string[] = [];
-  private timer: ReturnType<typeof setTimeout> | null = null;
-  private botTimers: ReturnType<typeof setTimeout>[] = [];
+  /** 0 while running; when the host paused (round clocks and timers are frozen). */
+  pausedAt = 0;
+  private readonly timers = new PausableTimers();
+  private timer: TimerEntry | null = null;
+  private botTimers: TimerEntry[] = [];
   private joinCount = 0;
 
   constructor(options: RoomOptions) {
@@ -169,6 +173,7 @@ export class Room {
 
   /** Host "next"/"skip" button: moves one step along lobby → question → reveal → leaderboard → … → ended. */
   next(): void {
+    this.resume();
     if (this.phase === 'lobby') return this.startQuestion(0);
     if (this.phase === 'question') return this.reveal();
     if (this.phase === 'reveal') return this.showLeaderboard();
@@ -188,10 +193,31 @@ export class Room {
 
   /** The big screen finished the answer clip. Ignored if it is about an earlier round. */
   clipEnded(qIndex: number): void {
-    if (this.phase === 'reveal' && qIndex === this.qIndex) this.showLeaderboard();
+    if (this.phase === 'reveal' && qIndex === this.qIndex && !this.pausedAt) this.showLeaderboard();
+  }
+
+  /** Freezes the round: clocks, timers, bots and guesses. Only while a round is running. */
+  pause(): void {
+    if (this.pausedAt || !['question', 'reveal', 'leaderboard'].includes(this.phase)) return;
+    this.pausedAt = Date.now();
+    this.timers.pause();
+    this.changed();
+  }
+
+  resume(): void {
+    if (!this.pausedAt) return;
+    const pausedFor = Date.now() - this.pausedAt;
+    this.pausedAt = 0;
+    // Deadlines move back by the pause, so answer times (and points) ignore it.
+    this.startsAt += pausedFor;
+    this.endsAt += pausedFor;
+    if (this.advanceAt) this.advanceAt += pausedFor;
+    this.timers.resume(pausedFor);
+    this.changed();
   }
 
   finish(): void {
+    this.resume();
     if (this.phase === 'ended') return;
     this.clearTimer();
     this.clearBotTimers();
@@ -215,6 +241,7 @@ export class Room {
 
   guess(playerId: string, text: string, now = Date.now()): GuessResult {
     const player = this.players.get(playerId);
+    if (player && this.phase === 'question' && this.pausedAt) return { status: 'paused' };
     if (!player || this.phase !== 'question' || now < this.startsAt || now > this.endsAt + LATE_GRACE_MS) {
       return { status: 'closed' };
     }
@@ -309,6 +336,7 @@ export class Room {
       startsAt: this.startsAt,
       endsAt: this.endsAt,
       allCorrect: this.allCorrect,
+      pausedAt: this.pausedAt,
     };
   }
 
@@ -338,12 +366,12 @@ export class Room {
     for (const p of this.players.values()) {
       if (!p.bot || Math.random() < BOT_MISS_RATE) continue;
       const delay = this.countdownMs + this.durationMs * (0.1 + Math.random() * 0.7);
-      this.botTimers.push(setTimeout(() => this.guess(p.id, title), delay));
+      this.botTimers.push(this.timers.set(delay, () => this.guess(p.id, title)));
     }
   }
 
   private clearBotTimers(): void {
-    this.botTimers.forEach(clearTimeout);
+    this.botTimers.forEach((entry) => this.timers.clear(entry));
     this.botTimers = [];
   }
 
@@ -378,11 +406,11 @@ export class Room {
 
   private schedule(ms: number, fn: () => void): void {
     this.clearTimer();
-    this.timer = setTimeout(fn, Math.max(0, ms));
+    this.timer = this.timers.set(ms, fn);
   }
 
   private clearTimer(): void {
-    if (this.timer) clearTimeout(this.timer);
+    this.timers.clear(this.timer);
     this.timer = null;
   }
 

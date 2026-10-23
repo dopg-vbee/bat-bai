@@ -109,7 +109,13 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
     });
 
     socket.on('host:next', () => hostRoom()?.next());
-    socket.on('host:reveal', () => hostRoom()?.reveal());
+    socket.on('host:reveal', () => {
+      const room = hostRoom();
+      room?.resume();
+      room?.reveal();
+    });
+    socket.on('host:pause', () => hostRoom()?.pause());
+    socket.on('host:resume', () => hostRoom()?.resume());
     socket.on('host:end', () => hostRoom()?.finish());
     socket.on('host:clipEnded', (qIndex) => hostRoom()?.clipEnded(Number(qIndex)));
     socket.on('host:kick', (playerId) => {

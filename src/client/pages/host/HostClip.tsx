@@ -5,6 +5,7 @@ import { socket } from '../../lib/socket.ts';
 
 interface HostClipProps {
   qIndex: number;
+  paused: boolean;
   clip: ClipInfo;
   title: string;
   active: boolean;
@@ -17,7 +18,7 @@ interface HostClipProps {
  * pre-buffering HD) is the same one shown at reveal: moving an iframe in the DOM reloads it,
  * so instead of moving it we position it over the reveal layout's slot.
  */
-export function HostClip({ qIndex, clip, title, active, slot }: HostClipProps) {
+export function HostClip({ qIndex, paused, clip, title, active, slot }: HostClipProps) {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   // The server moves on to the leaderboard when the answer clip is over.
@@ -54,6 +55,7 @@ export function HostClip({ qIndex, clip, title, active, slot }: HostClipProps) {
         active={rect !== null}
         showControls={false}
         onEnded={handleEnded}
+        paused={paused}
       />
     </div>
   );

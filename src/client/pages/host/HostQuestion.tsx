@@ -1,19 +1,17 @@
-import { CircleCheck, RotateCcw, SkipForward, Volume2 } from 'lucide-react';
+import { CircleCheck, Volume2 } from 'lucide-react';
 import type { HostState } from '../../../shared/types.ts';
 import { EmojiText } from '../../components/Emoji.tsx';
 import { Equalizer } from '../../components/Equalizer.tsx';
 import { TimerRing } from '../../components/TimerRing.tsx';
-import { socket, useServerNow } from '../../lib/socket.ts';
+import { useServerNow } from '../../lib/socket.ts';
 import { CorrectBubbles } from './CorrectBubbles.tsx';
 import type { QuestionAudio } from './useQuestionAudio.ts';
 
 export function HostQuestion({ state, audio }: { state: HostState; audio: QuestionAudio }) {
-  const now = useServerNow(true, 100);
+  // While paused the clock stands still at the moment the host paused.
+  const live = useServerNow(!state.pausedAt, 100);
+  const now = state.pausedAt || live;
   const online = state.players.filter((p) => p.connected).length;
-
-  function handleReveal() {
-    socket.emit('host:reveal');
-  }
 
   if (now < state.startsAt) {
     return (
@@ -47,20 +45,12 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
             <EmojiText text="Chưa ai đoán ra… 🤔" />
           )}
         </p>
-        <div className="host-actions">
-          {audio.blocked ? (
-            <button className="btn btn-primary btn-lg" onClick={audio.replay}>
-              <Volume2 /> Bấm để phát nhạc
-            </button>
-          ) : (
-            <button className="btn btn-ghost" onClick={audio.replay}>
-              <RotateCcw /> Phát lại
-            </button>
-          )}
-          <button className="btn btn-ghost" onClick={handleReveal}>
-            <SkipForward /> Hiện đáp án
+        {/* Only when the browser blocked autoplay: without it the round would have no sound. */}
+        {audio.blocked && (
+          <button className="btn btn-primary btn-lg" onClick={audio.replay}>
+            <Volume2 /> Bấm để phát nhạc
           </button>
-        </div>
+        )}
       </div>
       <CorrectBubbles feed={state.correctFeed} />
     </section>

@@ -1,4 +1,4 @@
-import { ArrowLeft, CircleAlert, Eye, Flag, Users, WifiOff } from 'lucide-react';
+import { ArrowLeft, CircleAlert, Eye, Flag, Pause, Play, Users, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { HostState } from '../../../shared/types.ts';
 import { BrandMark } from '../../components/Brand.tsx';
@@ -14,6 +14,7 @@ import { HostLeaderboard } from './HostLeaderboard.tsx';
 import { HostLobby } from './HostLobby.tsx';
 import { HostQuestion } from './HostQuestion.tsx';
 import { HostReveal } from './HostReveal.tsx';
+import { PauseOverlay } from './PauseOverlay.tsx';
 import { useQuestionAudio } from './useQuestionAudio.ts';
 
 export function HostPage({ code }: { code: string }) {
@@ -22,6 +23,8 @@ export function HostPage({ code }: { code: string }) {
   const [videoSlot, setVideoSlot] = useState<HTMLElement | null>(null);
   const connected = useConnected();
   const audio = useQuestionAudio(state);
+  const paused = Boolean(state?.pausedAt);
+  const pausable = state !== null && ['question', 'reveal', 'leaderboard'].includes(state.phase);
 
   useEffect(() => {
     preloadAnimatedEmoji(['💯', '🏆']);
@@ -45,6 +48,10 @@ export function HostPage({ code }: { code: string }) {
       socket.off('connect', join);
     };
   }, [code]);
+
+  function handleTogglePause() {
+    socket.emit(paused ? 'host:resume' : 'host:pause');
+  }
 
   function handleEnd() {
     if (confirm('Kết thúc trò chơi ngay và xem kết quả?')) socket.emit('host:end');
@@ -75,10 +82,17 @@ export function HostPage({ code }: { code: string }) {
   return (
     <main className="screen host-screen">
       <header className="host-bar">
-        <span className="host-brand">
-          <BrandMark />
-        </span>
-        <span className="host-set">{state.setName}</span>
+        {/* Brand and set name only around the game (lobby, results), not while playing. */}
+        {pausable ? (
+          <span className="host-set" />
+        ) : (
+          <>
+            <span className="host-brand">
+              <BrandMark />
+            </span>
+            <span className="host-set">{state.setName}</span>
+          </>
+        )}
         {state.preview && (
           <>
             <span className="pill pill-preview">
@@ -99,6 +113,16 @@ export function HostPage({ code }: { code: string }) {
           </button>
         )}
         <ThemeToggle />
+        {pausable && (
+          <button
+            className="btn btn-ghost pause-btn"
+            onClick={handleTogglePause}
+            aria-label={paused ? 'Tiếp tục' : 'Tạm dừng'}
+            title={paused ? 'Tiếp tục' : 'Tạm dừng'}
+          >
+            {paused ? <Play /> : <Pause />}
+          </button>
+        )}
       </header>
       {!connected && (
         <div className="banner">
@@ -114,12 +138,14 @@ export function HostPage({ code }: { code: string }) {
         <HostClip
           key={state.qIndex}
           qIndex={state.qIndex}
+          paused={paused}
           clip={state.clip}
           title={state.answer ?? ''}
           active={state.phase === 'reveal'}
           slot={videoSlot}
         />
       )}
+      {paused && <PauseOverlay onResume={handleTogglePause} />}
     </main>
   );
 }

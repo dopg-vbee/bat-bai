@@ -1,4 +1,4 @@
-import { ArrowLeft, DoorOpen, Users, WifiOff } from 'lucide-react';
+import { ArrowLeft, DoorOpen, Pause, Users, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { PlayerState } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
@@ -103,6 +103,11 @@ export function PlayPage({ code }: { code: string }) {
       {!connected && (
         <div className="banner">
           <WifiOff /> Mất kết nối, đang nối lại…
+        </div>
+      )}
+      {state.pausedAt > 0 && (
+        <div className="banner banner-pause">
+          <Pause /> Host đang tạm dừng
         </div>
       )}
       {state.phase === 'lobby' && (

@@ -1674,6 +1674,77 @@ button {
   }
 }
 
+/* ---------- pause ---------- */
+
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  background: rgb(12 10 24 / 0.78);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  animation: fade-in 0.2s ease-out;
+}
+
+.pause-icon {
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.12);
+  border: 3px solid rgb(255 255 255 / 0.3);
+  animation: pause-breathe 2s ease-in-out infinite;
+}
+
+.pause-icon svg {
+  width: 64px;
+  height: 64px;
+}
+
+.pause-title {
+  font-size: clamp(3rem, 7vw, 5rem);
+  line-height: 1;
+}
+
+/* Small round pause button, set apart at the top-right end of the host bar. */
+.pause-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: rgb(250 204 21 / 0.18);
+  color: #fde047;
+  box-shadow: inset 0 0 0 2px rgb(250 204 21 / 0.45);
+}
+
+.pause-btn:hover {
+  background: rgb(250 204 21 / 0.3);
+}
+
+.banner-pause {
+  background: rgb(192 132 252 / 0.2);
+  color: var(--on-page);
+}
+
+@keyframes pause-breathe {
+  50% {
+    transform: scale(1.08);
+    background: rgb(255 255 255 / 0.2);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* ---------- theme toggle ---------- */
 
 .theme-toggle {

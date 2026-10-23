@@ -10,7 +10,9 @@ type Feedback = { kind: 'wrong' | 'info'; text: string } | null;
 const SHAKE = [0, -10, 10, -8, 8, 0].map((x) => ({ transform: `translateX(${x}px)` }));
 
 export function PlayerQuestion({ state }: { state: PlayerState }) {
-  const now = useServerNow(true, 100);
+  // While paused the clock stands still at the moment the host paused.
+  const live = useServerNow(!state.pausedAt, 100);
+  const now = state.pausedAt || live;
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -37,6 +39,8 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
         inputRef.current?.select();
       } else if (res.status === 'slow') {
         setFeedback({ kind: 'info', text: 'Từ từ thôi nào 😄' });
+      } else if (res.status === 'paused') {
+        setFeedback({ kind: 'info', text: 'Host đang tạm dừng, chờ chút nhé' });
       } else if (res.status === 'closed') {
         setFeedback({ kind: 'info', text: 'Hết giờ mất rồi!' });
       }
@@ -101,7 +105,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
           enterKeyHint="send"
           autoFocus
         />
-        <button className="btn btn-primary btn-lg" disabled={!text.trim() || sending || remaining <= 0}>
+        <button className="btn btn-primary btn-lg" disabled={!text.trim() || sending || remaining <= 0 || Boolean(state.pausedAt)}>
           <Send /> Gửi
         </button>
       </form>

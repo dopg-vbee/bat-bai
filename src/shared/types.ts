@@ -48,6 +48,8 @@ export interface HostState {
   advanceAt: number;
   /** The round ended early because everyone answered correctly. */
   allCorrect: boolean;
+  /** 0 while running; otherwise when the host paused. Clocks show this instant until resumed. */
+  pausedAt: number;
   players: PlayerSummary[];
   audioUrl: string | null;
   nextAudioUrl: string | null;
@@ -75,6 +77,7 @@ export interface PlayerState {
   startsAt: number;
   endsAt: number;
   allCorrect: boolean;
+  pausedAt: number;
   playerCount: number;
   me: PlayerIdentity & { score: number; rank: number; delta: number };
   round: { correct: boolean; points: number };
@@ -86,7 +89,7 @@ export type Ack<T extends object = object> = ({ ok: true } & T) | { ok: false; e
 
 export type GuessResult =
   | { status: 'correct'; points: number }
-  | { status: 'wrong' | 'closed' | 'slow' | 'already' };
+  | { status: 'wrong' | 'closed' | 'slow' | 'already' | 'paused' };
 
 export interface CreateRoomInput {
   password: string;
@@ -117,6 +120,8 @@ export interface ClientToServerEvents {
   'host:next': () => void;
   'host:reveal': () => void;
   'host:end': () => void;
+  'host:pause': () => void;
+  'host:resume': () => void;
   /** The answer video finished playing on the big screen. */
   'host:clipEnded': (qIndex: number) => void;
   'host:kick': (playerId: string) => void;

@@ -104,6 +104,43 @@ describe('preview room', () => {
     expect(room.hostView().allCorrect).toBe(false);
   });
 
+  it('pause freezes the round; resume continues where it left off', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // bots answer 4.5s into the round
+    const room = makeRoom(true);
+    room.next();
+    vi.advanceTimersByTime(3000 + 2000);
+    const endsAt = room.endsAt;
+
+    room.pause();
+    expect(room.hostView().pausedAt).toBeGreaterThan(0);
+    vi.advanceTimersByTime(60_000); // nothing moves while paused: no bot answers, no buzzer
+    expect(room.phase).toBe('question');
+    expect(room.hostView().correctFeed).toHaveLength(0);
+
+    room.resume();
+    expect(room.hostView().pausedAt).toBe(0);
+    expect(room.endsAt).toBe(endsAt + 60_000);
+    vi.advanceTimersByTime(2500 + 450); // the rest of the bots' 4.5s, then the all-correct reveal
+    expect(room.phase).toBe('reveal');
+    // Points ignore the pause: answered 4.5s into a 10s round → 775, same as without pausing.
+    expect(room.hostView().correctFeed[0].points).toBe(775);
+  });
+
+  it('guesses are refused while paused, and pausing outside a round does nothing', () => {
+    const room = makeRoom(false);
+    room.pause();
+    expect(room.hostView().pausedAt).toBe(0); // lobby
+    const player = room.join('Lan', undefined, 'socket-1');
+    if (typeof player === 'string') throw new Error(player);
+    room.next();
+    vi.advanceTimersByTime(3000 + 1000);
+    room.pause();
+    expect(room.guess(player.id, 'Lạc Trôi')).toEqual({ status: 'paused' });
+    room.next(); // host skips while paused: resumes, then reveals
+    expect(room.hostView().pausedAt).toBe(0);
+    expect(room.phase).toBe('reveal');
+  });
+
   it('a normal room has no bots', () => {
     expect(makeRoom(false).hostView().players).toHaveLength(0);
   });

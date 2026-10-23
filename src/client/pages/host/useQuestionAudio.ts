@@ -12,6 +12,8 @@ export interface QuestionAudio {
 /** Plays the round's MP3 on the big screen at the server's start instant and warms the next one. */
 export function useQuestionAudio(state: HostState | null): QuestionAudio {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  /** Round whose MP3 has already started: after a pause it continues instead of restarting. */
+  const startedForRef = useRef<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [blocked, setBlocked] = useState(false);
 
@@ -20,6 +22,7 @@ export function useQuestionAudio(state: HostState | null): QuestionAudio {
   const startsAt = state?.startsAt ?? 0;
   const src = state?.audioUrl ?? null;
   const nextSrc = state?.nextAudioUrl ?? null;
+  const paused = Boolean(state?.pausedAt);
 
   useEffect(() => {
     const audio = new Audio();
@@ -35,14 +38,18 @@ export function useQuestionAudio(state: HostState | null): QuestionAudio {
     };
   }, []);
 
+  function resume() {
+    audioRef.current
+      ?.play()
+      .then(() => setBlocked(false))
+      .catch(() => setBlocked(true));
+  }
+
   function play() {
     const audio = audioRef.current;
     if (!audio) return;
     audio.currentTime = 0;
-    audio
-      .play()
-      .then(() => setBlocked(false))
-      .catch(() => setBlocked(true));
+    resume();
   }
 
   useEffect(() => {
@@ -57,9 +64,21 @@ export function useQuestionAudio(state: HostState | null): QuestionAudio {
       audio.src = absolute;
       audio.load();
     }
-    const timer = setTimeout(play, Math.max(0, startsAt - serverNow()));
+    if (paused) {
+      audio.pause();
+      return;
+    }
+    if (startedForRef.current === qIndex) {
+      if (!audio.ended) resume();
+      return;
+    }
+    // startsAt moves back after a pause during the countdown, so this still starts on time.
+    const timer = setTimeout(() => {
+      startedForRef.current = qIndex ?? null;
+      play();
+    }, Math.max(0, startsAt - serverNow()));
     return () => clearTimeout(timer);
-  }, [phase, qIndex, src, startsAt]);
+  }, [phase, qIndex, src, startsAt, paused]);
 
   // Warm the HTTP cache (files are immutable) so the next round starts instantly.
   useEffect(() => {
