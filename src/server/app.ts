@@ -3,7 +3,7 @@ import path from 'node:path';
 import express, { type ErrorRequestHandler, type RequestHandler } from 'express';
 import multer from 'multer';
 import { Server } from 'socket.io';
-import { MAX_AUDIO_MB } from '../shared/types.ts';
+import { MAX_AUDIO_MB, ROOM_NOT_FOUND } from '../shared/types.ts';
 import { adminRouter } from './admin.ts';
 import { AudioError } from './audio.ts';
 import { HttpError } from './errors.ts';
@@ -103,6 +103,11 @@ export async function createApp(options: AppOptions) {
   });
   app.get('/api/info', async (_req, res) => {
     res.json({ publicUrl: options.publicUrl ?? null, lanAddresses: await lanAddresses() });
+  });
+  /** Lets the home page turn away a wrong room code before opening the room. */
+  app.get('/api/rooms/:code', (req, res) => {
+    if (realtime.rooms.has(req.params.code)) res.json({ ok: true });
+    else res.status(404).json({ error: ROOM_NOT_FOUND });
   });
   app.use('/api/admin', adminRouter(library, store, adminPassword));
   app.use('/api', (_req, res) => {

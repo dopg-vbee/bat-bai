@@ -10,7 +10,7 @@ import type {
   QuestionSetDto,
   ServerToClientEvents,
 } from '../src/shared/types.ts';
-import { PREVIEW_BOTS } from '../src/shared/types.ts';
+import { PREVIEW_BOTS, ROOM_NOT_FOUND } from '../src/shared/types.ts';
 import { fakeMp3, sleep, tempDir, waitFor } from './helpers.ts';
 
 type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -140,6 +140,10 @@ describe('a full game with 60 players', () => {
     const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, shuffle: false });
     if (!created.ok) throw new Error(created.error);
     code = created.code;
+    expect((await fetch(`${base}/api/rooms/${code}`)).status).toBe(200);
+    const missing = await fetch(`${base}/api/rooms/${code === '9999' ? '9998' : '9999'}`);
+    expect(missing.status).toBe(404);
+    expect((await missing.json()).error).toBe(ROOM_NOT_FOUND);
     host.on('hostState', (state) => (hostState = state));
     expect(await host.emitWithAck('host:join', { code, hostToken: created.hostToken })).toEqual({ ok: true });
 

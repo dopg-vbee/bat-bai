@@ -222,6 +222,7 @@ export const PREVIEW_BOT_OPTIONS = [4, 20, 50, 100];
 /** Answer clips without an end mark play this long. */
 export const OPEN_CLIP_SEC = 25;
 export const LEADERBOARD_MS = 5000;
+export const ROOM_NOT_FOUND = 'Không tìm thấy phòng, kiểm tra lại mã nhé';
 /** From MIN correct answers in a row: fire on the avatar (four sizes) and a bonus per answer, growing until MAX. */
 export const STREAK_MIN = 3;
 export const STREAK_MAX = 8;

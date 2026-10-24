@@ -1,5 +1,6 @@
 import { ArrowRight, CircleHelp, LogIn, ScanQrCode } from 'lucide-react';
 import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react';
+import { ROOM_NOT_FOUND } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
 import { Overlay } from '../components/Overlay.tsx';
 import { ThemeToggle } from '../components/ThemeToggle.tsx';
@@ -13,14 +14,27 @@ export function HomePage() {
   const [code, setCode] = useState('');
   const [showGuide, setShowGuide] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
 
   function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
     setCode(event.target.value.replace(/\D/g, '').slice(0, 4));
+    setError('');
   }
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (code.length === 4) navigate(`/play/${code}`);
+    if (code.length !== 4 || checking) return;
+    setChecking(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}`);
+      if (res.status === 404) return setError(ROOM_NOT_FOUND);
+    } catch {
+      // Network trouble: let the room page try (and explain) instead.
+    } finally {
+      setChecking(false);
+    }
+    navigate(`/play/${code}`);
   }
 
   function handleShowScanner() {
@@ -58,7 +72,8 @@ export function HomePage() {
           onChange={handleCodeChange}
           autoFocus
         />
-        <button className="btn btn-primary btn-lg" disabled={code.length !== 4}>
+        {error && <p className="error-text">{error}</p>}
+        <button className="btn btn-primary btn-lg" disabled={code.length !== 4 || checking}>
           <LogIn /> Vào phòng
         </button>
         <button type="button" className="btn btn-ghost-dark" onClick={handleShowScanner}>

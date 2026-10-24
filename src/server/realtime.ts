@@ -1,5 +1,5 @@
 import type { Server } from 'socket.io';
-import { REACTIONS, type ClientToServerEvents, type ServerToClientEvents } from '../shared/types.ts';
+import { REACTIONS, ROOM_NOT_FOUND, type ClientToServerEvents, type ServerToClientEvents } from '../shared/types.ts';
 import { checkPassword } from './auth.ts';
 import { createRateLimiter } from './game/rateLimit.ts';
 import { pickLuck } from './game/luck.ts';
@@ -179,7 +179,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
     socket.on('player:join', (input, cb) => {
       if (typeof cb !== 'function') return;
       const room = rooms.get(String(input?.code));
-      if (!room) return cb({ ok: false, error: 'Không tìm thấy phòng, kiểm tra lại mã nhé' });
+      if (!room) return cb({ ok: false, error: ROOM_NOT_FOUND });
       // Joining another room (e.g. "Chơi phòng khác") leaves the previous one.
       if (socket.data.code && socket.data.code !== room.code) detach(socket);
       const result = room.join(String(input.name ?? ''), input.token ? String(input.token) : undefined, socket.id);
