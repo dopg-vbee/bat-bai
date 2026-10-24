@@ -400,7 +400,7 @@
   justify-content: center;
 }
 
-/* A gift box elsewhere stole some of this player's points. */
+/* Another player's gift box borrowed some of this player's points. */
 .robbed-line {
   font-weight: 800;
   font-size: 1.1rem;

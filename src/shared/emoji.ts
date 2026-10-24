@@ -67,8 +67,7 @@ export const EMOJI_NAMES: Record<string, string> = {
   '🎁': 'wrapped-gift',
   '🔥': 'fire',
   '😅': 'grinning-face-with-sweat',
-  // Gift boxes that steal from the leader
-  '🥷': 'ninja',
+  // Gift boxes that borrow points from the leader
   '💸': 'money-with-wings',
   '😱': 'face-screaming-in-fear',
   // Reactions thrown at the big screen

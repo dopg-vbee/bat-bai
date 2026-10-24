@@ -3,7 +3,7 @@ import { CountUp } from '../../components/AnimatedLeaderboard.tsx';
 import { AnimatedEmoji, Emoji, EmojiText } from '../../components/Emoji.tsx';
 import { StreakTag } from '../../components/Fire.tsx';
 import { Delta } from '../../components/Leaderboard.tsx';
-import { DoubleTag, GiftTag } from '../../components/Luck.tsx';
+import { BorrowQuip, DoubleTag, GiftTag } from '../../components/Luck.tsx';
 import { TeamBadge } from '../../components/Team.tsx';
 
 export function PlayerReveal({ state }: { state: PlayerState }) {
@@ -23,9 +23,12 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
         </p>
       )}
       {round.robbed > 0 && (
-        <p className="robbed-line">
-          <Emoji char="😱" /> Bị cướp mất {round.robbed} điểm!
-        </p>
+        <>
+          <p className="robbed-line">
+            <Emoji char="😱" /> Bị mượn mất {round.robbed} điểm!
+          </p>
+          <BorrowQuip leader />
+        </>
       )}
       <div className="card answer-card">
         <span className="label">Đáp án</span>

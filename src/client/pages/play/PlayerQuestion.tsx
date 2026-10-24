@@ -3,7 +3,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import type { GuessResult, PlayerState } from '../../../shared/types.ts';
 import { AnimatedEmoji, EmojiText } from '../../components/Emoji.tsx';
 import { StreakTag } from '../../components/Fire.tsx';
-import { DoubleTag, GiftTag, LuckyBanner } from '../../components/Luck.tsx';
+import { BorrowQuip, DoubleTag, GiftTag, LuckyBanner } from '../../components/Luck.tsx';
 import { burst } from '../../lib/confetti.ts';
 import { socket, useServerNow } from '../../lib/socket.ts';
 
@@ -76,7 +76,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
     const title = byTeam
       ? 'Đội bạn đã đoán đúng!'
       : result.stolenFrom
-        ? `Chính xác! Cướp điểm của ${result.stolenFrom}!`
+        ? `Chính xác! Mượn được điểm của ${result.stolenFrom}!`
         : result.gift
           ? 'Chính xác! Trúng hộp quà!'
           : 'Chính xác!';
@@ -86,6 +86,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
         <h2>{title}</h2>
         <p className="points-gain">+{result.points}</p>
         {result.gift > 0 && <GiftTag gift={result.gift} stolenFrom={result.stolenFrom} long className="gift-tag-lg" />}
+        {result.stolenFrom && <BorrowQuip />}
         {state.double && <DoubleTag />}
         <StreakTag streak={result.streak} long className="streak-tag-lg" />
         <p className="muted-light">Chờ mọi người đoán xong nhé…</p>
