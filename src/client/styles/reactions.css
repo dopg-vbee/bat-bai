@@ -49,6 +49,12 @@
   animation: reaction-rise 3s ease-out both;
 }
 
+.reaction-fly .emoji-animated {
+  display: block;
+  width: 1.25em;
+  height: 1.25em;
+}
+
 @keyframes reaction-rise {
   from {
     transform: translate(-50%, 40px) scale(0.4);

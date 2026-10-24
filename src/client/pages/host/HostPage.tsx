@@ -1,5 +1,6 @@
 import { ArrowLeft, CircleAlert, Pause, Play, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { REACTIONS } from '../../../shared/types.ts';
 import { BrandMark } from '../../components/Brand.tsx';
 import { Overlay } from '../../components/Overlay.tsx';
 import { preloadAnimatedEmoji } from '../../components/Emoji.tsx';
@@ -29,7 +30,8 @@ export function HostPage({ code }: { code: string }) {
   const pausable = state !== null && ['question', 'reveal', 'leaderboard'].includes(state.phase);
 
   useEffect(() => {
-    preloadAnimatedEmoji(['💯', '🏆', '🔥']);
+    // The big moments, and the reactions phones throw (so the first ones fly in already moving).
+    preloadAnimatedEmoji(['💯', '🏆', ...REACTIONS]);
   }, []);
 
   function handleTogglePause() {

@@ -1,5 +1,5 @@
 import { useEffect, useState, type AnimationEvent, type CSSProperties } from 'react';
-import { Emoji } from '../../components/Emoji.tsx';
+import { AnimatedEmoji } from '../../components/Emoji.tsx';
 import { socket } from '../../lib/socket.ts';
 
 /** Older ones are dropped beyond this, so a burst from 60 phones stays readable and cheap. */
@@ -20,7 +20,7 @@ interface Flying {
 
 let nextId = 0;
 
-/** Reactions thrown from phones, popping up anywhere along the bottom of the big screen and floating up. */
+/** Reactions thrown from phones: animated emoji popping up along the bottom of the big screen and floating up. */
 export function ReactionLayer({ code }: { code: string }) {
   const [flying, setFlying] = useState<Flying[]>([]);
 
@@ -67,7 +67,7 @@ export function ReactionLayer({ code }: { code: string }) {
           }
           onAnimationEnd={handleLanded}
         >
-          <Emoji char={f.emoji} />
+          <AnimatedEmoji char={f.emoji} />
         </span>
       ))}
     </div>
