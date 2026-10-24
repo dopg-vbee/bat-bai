@@ -22,8 +22,9 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
 **Chơi thử trước:** ở trang quản lý, nút **👁 Chơi thử** tạo một phòng y hệt ván thật, có 4 bot tự vào và tự đoán. Nút **👁 Xem thử** ở từng câu chỉ chạy riêng câu đó, để kiểm MP3 và đoạn YouTube. Trong phòng chơi thử, menu ☰ có mục **Mở màn hình người chơi**, mở cửa sổ cỡ điện thoại để tự đoán như người chơi. Bot **Bot Luôn Đúng** câu nào cũng đúng, để xem chuỗi lửa lớn dần.
 
 **Chơi theo đội:** khi tạo phòng chọn **Chơi theo đội** (nhập số đội từ 2 đến 10; mỗi đội một màu: Đỏ, Xanh, Vàng, Tím, Lục, Cam, Hồng, Ngọc, Nâu, Xám). Ở phòng chờ, màn hình lớn có một khung cho mỗi đội; người chơi tự chọn (và đổi) đội trên điện thoại, ai chưa chọn nằm ở khung "Chưa có đội". Chỉ bắt đầu được khi mọi người đều có đội; nút **Xếp đội ngẫu nhiên** chia lại tất cả cho đều. Ai vào sau khi game đã bắt đầu thì được xếp vào đội ít người nhất.
-- **Điểm trung bình:** mọi người chơi như thường; điểm đội = trung bình điểm các thành viên (đội đông không có lợi thế). Bảng xếp hạng có thêm thanh điểm đội, cuối game có thẻ "Đội vô địch".
-- **Đồng đội:** người đầu tiên trong đội đoán đúng là cả đội đúng, cùng nhận điểm đó. Bảng xếp hạng và bục vinh danh tính theo đội.
+- **Điểm trung bình:** mọi người chơi như thường; điểm đội = trung bình điểm các thành viên (đội đông không có lợi thế). Cuối game vẫn có bục vinh danh cá nhân, kèm thẻ "Đội vô địch".
+- **Đồng đội:** người đầu tiên trong đội đoán đúng là cả đội đúng, cùng nhận điểm đó. Bục vinh danh tính theo đội.
+- Ở cả hai chế độ: bảng xếp hạng giữa các câu xếp **các đội** (trượt lên/xuống hạng như bảng thường), màn câu hỏi đếm **số đội đã đoán đúng**, và người trả lời đúng có tim màu đội cạnh tên.
 
 **Thả cảm xúc:** ai đoán đúng rồi (và cả lúc xem đáp án, bảng xếp hạng) có thanh 👍 ❤️ 😆 🔥 👏 😮 ở cuối màn hình điện thoại; bấm là emoji bật lên đâu đó dưới đáy màn hình lớn rồi bay lên, ẩn danh. Mỗi người tối đa 8 lần trong 2 giây.
 

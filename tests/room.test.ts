@@ -319,8 +319,8 @@ describe('preview room', () => {
     expect(hoaPhone.round).toMatchObject({ correct: true, points: 1000, byTeam: true });
     expect(hoaPhone.teams).toBeNull(); // held back while the question is open
     expect(room.hostView().teams).toEqual([
-      { team: 0, score: 1000, members: 2 },
-      { team: 1, score: 0, members: 1 },
+      { team: 0, score: 1000, members: 2, delta: 0, roundPoints: 1000 },
+      { team: 1, score: 0, members: 1, delta: 0, roundPoints: 0 },
     ]);
     room.finish();
     expect(room.playerViews()[0].state.podium?.map((e) => e.name)).toEqual(['Đội Đỏ', 'Đội Xanh']);
@@ -351,6 +351,31 @@ describe('preview room', () => {
       new Room({ code: '1234', setName: 'T', questions, durationMs: 10_000, countdownMs: 3000, teamMode: 'average', teamCount, onChange: () => {} })
         .hostView().teams.length;
     expect([1, 2, 7, 10, 99].map(teamsOf)).toEqual([2, 2, 7, 10, 10]);
+  });
+
+  it('tracks how teams move between questions, like players', () => {
+    const room = new Room({
+      code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
+      teamMode: 'average', teamCount: 2, onChange: () => {},
+    });
+    const [lan, minh] = ['Lan', 'Minh'].map((name, i) => {
+      const player = room.join(name, undefined, 's' + i);
+      if (typeof player === 'string') throw new Error(player);
+      return player;
+    });
+    room.setTeam(lan.id, 0);
+    room.setTeam(minh.id, 1);
+    room.next();
+    vi.advanceTimersByTime(3000 + 5000);
+    room.guess(lan.id, 'Lạc Trôi'); // halfway through: 750, team 0 leads
+    room.next(); room.next(); room.next(); // reveal → leaderboard → question 2
+    vi.advanceTimersByTime(3000);
+    room.guess(minh.id, 'Nơi Này Có Anh'); // at once: 1000, team 1 overtakes
+    room.next(); room.next(); // reveal → leaderboard
+    expect(room.hostView().teams).toEqual([
+      { team: 1, score: 1000, members: 1, delta: 1, roundPoints: 1000 },
+      { team: 0, score: 750, members: 1, delta: -1, roundPoints: 0 },
+    ]);
   });
 
   it('a room without teams leaves everyone teamless', () => {

@@ -19,6 +19,7 @@ export interface PlayerSummary extends PlayerIdentity {
 }
 
 export interface CorrectEntry extends PlayerIdentity {
+  team: number | null;
   /** Everything earned this round, gift included. */
   points: number;
   /** Bonus from a lucky gift box, 0 if none. */
@@ -264,4 +265,8 @@ export interface TeamStanding {
   /** Average score of its members, rounded. */
   score: number;
   members: number;
+  /** Places climbed since the question started (negative = dropped), like RankRow.delta. */
+  delta: number;
+  /** Score gained since the question started. */
+  roundPoints: number;
 }

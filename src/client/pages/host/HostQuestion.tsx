@@ -20,7 +20,11 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
   const live = useServerNow(!state.pausedAt, 100);
   const now = state.pausedAt || live;
   const unit = useScreenUnit();
+  // Team play counts teams: a team is in once any of its members got it.
+  const teamPlay = state.teamMode !== 'off';
   const online = state.players.filter((p) => p.connected).length;
+  const correct = teamPlay ? new Set(state.correctFeed.map((e) => e.team)).size : state.correctFeed.length;
+  const total = teamPlay ? state.teams.length : online;
 
   if (now < state.startsAt) {
     return (
@@ -59,10 +63,10 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
           <>
             <p className="stats-count">
               <CircleCheck />
-              <strong>{state.correctFeed.length}</strong>
-              <span>/{online}</span>
+              <strong>{correct}</strong>
+              <span>/{total}</span>
             </p>
-            <p className="stats-label">người đã đoán đúng</p>
+            <p className="stats-label">{teamPlay ? 'đội đã đoán đúng' : 'người đã đoán đúng'}</p>
           </>
         ) : (
           <p className="stats-label">

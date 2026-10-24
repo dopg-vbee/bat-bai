@@ -19,22 +19,17 @@ const RESERVED_HEIGHT = 310;
 /** Text size as a share of the row pitch: everything in a row scales with it. */
 const FONT_PER_PITCH = 0.46;
 
-/**
- * Row height plus gap, shrunk so the whole list fits the screen height (less `reserve` px taken by
- * something else, like team bars). Rows are absolutely positioned.
- */
-function useRowPitch(count: number, reserve: number) {
-  const fit = () => {
-    const room = window.innerHeight - RESERVED_HEIGHT - reserve;
-    return Math.max(MIN_PITCH, Math.min(MAX_PITCH, Math.floor(room / Math.max(count, 1))));
-  };
+/** Row height plus gap, shrunk so the whole list fits the screen height. Rows are absolutely positioned. */
+function useRowPitch(count: number) {
+  const fit = () =>
+    Math.max(MIN_PITCH, Math.min(MAX_PITCH, Math.floor((window.innerHeight - RESERVED_HEIGHT) / Math.max(count, 1))));
   const [pitch, setPitch] = useState(fit);
   useEffect(() => {
     const update = () => setPitch(fit());
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
-  }, [count, reserve]);
+  }, [count]);
   return pitch;
 }
 
@@ -65,11 +60,11 @@ export function CountUp({ from, to, run }: { from: number; to: number; run: bool
  * Starts from the previous round's order and scores, then slides every row to its new rank
  * while the scores count up. Players climbing in from outside the top list fade in from below.
  */
-export function AnimatedLeaderboard({ rows, reserve = 0 }: { rows: RankRow[]; reserve?: number }) {
+export function AnimatedLeaderboard({ rows }: { rows: RankRow[] }) {
   const [settled, setSettled] = useState(false);
   const [renumbered, setRenumbered] = useState(false);
   const [moved, setMoved] = useState(false);
-  const pitch = useRowPitch(rows.length, reserve);
+  const pitch = useRowPitch(rows.length);
 
   useEffect(() => {
     const timers = [

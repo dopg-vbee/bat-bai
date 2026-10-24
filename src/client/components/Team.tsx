@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { TEAMS, type PodiumEntry, type TeamStanding } from '../../shared/types.ts';
+import { TEAMS, type PodiumEntry, type RankRow, type TeamStanding } from '../../shared/types.ts';
 import { Emoji } from './Emoji.tsx';
 
 const teamStyle = (team: number, extra: Record<string, number> = {}) =>
@@ -24,16 +24,14 @@ export function TeamBadge({ team, short = false, className = '' }: TeamBadgeProp
 
 /** Up to 5 teams take a row each; more are laid out in two columns. */
 const barColumns = (teams: number) => (teams > 5 ? 2 : 1);
-/** Rows the team bars take, for the room the leaderboard below must leave them. */
-export const teamBarRows = (teams: number) => Math.ceil(teams / barColumns(teams));
 
 /** Teams as bars sized by their score (members' average), best first, reading down each column. */
-export function TeamBars({ teams, large = false }: { teams: TeamStanding[]; large?: boolean }) {
+export function TeamBars({ teams }: { teams: TeamStanding[] }) {
   const top = Math.max(1, ...teams.map((t) => t.score));
   return (
     <ol
-      className={`team-bars${large ? ' team-bars-large' : ''}${barColumns(teams.length) > 1 ? ' two-columns' : ''}`}
-      style={{ '--rows': teamBarRows(teams.length) } as CSSProperties}
+      className="team-bars"
+      style={{ '--rows': Math.ceil(teams.length / barColumns(teams.length)) } as CSSProperties}
     >
       {teams.map(({ team, score, members }, i) => (
         <li key={team} className="team-bar" style={teamStyle(team, { '--share': score / top })}>
@@ -59,4 +57,19 @@ export const teamPodium = (teams: TeamStanding[]): PodiumEntry[] =>
     avatar: TEAMS[team].emoji,
     color: TEAMS[team].color,
     score,
+  }));
+
+/** Teams as rows of the regular leaderboard: the heart in place of an avatar, the same movement and points. */
+export const teamRows = (teams: TeamStanding[]): RankRow[] =>
+  teams.map(({ team, score, delta, roundPoints }, i) => ({
+    id: `team-${team}`,
+    name: `Đội ${TEAMS[team].name}`,
+    avatar: TEAMS[team].emoji,
+    color: TEAMS[team].color,
+    score,
+    rank: i + 1,
+    delta,
+    roundPoints,
+    streak: 0,
+    team: null,
   }));

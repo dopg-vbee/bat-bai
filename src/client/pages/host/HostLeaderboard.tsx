@@ -1,7 +1,7 @@
 import { SkipForward, Trophy } from 'lucide-react';
 import { LEADERBOARD_MS, type HostState } from '../../../shared/types.ts';
 import { AnimatedLeaderboard } from '../../components/AnimatedLeaderboard.tsx';
-import { teamBarRows, TeamBars } from '../../components/Team.tsx';
+import { teamRows } from '../../components/Team.tsx';
 import { socket, useServerNow } from '../../lib/socket.ts';
 
 /** Ticks on its own so the list above isn't re-rendered ten times a second. */
@@ -15,10 +15,6 @@ function AdvanceBar({ advanceAt, pausedAt }: { advanceAt: number; pausedAt: numb
     </div>
   );
 }
-
-/** One row of team bars' height plus gap, and the gap under the bars: room the player list gives up. */
-const TEAM_BAR_PITCH = 52;
-const TEAM_BARS_GAP = 16;
 
 /** A few seconds between rounds: rank changes animate, then the next question starts by itself. */
 export function HostLeaderboard({ state }: { state: HostState }) {
@@ -34,18 +30,8 @@ export function HostLeaderboard({ state }: { state: HostState }) {
         Sau câu {state.qIndex + 1}/{state.qTotal} · đáp án: <strong>{state.answer}</strong>
       </p>
       <h2 className="leaderboard-title">Bảng xếp hạng</h2>
-      {state.teamMode === 'together' ? (
-        // Teammates all score alike: the teams are the ranking.
-        <TeamBars teams={state.teams} large />
-      ) : (
-        <>
-          {state.teams.length > 0 && <TeamBars teams={state.teams} />}
-          <AnimatedLeaderboard
-            rows={state.leaderboard}
-            reserve={state.teams.length ? teamBarRows(state.teams.length) * TEAM_BAR_PITCH + TEAM_BARS_GAP : 0}
-          />
-        </>
-      )}
+      {/* Team play ranks the teams, in the same style as players. */}
+      <AnimatedLeaderboard rows={state.teamMode === 'off' ? state.leaderboard : teamRows(state.teams)} />
       <AdvanceBar advanceAt={state.advanceAt} pausedAt={state.pausedAt} />
       <button
         className="btn btn-ghost icon-btn skip-btn"

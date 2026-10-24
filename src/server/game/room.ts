@@ -108,6 +108,8 @@ export class Room {
   private timer: TimerEntry | null = null;
   private botTimers: TimerEntry[] = [];
   private sureBotId: string | null = null;
+  /** Each team's place and score when the question started, for the leaderboard's movement. */
+  private teamsAtStart = new Map<number, { rank: number; score: number }>();
   private joinCount = 0;
 
   constructor(options: RoomOptions) {
@@ -375,7 +377,15 @@ export class Room {
         const p = this.players.get(id);
         const answer = p?.answers.get(this.qIndex);
         return p && answer
-          ? [{ ...identity(p), points: answer.points, gift: answer.gift, streak: streakAt(p, this.qIndex) }]
+          ? [
+              {
+                ...identity(p),
+                team: p.team,
+                points: answer.points,
+                gift: answer.gift,
+                streak: streakAt(p, this.qIndex),
+              },
+            ]
           : [];
       }),
       leaderboard: showRanking
@@ -461,6 +471,7 @@ export class Room {
 
   private startQuestion(index: number): void {
     this.ranking().forEach((p, i) => (p.prevRank = i + 1));
+    this.teamsAtStart = new Map(this.teams().map((t, i) => [t.team, { rank: i + 1, score: t.score }]));
     this.qIndex = index;
     this.phase = 'question';
     this.advanceAt = 0;
@@ -529,7 +540,11 @@ export class Room {
   }
 
   private teams(): TeamStanding[] {
-    return this.teamCount ? teamStandings([...this.players.values()], this.teamCount) : [];
+    if (!this.teamCount) return [];
+    return teamStandings([...this.players.values()], this.teamCount).map((t, i) => {
+      const start = this.teamsAtStart.get(t.team);
+      return { ...t, delta: start ? start.rank - (i + 1) : 0, roundPoints: start ? t.score - start.score : 0 };
+    });
   }
 
   /** Top three players, or top three teams in "together" mode, where teammates all score alike. */

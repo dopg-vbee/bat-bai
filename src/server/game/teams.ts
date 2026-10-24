@@ -1,5 +1,7 @@
 import type { TeamStanding } from '../../shared/types.ts';
 
+type TeamScore = Pick<TeamStanding, 'team' | 'score' | 'members'>;
+
 interface TeamMember {
   team: number | null;
   score: number;
@@ -27,8 +29,8 @@ export function dealTeams(members: TeamMember[], teamCount: number, random = Mat
 }
 
 /** Teams ranked by their members' average score (fair whatever their size), best first. */
-export function teamStandings(members: TeamMember[], teamCount: number): TeamStanding[] {
-  const standings: TeamStanding[] = [];
+export function teamStandings(members: TeamMember[], teamCount: number): TeamScore[] {
+  const standings: TeamScore[] = [];
   for (let team = 0; team < teamCount; team++) {
     const inTeam = membersOf(members, team);
     const total = inTeam.reduce((sum, m) => sum + m.score, 0);

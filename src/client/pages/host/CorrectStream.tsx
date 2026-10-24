@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
-import type { CorrectEntry } from '../../../shared/types.ts';
+import { TEAMS, type CorrectEntry } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
+import { Emoji } from '../../components/Emoji.tsx';
 import { OnFire, StreakTag } from '../../components/Fire.tsx';
 import { GiftTag } from '../../components/Luck.tsx';
 import { playCorrectChime } from '../../lib/sfx.ts';
@@ -121,7 +122,9 @@ export const CorrectStream = memo(function CorrectStream({ entries }: { entries:
                   <StreakTag streak={entry.streak} className="stream-streak" />
                   {entry.gift > 0 && <GiftTag gift={entry.gift} className="stream-gift" />}
                 </span>
-                <span className="stream-name">{entry.name}</span>
+                <span className="stream-name">
+                  {entry.name} {entry.team !== null && <Emoji char={TEAMS[entry.team].emoji} />}
+                </span>
                 <span className="stream-points">+{entry.points}</span>
               </div>
             </li>

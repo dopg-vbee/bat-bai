@@ -115,7 +115,6 @@
   gap: 8px 12px;
 }
 
-/* 44px tall + 8px gap: HostLeaderboard reserves that much per team (TEAM_BAR_PITCH). */
 .team-bar {
   display: grid;
   grid-template-columns: 1.6em minmax(8em, auto) 1fr 5em;
@@ -174,27 +173,6 @@
 
 .team-bar-score {
   text-align: right;
-}
-
-/* "Together" mode: the teams are the whole ranking, so they get the room. */
-.team-bars-large .team-bar {
-  height: 84px;
-  font-size: 2rem;
-  border-radius: 20px;
-}
-
-.team-bars-large .team-bar-track {
-  height: 26px;
-}
-
-/* Two columns of big bars (more than 5 teams) would overflow at the full size. */
-.team-bars-large.two-columns .team-bar {
-  height: 72px;
-  font-size: 1.4rem;
-}
-
-.team-bars-large.two-columns .team-bar-track {
-  height: 18px;
 }
 
 .team-picker {
