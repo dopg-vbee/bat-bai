@@ -381,13 +381,10 @@ button {
   background: var(--white-10);
 }
 
-/* On the big screen: the column right of the answer video, where thrown emoji float up. */
+/* On the big screen: thrown emoji pop up anywhere along the bottom and float up, like bubbles. */
 .reaction-layer {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(190px, 10vw);
+  inset: 0;
   z-index: 6;
   overflow: hidden;
   pointer-events: none;
@@ -395,27 +392,29 @@ button {
 
 .reaction-fly {
   position: absolute;
-  bottom: -70px;
-  /* 60px wide, plus room for a 40px sway either way. */
-  left: calc(40px + var(--x) * (100% - 140px));
-  font-size: 48px;
-  animation: reaction-rise 3.2s cubic-bezier(0.2, 0.6, 0.4, 1) both;
+  bottom: 6%;
+  left: calc(5% + var(--x) * 90%);
+  font-size: calc(52px * var(--scale));
+  animation: reaction-rise 3s ease-out both;
 }
 
 @keyframes reaction-rise {
   from {
-    transform: translateY(0) scale(0.5);
+    transform: translate(-50%, 40px) scale(0.4);
     opacity: 0;
   }
-  10% {
-    transform: translateY(-8vh) scale(1.15);
+  12% {
+    transform: translate(-50%, 0) scale(1.15);
     opacity: 1;
+  }
+  20% {
+    transform: translate(-50%, -10px) scale(1);
   }
   80% {
     opacity: 1;
   }
   to {
-    transform: translate(calc(var(--drift) * 40px), -95vh) scale(1);
+    transform: translate(calc(-50% + var(--drift) * 60px), -60vh) scale(0.9);
     opacity: 0;
   }
 }

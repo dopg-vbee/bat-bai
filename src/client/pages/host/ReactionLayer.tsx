@@ -10,15 +10,17 @@ const STAGGER_MS = 70;
 interface Flying {
   id: number;
   emoji: string;
-  /** 0–1 across the column, and a sideways sway for the rise. */
+  /** 0–1 across the screen, a sideways sway for the rise, and a bit of variety in size and speed. */
   x: number;
   drift: number;
+  scale: number;
+  riseMs: number;
   delayMs: number;
 }
 
 let nextId = 0;
 
-/** Reactions thrown from phones, floating up the right edge of the big screen (clear of the video). */
+/** Reactions thrown from phones, popping up anywhere along the bottom of the big screen and floating up. */
 export function ReactionLayer({ code }: { code: string }) {
   const [flying, setFlying] = useState<Flying[]>([]);
 
@@ -30,6 +32,8 @@ export function ReactionLayer({ code }: { code: string }) {
         emoji,
         x: Math.random(),
         drift: Math.random() * 2 - 1,
+        scale: 0.8 + Math.random() * 0.6,
+        riseMs: 2600 + Math.random() * 1000,
         delayMs: i * STAGGER_MS,
       }));
       setFlying((list) => [...list, ...added].slice(-MAX_ON_SCREEN));
@@ -52,7 +56,15 @@ export function ReactionLayer({ code }: { code: string }) {
           key={f.id}
           data-id={f.id}
           className="reaction-fly"
-          style={{ '--x': f.x, '--drift': f.drift, animationDelay: `${f.delayMs}ms` } as CSSProperties}
+          style={
+            {
+              '--x': f.x,
+              '--drift': f.drift,
+              '--scale': f.scale,
+              animationDuration: `${f.riseMs}ms`,
+              animationDelay: `${f.delayMs}ms`,
+            } as CSSProperties
+          }
           onAnimationEnd={handleLanded}
         >
           <Emoji char={f.emoji} />
