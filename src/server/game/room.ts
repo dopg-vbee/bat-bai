@@ -318,7 +318,7 @@ export class Room {
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
     const speed = scoreFor(elapsed, this.durationMs) * (this.isDouble() ? 2 : 1);
     const gift = rollGift(this.luck);
-    const streak = streakAt(player, this.qIndex - 1) + 1;
+    const streak = this.teamMode === 'off' ? streakAt(player, this.qIndex - 1) + 1 : 0;
     const points = speed + gift + streakBonus(streak);
     player.answers.set(this.qIndex, { points, gift, ms: elapsed });
     player.score += points;
@@ -383,7 +383,7 @@ export class Room {
                 team: p.team,
                 points: answer.points,
                 gift: answer.gift,
-                streak: streakAt(p, this.qIndex),
+                streak: this.streakAt(p, this.qIndex),
               },
             ]
           : [];
@@ -395,7 +395,9 @@ export class Room {
         : [],
       awards:
         this.phase === 'ended'
-          ? computeAwards([...this.players.values()], this.questions.map((q) => q.title), this.qIndex)
+          ? computeAwards([...this.players.values()], this.questions.map((q) => q.title), this.qIndex, {
+              streaks: this.teamMode === 'off',
+            })
           : null,
     };
   }
@@ -431,8 +433,7 @@ export class Room {
                   points: p.answers.get(this.qIndex)?.points ?? 0,
                   gift: p.answers.get(this.qIndex)?.gift ?? 0,
                   // While the question is open an unanswered one hasn't broken the streak yet.
-                  streak:
-                    holdRank && !p.answers.has(this.qIndex) ? streakAt(p, this.qIndex - 1) : streakAt(p, this.qIndex),
+                  streak: this.streakAt(p, holdRank && !p.answers.has(this.qIndex) ? this.qIndex - 1 : this.qIndex),
                   byTeam: Boolean(p.answers.get(this.qIndex)?.byTeam),
                 },
                 teamMode: this.teamMode,
@@ -539,6 +540,11 @@ export class Room {
     );
   }
 
+  /** Streaks (bonus, fire, the streak title) are a solo thing: in team play they stay at 0. */
+  private streakAt(p: Player, index: number): number {
+    return this.teamMode === 'off' ? streakAt(p, index) : 0;
+  }
+
   private teams(): TeamStanding[] {
     if (!this.teamCount) return [];
     return teamStandings([...this.players.values()], this.teamCount).map((t, i) => {
@@ -565,7 +571,7 @@ export class Room {
       rank,
       delta: p.prevRank - rank,
       roundPoints: p.answers.get(this.qIndex)?.points ?? 0,
-      streak: streakAt(p, this.qIndex),
+      streak: this.streakAt(p, this.qIndex),
       team: p.team,
     };
   }

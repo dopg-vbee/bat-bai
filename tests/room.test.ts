@@ -378,6 +378,27 @@ describe('preview room', () => {
     ]);
   });
 
+  it('has no streaks in team play: no bonus, no fire, no streak title', () => {
+    const titles = ['Lạc Trôi', 'Nơi Này Có Anh', 'Hãy Trao Cho Anh'];
+    const room = new Room({
+      code: '1234', setName: 'Test', questions: titles.map((title) => ({ ...questions[0], title })),
+      durationMs: 10_000, countdownMs: 3000, teamMode: 'average', teamCount: 2, onChange: () => {},
+    });
+    const lan = room.join('Lan', undefined, 's1');
+    if (typeof lan === 'string') throw new Error(lan);
+    room.setTeam(lan.id, 0);
+    room.next();
+    for (const [i, title] of titles.entries()) {
+      vi.advanceTimersByTime(3000);
+      // No +50 on the third answer in a row.
+      expect(room.guess(lan.id, title)).toEqual({ status: 'correct', points: 1000, gift: 0, streak: 0 });
+      expect(room.hostView().correctFeed[0].streak).toBe(0);
+      if (i < titles.length - 1) { room.next(); room.next(); room.next(); }
+    }
+    room.finish();
+    expect(room.hostView().awards?.streak).toBeNull();
+  });
+
   it('a room without teams leaves everyone teamless', () => {
     const room = makeRoom(false);
     const lan = room.join('Lan', undefined, 's1');

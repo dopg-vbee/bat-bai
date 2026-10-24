@@ -1,8 +1,16 @@
 import { STREAK_MIN, type GameAwards } from '../../shared/types.ts';
 import { identity, longestStreak, type Player } from './player.ts';
 
-/** Fun titles for the final screen over questions 0..lastIndex; each is null when nobody earned it. */
-export function computeAwards(players: Player[], titles: string[], lastIndex: number): GameAwards {
+/**
+ * Fun titles for the final screen over questions 0..lastIndex; each is null when nobody earned it.
+ * `streaks: false` leaves out the streak title (team play has no streaks).
+ */
+export function computeAwards(
+  players: Player[],
+  titles: string[],
+  lastIndex: number,
+  { streaks = true } = {},
+): GameAwards {
   let fastest: GameAwards['fastest'] = null;
   let streak: GameAwards['streak'] = null;
   let guesser: GameAwards['guesser'] = null;
@@ -10,7 +18,7 @@ export function computeAwards(players: Player[], titles: string[], lastIndex: nu
     for (const [index, { ms }] of p.answers) {
       if (!fastest || ms < fastest.ms) fastest = { ...identity(p), ms, question: titles[index] };
     }
-    const best = longestStreak(p);
+    const best = streaks ? longestStreak(p) : 0;
     if (best >= STREAK_MIN && (!streak || best > streak.streak)) streak = { ...identity(p), streak: best };
     if (p.wrongTotal > 0 && (!guesser || p.wrongTotal > guesser.wrong)) {
       guesser = { ...identity(p), wrong: p.wrongTotal };
