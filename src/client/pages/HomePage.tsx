@@ -1,14 +1,18 @@
-import { ArrowRight, CircleHelp, LogIn } from 'lucide-react';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { ArrowRight, CircleHelp, LogIn, ScanQrCode } from 'lucide-react';
+import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Logo } from '../components/Brand.tsx';
 import { Overlay } from '../components/Overlay.tsx';
 import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { Link, navigate } from '../lib/router.tsx';
 import { HowToPlay } from './HowToPlay.tsx';
 
+// The QR decoder only loads for the phones that open the scanner.
+const QrScanner = lazy(() => import('./QrScanner.tsx').then((m) => ({ default: m.QrScanner })));
+
 export function HomePage() {
   const [code, setCode] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
     setCode(event.target.value.replace(/\D/g, '').slice(0, 4));
@@ -17,6 +21,14 @@ export function HomePage() {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (code.length === 4) navigate(`/play/${code}`);
+  }
+
+  function handleShowScanner() {
+    setShowScanner(true);
+  }
+
+  function handleHideScanner() {
+    setShowScanner(false);
   }
 
   function handleShowGuide() {
@@ -49,6 +61,9 @@ export function HomePage() {
         <button className="btn btn-primary btn-lg" disabled={code.length !== 4}>
           <LogIn /> Vào phòng
         </button>
+        <button type="button" className="btn btn-ghost-dark" onClick={handleShowScanner}>
+          <ScanQrCode /> Quét mã QR
+        </button>
       </form>
       <button type="button" className="btn btn-ghost" onClick={handleShowGuide}>
         <CircleHelp /> Hướng dẫn chơi
@@ -56,6 +71,13 @@ export function HomePage() {
       <Link to="/admin" className="link-subtle">
         Tôi là host <ArrowRight />
       </Link>
+      {showScanner && (
+        <Overlay onClose={handleHideScanner}>
+          <Suspense fallback={<div className="card qr-scanner"><div className="spinner" /></div>}>
+            <QrScanner />
+          </Suspense>
+        </Overlay>
+      )}
       {showGuide && (
         <Overlay onClose={handleHideGuide}>
           <HowToPlay />

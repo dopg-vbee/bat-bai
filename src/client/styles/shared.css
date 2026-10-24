@@ -322,3 +322,41 @@
   color: var(--text-soft);
   white-space: pre-line;
 }
+
+/* ---------- QR scanner (home page) ---------- */
+
+.qr-scanner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(420px, calc(100vw - 32px));
+  text-align: left;
+}
+
+/* Clear of the pop-up's close button. */
+.qr-scanner h2 {
+  padding-right: 48px;
+}
+
+.qr-scanner-view {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+}
+
+.qr-scanner-view video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Where to put the code: the rest of the picture is dimmed. */
+.qr-scanner-frame {
+  position: absolute;
+  inset: 15%;
+  border: 3px solid rgb(255 255 255 / 0.9);
+  border-radius: 18px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.35);
+}

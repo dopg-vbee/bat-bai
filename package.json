@@ -37,6 +37,7 @@
     "@types/youtube": "^0.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "canvas-confetti": "^1.9.4",
+    "jsqr": "^1.4.0",
     "lucide-react": "^1.61.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
