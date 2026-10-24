@@ -2456,10 +2456,14 @@ button {
 }
 
 .flames {
+  /* Flame size as a multiple of the avatar. */
+  --flame: calc(1.45 + 0.4 * var(--fire));
   position: absolute;
   left: 50%;
-  bottom: -12%;
-  width: calc(100% * (1.45 + 0.4 * var(--fire)));
+  /* The flame image has ~3.2% clear space at its foot: sink it by that, so the fire's base
+     sits just under the avatar's bottom edge whatever its size. */
+  bottom: calc(-3.2% * var(--flame) - 2%);
+  width: calc(100% * var(--flame));
   aspect-ratio: 1;
   translate: -50% 0;
   pointer-events: none;
@@ -2469,8 +2473,7 @@ button {
 
 /* Small avatars (leaderboard rows, the phone bar) sit close to their neighbours: smaller flames. */
 .on-fire:has(> .avatar-sm) .flames {
-  width: calc(100% * (1.6 + 0.4 * var(--fire)));
-  bottom: -8%;
+  --flame: calc(1.6 + 0.4 * var(--fire));
 }
 
 .flames img {
