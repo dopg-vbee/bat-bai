@@ -1,5 +1,5 @@
 import { ExternalLink, Pencil, Play, Plus, Save, X } from 'lucide-react';
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import type { QuestionDto, QuestionSetDto } from '../../../shared/types.ts';
 import { parseYoutube, youtubeWatchUrl } from '../../../shared/youtube.ts';
 import { YoutubeClip } from '../../components/YoutubeClip.tsx';
@@ -37,12 +37,18 @@ export function QuestionForm({ setId, question, onSaved, onCancel }: QuestionFor
   const [showClip, setShowClip] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const youtube = parseYoutube(youtubeUrl);
   const duration = useYoutubeDuration(youtube?.id ?? null);
   const videoStatus = useVideoStatus(youtube?.id ?? null);
   const previewStart = useDebounced(startSec, PREVIEW_DEBOUNCE_MS);
   const previewEnd = useDebounced(endSec, PREVIEW_DEBOUNCE_MS);
+  // Opened from a row's "Sửa" button, maybe far down the list (the form is keyed per question).
+  useEffect(() => {
+    if (question) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   const ready = title.trim() && youtube && (endSec === null || endSec > startSec) && (file || question);
 
   function handleTitleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -99,7 +105,7 @@ export function QuestionForm({ setId, question, onSaved, onCancel }: QuestionFor
   }
 
   return (
-    <form className="card question-form" onSubmit={handleSubmit}>
+    <form ref={formRef} className="card question-form" onSubmit={handleSubmit}>
       <h3 className="icon-heading">
         {question ? <Pencil /> : <Plus />}
         {question ? `Sửa câu: ${question.title}` : 'Thêm câu hỏi'}
