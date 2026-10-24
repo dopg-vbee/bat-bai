@@ -24,7 +24,7 @@ const SWEEP_INTERVAL_MS = 5 * 60_000;
 const IDLE_ROOM_MS = 3 * 60 * 60_000;
 /** Reactions reach the big screen in small batches; the screen shows a few at a time anyway. */
 const REACTION_BATCH_MS = 200;
-const MAX_REACTIONS_PER_BATCH = 20;
+const MAX_REACTIONS_PER_BATCH = 30;
 
 const hostChannel = (code: string) => `host:${code}`;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -45,8 +45,8 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
   // Changes are coalesced: a burst of 60 joins or correct answers becomes one push per client.
   /** Last state sent to each phone, per room: a phone whose state did not change gets nothing. */
   const sentToPhones = new WeakMap<Room, Map<string, string>>();
-  /** Each phone may throw 3 reactions every 2 seconds. */
-  const reactionLimit = createRateLimiter(3, 2000);
+  /** Each phone may throw 8 reactions every 2 seconds: a little spamming is part of the fun. */
+  const reactionLimit = createRateLimiter(8, 2000);
   const pendingReactions = new Map<string, string[]>();
   let reactionTimer: ReturnType<typeof setTimeout> | null = null;
 

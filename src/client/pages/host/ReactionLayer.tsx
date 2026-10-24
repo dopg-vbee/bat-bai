@@ -3,7 +3,7 @@ import { Emoji } from '../../components/Emoji.tsx';
 import { socket } from '../../lib/socket.ts';
 
 /** Older ones are dropped beyond this, so a burst from 60 phones stays readable and cheap. */
-const MAX_ON_SCREEN = 40;
+const MAX_ON_SCREEN = 60;
 /** A batch arrives at once; spreading it out makes it look thrown, not stamped. */
 const STAGGER_MS = 70;
 
