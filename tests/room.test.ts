@@ -221,7 +221,7 @@ describe('preview room', () => {
     expect([lan, minh, an].map((p) => (room.guess(p.id, titles[1]) as { gift: number }).gift)).toEqual([0, 0, 200]);
   });
 
-  it('a gift box can steal from the leader at the start of the question, but not in team play', () => {
+  it('a gift box can steal from the leader at the start of the question, once a question, not in team play', () => {
     const titles = ['Lạc Trôi', 'Nơi Này Có Anh'];
     const luck = { doubleRounds: [], giftChances: [1, 1, 1], stealShare: 1 };
     const makeRoom = (teamMode: 'off' | 'average') => {
@@ -229,16 +229,16 @@ describe('preview room', () => {
         code: '1234', setName: 'Test', questions: titles.map((title) => ({ ...questions[0], title })),
         durationMs: 10_000, countdownMs: 3000, luck, teamMode, teamCount: 2, onChange: () => {},
       });
-      const players = ['Lan', 'Minh'].map((name, i) => {
+      const players = ['Lan', 'Minh', 'An'].map((name, i) => {
         const player = room.join(name, undefined, `s${i}`);
         if (typeof player === 'string') throw new Error(player);
-        room.setTeam(player.id, i);
+        room.setTeam(player.id, i % 2);
         return player;
       });
       return { room, players };
     };
     vi.spyOn(Math, 'random').mockReturnValue(0.5); // gift 200; a steal takes 150
-    const { room, players: [lan, minh] } = makeRoom('off');
+    const { room, players: [lan, minh, an] } = makeRoom('off');
     room.next();
     vi.advanceTimersByTime(3000);
     // Nobody has points yet: nothing to steal.
@@ -248,11 +248,17 @@ describe('preview room', () => {
     // The leader's own box is a plain gift; anyone else's takes from the leader.
     expect(room.guess(lan.id, titles[1])).toMatchObject({ gift: 200, stolenFrom: null });
     expect(room.guess(minh.id, titles[1])).toMatchObject({ points: 1150, gift: 150, stolenFrom: 'Lan' });
+    // Only one steal a question: the next box is a plain gift.
+    expect(room.guess(an.id, titles[1])).toMatchObject({ gift: 200, stolenFrom: null });
     expect(lan.score).toBe(1200 + 1200 - 150);
     expect(room.hostView().correctFeed[1]).toMatchObject({ name: 'Minh', stolenFrom: 'Lan' });
     expect(room.playerViews().find((v) => v.socketId === 's0')!.state.round).toMatchObject({ robbed: 150 });
     room.next(); room.next(); // reveal → leaderboard: the stolen points come off this round's gain
-    expect(room.hostView().leaderboard.map((r) => [r.name, r.roundPoints])).toEqual([['Lan', 1050], ['Minh', 1150]]);
+    expect(room.hostView().leaderboard.map((r) => [r.name, r.roundPoints])).toEqual([
+      ['Lan', 1050],
+      ['An', 1200],
+      ['Minh', 1150],
+    ]);
 
     const teams = makeRoom('average');
     teams.room.next();

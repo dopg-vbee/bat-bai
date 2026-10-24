@@ -350,11 +350,14 @@ export class Room {
     return { status: 'correct', points, gift, streak, stolenFrom: stolenFrom?.name ?? null };
   }
 
-  /** Who a gift box would steal from: the leader at the start of the question (solo play, not the finder). */
+  /**
+   * Who a gift box would steal from: the leader at the start of the question (solo play, not the finder),
+   * at most once a question.
+   */
   private stealVictim(finder: Player): Player | undefined {
     if (this.teamMode !== 'off') return undefined;
     const leader = [...this.players.values()].find((p) => p.prevRank === 1);
-    return leader && leader !== finder && leader.score > 0 ? leader : undefined;
+    return leader && leader !== finder && leader.score > 0 && !leader.robbed.has(this.qIndex) ? leader : undefined;
   }
 
   dispose(): void {
