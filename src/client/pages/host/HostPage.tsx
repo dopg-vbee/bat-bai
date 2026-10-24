@@ -1,6 +1,7 @@
 import { ArrowLeft, CircleAlert, Pause, Play, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { BrandMark } from '../../components/Brand.tsx';
+import { Overlay } from '../../components/Overlay.tsx';
 import { preloadAnimatedEmoji } from '../../components/Emoji.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { Link } from '../../lib/router.tsx';
@@ -12,7 +13,7 @@ import { HostLobby } from './HostLobby.tsx';
 import { HostMenu } from './HostMenu.tsx';
 import { HostQuestion } from './HostQuestion.tsx';
 import { HostReveal } from './HostReveal.tsx';
-import { JoinCard, QrOverlay, RemoteCard } from './JoinCard.tsx';
+import { JoinCard, RemoteCard } from './JoinCard.tsx';
 import { PauseOverlay } from './PauseOverlay.tsx';
 import { ReactionLayer } from './ReactionLayer.tsx';
 import { useHostRoom } from './useHostRoom.ts';
@@ -126,14 +127,14 @@ export function HostPage({ code }: { code: string }) {
         />
       )}
       {state.joinQr && state.phase !== 'lobby' && state.phase !== 'ended' && (
-        <QrOverlay onClose={handleHideQr}>
+        <Overlay onClose={handleHideQr}>
           <JoinCard code={state.code} />
-        </QrOverlay>
+        </Overlay>
       )}
       {showRemote && (
-        <QrOverlay onClose={handleHideRemote}>
+        <Overlay onClose={handleHideRemote}>
           <RemoteCard code={state.code} />
-        </QrOverlay>
+        </Overlay>
       )}
       {state.phase !== 'lobby' && <ReactionLayer code={state.code} />}
       {paused && <PauseOverlay onResume={handleTogglePause} />}

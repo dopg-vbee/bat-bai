@@ -107,31 +107,6 @@
 
 /* ---------- pause ---------- */
 
-/* Above the host menu (z-index 40) it was opened from. */
-.qr-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 45;
-  display: grid;
-  place-items: center;
-  background: rgb(12 10 24 / 0.7);
-  backdrop-filter: blur(6px);
-  animation: fade-in 0.2s ease-out;
-}
-
-.qr-overlay-body {
-  position: relative;
-}
-
-.qr-overlay-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  /* On the card, not the page: a ghost button would vanish on white. */
-  background: var(--surface-2);
-  color: var(--text);
-}
-
 .pause-overlay {
   position: fixed;
   inset: 0;

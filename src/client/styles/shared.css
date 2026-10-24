@@ -237,3 +237,75 @@
 .podium-large .place-3 .podium-block {
   height: 110px;
 }
+
+/* ---------- pop-up ---------- */
+
+/* Above the host menu (z-index 40) it was opened from. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  background: rgb(12 10 24 / 0.7);
+  backdrop-filter: blur(6px);
+  animation: fade-in 0.2s ease-out;
+}
+
+.overlay-body {
+  position: relative;
+}
+
+.overlay-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  /* On the card, not the page: a ghost button would vanish on white. */
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* ---------- how to play (home page) ---------- */
+
+.how-to-play {
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  text-align: left;
+}
+
+/* Clear of the pop-up's close button. */
+.how-to-play h2 {
+  padding-right: 48px;
+}
+
+.how-steps {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.how-steps li {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.how-steps svg {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.how-steps p {
+  margin: 2px 0 0;
+  color: var(--text-soft);
+  line-height: 1.45;
+}

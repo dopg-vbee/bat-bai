@@ -1,5 +1,5 @@
-import { ScanQrCode, Smartphone, X } from 'lucide-react';
-import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
+import { ScanQrCode, Smartphone } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
 import QRCode from 'qrcode';
 import { readStorage, storageKeys } from '../../lib/storage.ts';
 
@@ -89,31 +89,5 @@ export function RemoteCard({ code }: { code: string }) {
     >
       <p className="join-or">Ai quét mã này cũng điều khiển được phòng: đừng để người chơi thấy.</p>
     </QrCard>
-  );
-}
-
-/** A card over the game; the round keeps running underneath. */
-export function QrOverlay({ onClose, children }: { onClose: () => void; children: ReactNode }) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  function handleBackdrop(event: MouseEvent) {
-    if (event.target === event.currentTarget) onClose();
-  }
-
-  return (
-    <div className="qr-overlay" role="dialog" onClick={handleBackdrop}>
-      <div className="qr-overlay-body">
-        <button className="btn btn-ghost icon-btn qr-overlay-close" onClick={onClose} aria-label="Đóng" title="Đóng">
-          <X />
-        </button>
-        {children}
-      </div>
-    </div>
   );
 }

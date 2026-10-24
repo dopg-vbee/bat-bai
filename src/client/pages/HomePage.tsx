@@ -1,11 +1,14 @@
-import { ArrowRight, LogIn } from 'lucide-react';
+import { ArrowRight, CircleHelp, LogIn } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Logo } from '../components/Brand.tsx';
+import { Overlay } from '../components/Overlay.tsx';
 import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { Link, navigate } from '../lib/router.tsx';
+import { HowToPlay } from './HowToPlay.tsx';
 
 export function HomePage() {
   const [code, setCode] = useState('');
+  const [showGuide, setShowGuide] = useState(false);
 
   function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
     setCode(event.target.value.replace(/\D/g, '').slice(0, 4));
@@ -14,6 +17,14 @@ export function HomePage() {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (code.length === 4) navigate(`/play/${code}`);
+  }
+
+  function handleShowGuide() {
+    setShowGuide(true);
+  }
+
+  function handleHideGuide() {
+    setShowGuide(false);
   }
 
   return (
@@ -39,9 +50,17 @@ export function HomePage() {
           <LogIn /> Vào phòng
         </button>
       </form>
+      <button type="button" className="btn btn-ghost" onClick={handleShowGuide}>
+        <CircleHelp /> Hướng dẫn chơi
+      </button>
       <Link to="/admin" className="link-subtle">
         Tôi là host <ArrowRight />
       </Link>
+      {showGuide && (
+        <Overlay onClose={handleHideGuide}>
+          <HowToPlay />
+        </Overlay>
+      )}
     </main>
   );
 }
