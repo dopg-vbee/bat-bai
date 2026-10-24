@@ -3,8 +3,6 @@ import { OPEN_CLIP_SEC } from '../../../shared/types.ts';
 import { formatTimestamp, parseTimestamp, roundTenth } from '../../../shared/youtube.ts';
 
 const STEP = 0.1;
-/** What the − / + buttons move the mark by. */
-const NUDGE_SEC = 1;
 const DEFAULT_CLIP_SEC = 20;
 /** Slider length while the video's real duration is still loading (or unavailable). */
 const FALLBACK_SPAN_SEC = 300;
@@ -24,12 +22,13 @@ function TimeSlider({ label, value, max, disabled = false, onChange }: TimeSlide
     onChange(Number(event.target.value));
   }
 
+  // The − / + buttons go to the previous / next whole second (12.3 → 12 or 13).
   function handleMinus() {
-    onChange(value - NUDGE_SEC);
+    onChange(Math.ceil(value) - 1);
   }
 
   function handlePlus() {
-    onChange(value + NUDGE_SEC);
+    onChange(Math.floor(value) + 1);
   }
 
   function handleDraftChange(event: ChangeEvent<HTMLInputElement>) {
@@ -89,7 +88,7 @@ interface ClipRangeEditorProps {
   onChange: (startSec: number, endSec: number | null) => void;
 }
 
-/** Start/end sliders for the YouTube clip, each with ±1s nudges and an exact-time box. */
+/** Start/end sliders for the YouTube clip, each with ±1s buttons that snap to whole seconds and an exact-time box. */
 export function ClipRangeEditor({ duration, startSec, endSec, onChange }: ClipRangeEditorProps) {
   const max = duration ?? Math.max(startSec, endSec ?? 0) + FALLBACK_SPAN_SEC;
 
