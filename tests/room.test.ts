@@ -414,15 +414,16 @@ describe('preview room', () => {
 });
 
 describe('pickLuck', () => {
-  it('picks about a fifth of the questions, never the first, no duplicates', () => {
+  it('picks about 15% of the questions, never the first, no duplicates', () => {
     for (let run = 0; run < 50; run++) {
       const { doubleRounds, giftChance } = pickLuck(10);
       expect(doubleRounds).toHaveLength(2);
       expect(new Set(doubleRounds).size).toBe(2);
       expect(doubleRounds).not.toContain(0);
       expect(doubleRounds.every((i) => i >= 1 && i <= 9)).toBe(true);
-      expect(giftChance).toBe(0.15);
+      expect(giftChance).toBe(0.12);
     }
+    expect(pickLuck(30).doubleRounds).toHaveLength(5);
     expect(pickLuck(3).doubleRounds).toHaveLength(1);
     expect(pickLuck(2).doubleRounds).toEqual([]);
   });

@@ -10,8 +10,8 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
    - Sai thì đoán lại được. Không cần gõ dấu, sai chính tả nhẹ vẫn tính, gõ thêm tên ca sĩ sau tên bài cũng tính. Đoán sát mà chưa đúng thì điện thoại báo **"Gần đúng rồi!"**.
    - Đúng càng nhanh càng nhiều điểm: **1000 → 500 điểm**.
    - **🔥 Chuỗi đúng:** từ câu đúng thứ 3 liên tiếp, avatar bốc cháy và mỗi câu được thưởng **+50**, tăng dần tới **+300** (chuỗi 8). Trượt một câu là mất chuỗi. Chơi theo đội thì không có chuỗi.
-   - **⚡ Câu may mắn:** khoảng 1/5 số câu (không bao giờ là câu đầu) được chọn ngẫu nhiên tính **x2 điểm**. Chỉ lộ ra lúc đếm ngược câu đó.
-   - **🎁 Hộp quà:** mỗi lần đoán đúng có 15% cơ hội được thưởng thêm ngẫu nhiên **+100 đến +300** điểm.
+   - **⚡ Câu may mắn:** khoảng 15% số câu (không bao giờ là câu đầu) được chọn ngẫu nhiên tính **x2 điểm**. Chỉ lộ ra lúc đếm ngược câu đó.
+   - **🎁 Hộp quà:** mỗi lần đoán đúng có 12% cơ hội được thưởng thêm ngẫu nhiên **+100 đến +300** điểm.
    - Ai đoán đúng thì avatar + tên bật lên màn hình lớn kèm tiếng "ting" (nhiều người đúng liên tiếp thì cao dần như chuỗi nốt nhạc).
 4. Hết giờ (hoặc khi mọi người đều đúng): màn hình lớn hiện đáp án và phát đoạn YouTube cỡ lớn ở giữa màn hình. Phát xong tự chuyển sang **bảng xếp hạng** khoảng 5 giây (các dòng trượt tới hạng mới, điểm đếm tăng), rồi **tự sang câu tiếp**. Host bấm "Bỏ qua" / "Câu tiếp ngay" nếu muốn nhanh hơn.
    - Mỗi câu đặt được điểm **Phát từ** và **Đến**. Bỏ trống "Đến" thì phát 25 giây.

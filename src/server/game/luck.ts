@@ -5,11 +5,11 @@ export interface Luck {
   giftChance: number;
 }
 
-const DOUBLE_SHARE = 0.2;
-const GIFT_CHANCE = 0.15;
+const DOUBLE_SHARE = 0.15;
+const GIFT_CHANCE = 0.12;
 const GIFT_STEPS = [100, 150, 200, 250, 300];
 
-/** About a fifth of the questions (never the first) score double; 15% of correct answers get a gift. */
+/** About 15% of the questions (never the first) score double; 12% of correct answers get a gift. */
 export function pickLuck(questionCount: number, random = Math.random): Luck {
   const candidates = Array.from({ length: Math.max(0, questionCount - 1) }, (_, i) => i + 1);
   const count = questionCount >= 3 ? Math.max(1, Math.round(questionCount * DOUBLE_SHARE)) : 0;
