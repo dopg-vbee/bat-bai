@@ -158,7 +158,8 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  max-width: 1000px;
+  /* Wide enough for a 20-character name at the big-screen font size. */
+  max-width: 1400px;
   margin: 0 auto;
 }
 
