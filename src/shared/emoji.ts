@@ -90,6 +90,9 @@ export const EMOJI_NAMES: Record<string, string> = {
   '👀': 'eyes',
   '🎧': 'headphone',
   '📺': 'television',
+  // How-to-play pictures
+  '📱': 'mobile-phone',
+  '🤝': 'handshake',
 };
 
 export const AVATARS = Object.keys(EMOJI_NAMES).slice(0, Object.keys(EMOJI_NAMES).indexOf('🥇'));

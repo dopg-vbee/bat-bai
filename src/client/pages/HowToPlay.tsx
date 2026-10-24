@@ -1,28 +1,34 @@
-import { Gift, Music, Smartphone, Trophy, Users, type LucideIcon } from 'lucide-react';
+import type { CSSProperties } from 'react';
+import { Emoji, EmojiText } from '../components/Emoji.tsx';
 
-const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
+const STEPS: { art: string; title: string; text: string }[] = [
   {
-    icon: Smartphone,
+    art: '📱',
     title: 'Vào phòng',
     text: 'Quét mã QR trên màn hình lớn, hoặc nhập mã phòng 4 số ở trang này. Đặt tên là chơi được.',
   },
   {
-    icon: Music,
+    art: '🎧',
     title: 'Nghe và đoán',
     text: 'Nghe đoạn lời bài hát, gõ tên bài vào điện thoại. Không cần gõ dấu. Sai thì đoán tiếp, không bị trừ điểm.',
   },
   {
-    icon: Trophy,
+    art: '🏆',
     title: 'Ghi điểm',
     text: 'Đúng càng nhanh càng nhiều điểm, từ 500 đến 1000. Sau mỗi câu có video đáp án và bảng xếp hạng.',
   },
   {
-    icon: Gift,
+    art: '🎁',
     title: 'Thưởng thêm',
-    text: 'Câu x2 được nhân đôi điểm. Hộp quà tặng thêm 100–300 điểm, người đang xếp sau dễ trúng hơn. Đúng từ 3 câu liên tiếp được cộng thêm.',
+    // One bonus per line (the paragraph keeps line breaks).
+    text: [
+      '⚡ Câu x2: nhân đôi điểm.',
+      '🎁 Hộp quà: thêm 100–300 điểm, người đang xếp sau dễ trúng hơn.',
+      '🔥 Đúng từ 3 câu liên tiếp: được cộng thêm.',
+    ].join('\n'),
   },
   {
-    icon: Users,
+    art: '🤝',
     title: 'Chơi theo đội',
     text: 'Chọn đội ở sảnh chờ. Tùy host: điểm đội là trung bình cả đội, hoặc chỉ cần một người đúng là cả đội đúng.',
   },
@@ -34,12 +40,16 @@ export function HowToPlay() {
     <div className="card how-to-play">
       <h2>Hướng dẫn chơi</h2>
       <ol className="how-steps">
-        {STEPS.map(({ icon: Icon, title, text }) => (
-          <li key={title}>
-            <Icon />
+        {STEPS.map(({ art, title, text }, i) => (
+          <li key={title} style={{ '--i': i } as CSSProperties}>
+            <span className="how-step-art">
+              <Emoji char={art} />
+            </span>
             <div>
               <strong>{title}</strong>
-              <p>{text}</p>
+              <p>
+                <EmojiText text={text} />
+              </p>
             </div>
           </li>
         ))}

@@ -38,6 +38,26 @@
 }
 
 @media (max-width: 560px) {
+  .how-to-play {
+    padding: 20px;
+  }
+
+  .how-steps li {
+    grid-template-columns: 48px 1fr;
+    gap: 12px;
+  }
+
+  .how-step-art {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+  }
+
+  .how-step-art .emoji {
+    width: 34px;
+    height: 34px;
+  }
+
   .create-set {
     flex-direction: column;
   }

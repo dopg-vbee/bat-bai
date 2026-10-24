@@ -268,44 +268,62 @@
 /* ---------- how to play (home page) ---------- */
 
 .how-to-play {
-  width: min(480px, calc(100vw - 32px));
+  width: min(560px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
   text-align: left;
+  padding: 24px;
 }
 
 /* Clear of the pop-up's close button. */
 .how-to-play h2 {
   padding-right: 48px;
+  font-size: 1.9rem;
 }
 
 .how-steps {
   list-style: none;
-  margin: 16px 0 0;
+  margin: 18px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 
+/* Steps slide in one after another, then their pictures bob in turn. */
 .how-steps li {
   display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 12px;
+  grid-template-columns: 64px 1fr;
+  gap: 14px;
   align-items: start;
+  animation: slide-in 0.4s ease-out both;
+  animation-delay: calc(var(--i) * 80ms);
 }
 
-.how-steps svg {
-  width: 36px;
-  height: 36px;
-  padding: 8px;
-  border-radius: 10px;
+.how-step-art {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
   background: var(--surface-2);
-  color: var(--accent);
+}
+
+.how-step-art .emoji {
+  width: 44px;
+  height: 44px;
+  animation: bounce 2.5s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.5s);
+}
+
+.how-steps strong {
+  font-size: 1.3rem;
 }
 
 .how-steps p {
-  margin: 2px 0 0;
+  margin: 4px 0 0;
+  font-size: 1.1rem;
+  line-height: 1.5;
   color: var(--text-soft);
-  line-height: 1.45;
+  white-space: pre-line;
 }
