@@ -13,13 +13,18 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
   const byTeam = state.teamMode === 'together' && teamRank > 0;
   return (
     <section className="player-body center">
-      <AnimatedEmoji char={round.correct ? '🥳' : '😅'} className="pop" once />
+      <AnimatedEmoji char={round.correct ? '🥳' : round.robbed ? '😱' : '😅'} className="pop" once />
       <h2>{round.correct ? `+${round.points} điểm` : 'Tiếc quá!'}</h2>
       <StreakTag streak={round.streak} long className="streak-tag-lg" />
       {(round.gift > 0 || (state.double && round.correct)) && (
         <p className="luck-line">
           {state.double && round.correct && <DoubleTag />}
-          {round.gift > 0 && <GiftTag gift={round.gift} />}
+          {round.gift > 0 && <GiftTag gift={round.gift} stolenFrom={round.stolenFrom} long />}
+        </p>
+      )}
+      {round.robbed > 0 && (
+        <p className="robbed-line">
+          <Emoji char="😱" /> Bị cướp mất {round.robbed} điểm!
         </p>
       )}
       <div className="card answer-card">
@@ -34,7 +39,7 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
       <p className="total-line">
         Tổng điểm{' '}
         <strong>
-          <CountUp from={me.score - round.points} to={me.score} run />
+          <CountUp from={me.score - round.points + round.robbed} to={me.score} run />
         </strong>
       </p>
       {byTeam ? (

@@ -24,6 +24,8 @@ export interface CorrectEntry extends PlayerIdentity {
   points: number;
   /** Bonus from a lucky gift box, 0 if none. */
   gift: number;
+  /** The gift box stole the bonus from this player (the leader); null for a plain gift. */
+  stolenFrom: string | null;
   /** Correct answers in a row, this one included. */
   streak: number;
 }
@@ -39,6 +41,7 @@ export interface RankRow extends PlayerIdentity {
   rank: number;
   /** Positive = moved up since the start of the round. */
   delta: number;
+  /** Earned this round minus anything stolen from them; can be negative. */
   roundPoints: number;
   /** Correct answers in a row up to this round; 0 once one is missed. */
   streak: number;
@@ -126,8 +129,17 @@ export interface PlayerState {
   /**
    * streak: correct answers in a row, still counting the previous ones while this question is open.
    * byTeam: in "together" mode, a teammate got it right for the whole team.
+   * stolenFrom: whose points the gift box took; robbed: points other players' gift boxes took from this one.
    */
-  round: { correct: boolean; points: number; gift: number; streak: number; byTeam: boolean };
+  round: {
+    correct: boolean;
+    points: number;
+    gift: number;
+    stolenFrom: string | null;
+    robbed: number;
+    streak: number;
+    byTeam: boolean;
+  };
   teamMode: TeamMode;
   /** Held back (null) while a question is open, so one team scoring doesn't re-send every phone. */
   teams: TeamStanding[] | null;
@@ -138,7 +150,7 @@ export interface PlayerState {
 type Ack<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
 
 export type GuessResult =
-  | { status: 'correct'; points: number; gift: number; streak: number }
+  | { status: 'correct'; points: number; gift: number; streak: number; stolenFrom: string | null }
   /** close: wrong, but nearly the name (a typo or two too many, a word missing). */
   | { status: 'wrong' | 'close' | 'closed' | 'slow' | 'already' | 'paused' };
 

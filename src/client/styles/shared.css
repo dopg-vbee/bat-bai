@@ -151,6 +151,10 @@
   font-size: 0.8em;
 }
 
+.leaderboard-gain.loss {
+  color: var(--danger);
+}
+
 .leaderboard-score {
   font-weight: 800;
   min-width: 4em;

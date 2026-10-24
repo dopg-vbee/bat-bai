@@ -18,7 +18,7 @@ import {
 } from '../../shared/types.ts';
 import { AVATARS } from '../../shared/emoji.ts';
 import { computeAwards } from './awards.ts';
-import { rollGift, scoreFor, type Luck } from './luck.ts';
+import { rollGift, rollSteal, scoreFor, type Luck } from './luck.ts';
 import { checkGuess } from './match.ts';
 import { identity, isOnline, streakAt, type Player } from './player.ts';
 import { dealTeams, smallestTeam, teamStandings } from './teams.ts';
@@ -122,7 +122,7 @@ export class Room {
     this.countdownMs = options.countdownMs;
     this.preview = options.preview ?? false;
     this.onChange = options.onChange;
-    this.luck = options.luck ?? { doubleRounds: [], giftChances: [0, 0, 0] };
+    this.luck = options.luck ?? { doubleRounds: [], giftChances: [0, 0, 0], stealShare: 0 };
     this.teamMode = options.teamMode ?? 'off';
     const teamCount = Math.round(options.teamCount ?? MIN_TEAMS);
     this.teamCount = this.teamMode === 'off' ? 0 : Math.min(Math.max(teamCount, MIN_TEAMS), TEAMS.length);
@@ -173,6 +173,7 @@ export class Room {
       team: this.teamCount && this.phase !== 'lobby' ? smallestTeam([...this.players.values()], this.teamCount) : null,
       wrongTotal: 0,
       answers: new Map(),
+      robbed: new Map(),
     };
     this.players.set(player.id, player);
     return player;
@@ -320,10 +321,18 @@ export class Room {
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
     const speed = scoreFor(elapsed, this.durationMs) * (this.isDouble() ? 2 : 1);
     // Joined during this question: counts as last.
-    const gift = rollGift(this.luck, this.giftTiers.get(player.id) ?? 2);
+    let gift = rollGift(this.luck, this.giftTiers.get(player.id) ?? 2);
+    const victim = gift ? this.stealVictim(player) : undefined;
+    const steal = victim ? Math.min(rollSteal(this.luck), victim.score) : 0;
+    if (victim && steal) {
+      gift = steal;
+      victim.score -= steal;
+      victim.robbed.set(this.qIndex, (victim.robbed.get(this.qIndex) ?? 0) + steal);
+    }
+    const stolenFrom = steal ? victim : undefined;
     const streak = this.teamMode === 'off' ? streakAt(player, this.qIndex - 1) + 1 : 0;
     const points = speed + gift + streakBonus(streak);
-    player.answers.set(this.qIndex, { points, gift, ms: elapsed });
+    player.answers.set(this.qIndex, { points, gift, ms: elapsed, stolenFrom });
     player.score += points;
     player.totalMs += elapsed;
     this.correctOrder.push(player.id);
@@ -338,7 +347,14 @@ export class Room {
     }
     this.revealIfEveryoneCorrect();
     this.changed();
-    return { status: 'correct', points, gift, streak };
+    return { status: 'correct', points, gift, streak, stolenFrom: stolenFrom?.name ?? null };
+  }
+
+  /** Who a gift box would steal from: the leader at the start of the question (solo play, not the finder). */
+  private stealVictim(finder: Player): Player | undefined {
+    if (this.teamMode !== 'off') return undefined;
+    const leader = [...this.players.values()].find((p) => p.prevRank === 1);
+    return leader && leader !== finder && leader.score > 0 ? leader : undefined;
   }
 
   dispose(): void {
@@ -386,6 +402,7 @@ export class Room {
                 team: p.team,
                 points: answer.points,
                 gift: answer.gift,
+                stolenFrom: answer.stolenFrom?.name ?? null,
                 streak: this.streakAt(p, this.qIndex),
               },
             ]
@@ -435,6 +452,8 @@ export class Room {
                   correct: p.answers.has(this.qIndex),
                   points: p.answers.get(this.qIndex)?.points ?? 0,
                   gift: p.answers.get(this.qIndex)?.gift ?? 0,
+                  stolenFrom: p.answers.get(this.qIndex)?.stolenFrom?.name ?? null,
+                  robbed: p.robbed.get(this.qIndex) ?? 0,
                   // While the question is open an unanswered one hasn't broken the streak yet.
                   streak: this.streakAt(p, holdRank && !p.answers.has(this.qIndex) ? this.qIndex - 1 : this.qIndex),
                   byTeam: Boolean(p.answers.get(this.qIndex)?.byTeam),
@@ -577,7 +596,7 @@ export class Room {
       score: p.score,
       rank,
       delta: p.prevRank - rank,
-      roundPoints: p.answers.get(this.qIndex)?.points ?? 0,
+      roundPoints: (p.answers.get(this.qIndex)?.points ?? 0) - (p.robbed.get(this.qIndex) ?? 0),
       streak: this.streakAt(p, this.qIndex),
       team: p.team,
     };

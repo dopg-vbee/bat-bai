@@ -23,6 +23,7 @@ const STEPS: { art: string; title: string; text: string }[] = [
     text: [
       '⚡ Câu x2: nhân đôi điểm.',
       '🎁 Hộp quà: thêm 100–300 điểm, người đang xếp sau dễ trúng hơn.',
+      '🥷 Đôi khi hộp quà cướp 100–200 điểm của người đang đứng đầu.',
       '🔥 Đúng từ 3 câu liên tiếp: được cộng thêm.',
     ].join('\n'),
   },

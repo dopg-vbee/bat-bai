@@ -18,9 +18,12 @@ export interface Player {
   wrongTotal: number;
   /**
    * By question index. points = speed score (doubled on lucky rounds) + gift + streak bonus;
-   * byTeam: credited because a teammate got it right ("together" team mode).
+   * byTeam: credited because a teammate got it right ("together" team mode);
+   * stolenFrom: the gift was taken from this player (the leader).
    */
-  answers: Map<number, { points: number; gift: number; ms: number; byTeam?: boolean }>;
+  answers: Map<number, { points: number; gift: number; ms: number; byTeam?: boolean; stolenFrom?: Player }>;
+  /** Points stolen from this player, by question index. */
+  robbed: Map<number, number>;
 }
 
 export const isOnline = (p: Player) => p.bot || p.socketId !== null;

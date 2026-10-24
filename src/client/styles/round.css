@@ -400,6 +400,13 @@
   justify-content: center;
 }
 
+/* A gift box elsewhere stole some of this player's points. */
+.robbed-line {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--danger-text);
+}
+
 /* Gift badge on the bottom-right of a correct-answer avatar (the row clips anything above it). */
 .stream-avatar {
   position: relative;

@@ -20,11 +20,21 @@ export function DoubleTag() {
   );
 }
 
-/** "🎁 +200" bonus from a gift box. */
-export function GiftTag({ gift, className = '' }: { gift: number; className?: string }) {
+interface GiftTagProps {
+  gift: number;
+  /** The box stole the points from this player (the leader). */
+  stolenFrom?: string | null;
+  /** Name the player robbed, not just the ninja. */
+  long?: boolean;
+  className?: string;
+}
+
+/** "🎁 +200" bonus from a gift box, or "🥷 +150" when it stole them from the leader. */
+export function GiftTag({ gift, stolenFrom = null, long = false, className = '' }: GiftTagProps) {
   return (
     <span className={`gift-tag ${className}`}>
-      <Emoji char="🎁" /> +{gift}
+      <Emoji char={stolenFrom ? '🥷' : '🎁'} /> +{gift}
+      {stolenFrom && long && ` của ${stolenFrom}`}
     </span>
   );
 }

@@ -102,7 +102,13 @@ export function AnimatedLeaderboard({ rows }: { rows: RankRow[] }) {
               {row.name} {row.team !== null && <Emoji char={TEAMS[row.team].emoji} />}
             </span>
             <StreakTag streak={row.streak} />
-            {row.roundPoints > 0 && <span className={`leaderboard-gain${settled ? ' show' : ''}`}>+{row.roundPoints}</span>}
+            {row.roundPoints !== 0 && (
+              // Negative: a gift box stole more than they earned.
+              <span className={`leaderboard-gain${row.roundPoints < 0 ? ' loss' : ''}${settled ? ' show' : ''}`}>
+                {row.roundPoints > 0 && '+'}
+                {row.roundPoints}
+              </span>
+            )}
             {renumbered && <Delta value={row.delta} />}
             <span className="leaderboard-score">
               <CountUp from={row.score - row.roundPoints} to={row.score} run={settled} />
