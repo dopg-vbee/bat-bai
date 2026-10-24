@@ -58,7 +58,14 @@ export function HomePage() {
 
   return (
     <main className="screen center">
-      <ThemeToggle floating />
+      <div className="home-corner">
+        {canInstall && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={promptInstall}>
+            <Download /> Cài app
+          </button>
+        )}
+        <ThemeToggle />
+      </div>
       <Logo />
       <p className="tagline">Nghe lời – đoán tên bài hát!</p>
       <form className="card stack" onSubmit={handleSubmit}>
@@ -83,16 +90,9 @@ export function HomePage() {
           <ScanQrCode /> Quét mã QR
         </button>
       </form>
-      <div className="home-actions">
-        <button type="button" className="btn btn-ghost" onClick={handleShowGuide}>
-          <CircleHelp /> Hướng dẫn chơi
-        </button>
-        {canInstall && (
-          <button type="button" className="btn btn-ghost" onClick={promptInstall}>
-            <Download /> Cài app
-          </button>
-        )}
-      </div>
+      <button type="button" className="btn btn-ghost" onClick={handleShowGuide}>
+        <CircleHelp /> Hướng dẫn chơi
+      </button>
       <Link to="/admin" className="link-subtle">
         Tôi là host <ArrowRight />
       </Link>

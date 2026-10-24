@@ -367,11 +367,14 @@
 
 /* ---------- home page ---------- */
 
-.home-actions {
+/* Top-right corner: "Cài app" (when the browser offers it) beside the theme toggle. */
+.home-corner {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .install-hint {
