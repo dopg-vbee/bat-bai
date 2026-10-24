@@ -129,7 +129,7 @@ export async function createApp(options: AppOptions) {
         index: false,
         setHeaders: (res, file) => {
           if (file.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-          else if (file.includes(`${path.sep}emoji${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=86400');
+          else if (/[\\/](emoji|reactions)[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=86400');
         },
       }),
     );

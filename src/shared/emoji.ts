@@ -109,6 +109,12 @@ export const emojiCode = (char: string) =>
 
 export const emojiUrl = (char: string) => `/emoji/${emojiCode(char)}.svg`;
 
+/**
+ * The reactions' Noto animations shrunk to 128px (in src/client/public/reactions/): a few dozen fly at once,
+ * and decoding six 512px originals every frame made the big screen stutter.
+ */
+export const reactionAnimationUrl = (char: string) => `/reactions/${emojiCode(char)}.webp`;
+
 /** Google Noto animated emoji (animated WebP), used for the big celebration moments. */
 export const animatedEmojiUrl = (char: string) =>
   `https://fonts.gstatic.com/s/e/notoemoji/latest/${emojiCode(char)}/512.webp`;

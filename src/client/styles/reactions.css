@@ -32,6 +32,11 @@
   background: var(--white-10);
 }
 
+/* Just thrown one: the bar rests for REACTION_COOLDOWN_MS. */
+.reaction-bar.cooling .reaction-btn {
+  opacity: 0.4;
+}
+
 /* On the big screen: thrown emoji pop up anywhere along the bottom and float up, like bubbles. */
 .reaction-layer {
   position: fixed;
@@ -39,6 +44,8 @@
   z-index: 6;
   overflow: hidden;
   pointer-events: none;
+  /* Emoji coming and going never make the rest of the page lay out again. */
+  contain: strict;
 }
 
 .reaction-fly {
@@ -47,6 +54,8 @@
   left: calc(5% + var(--x) * 90%);
   font-size: calc(52px * var(--scale));
   animation: reaction-rise 3s ease-out both;
+  /* Each rises on its own GPU layer from the start. */
+  will-change: transform, opacity;
 }
 
 .reaction-fly .emoji-animated {

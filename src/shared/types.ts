@@ -243,6 +243,8 @@ export const streakBonus = (streak: number) =>
 export const MAX_AUDIO_MB = 20;
 /** What a phone can throw at the big screen once it has answered. */
 export const REACTIONS = ['👍', '❤️', '😆', '🔥', '👏', '😮'];
+/** One reaction a second per player. */
+export const REACTION_COOLDOWN_MS = 1000;
 
 /** Whether a question's video can play inside the game; blocked = embedding turned off (or private). */
 export type VideoStatus = 'ok' | 'blocked' | 'missing' | 'unknown';

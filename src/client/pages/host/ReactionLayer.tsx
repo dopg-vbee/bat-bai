@@ -1,9 +1,9 @@
 import { useEffect, useState, type AnimationEvent, type CSSProperties } from 'react';
-import { AnimatedEmoji } from '../../components/Emoji.tsx';
+import { reactionAnimationUrl } from '../../../shared/emoji.ts';
 import { socket } from '../../lib/socket.ts';
 
 /** Older ones are dropped beyond this, so a burst from 60 phones stays readable and cheap. */
-const MAX_ON_SCREEN = 60;
+const MAX_ON_SCREEN = 20;
 /** A batch arrives at once; spreading it out makes it look thrown, not stamped. */
 const STAGGER_MS = 70;
 
@@ -67,7 +67,7 @@ export function ReactionLayer({ code }: { code: string }) {
           }
           onAnimationEnd={handleLanded}
         >
-          <AnimatedEmoji char={f.emoji} />
+          <img className="emoji-animated" src={reactionAnimationUrl(f.emoji)} alt={f.emoji} draggable={false} />
         </span>
       ))}
     </div>

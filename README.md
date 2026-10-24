@@ -27,7 +27,7 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
 - **Đồng đội:** người đầu tiên trong đội đoán đúng là cả đội đúng, cùng nhận điểm đó. Bục vinh danh tính theo đội.
 - Ở cả hai chế độ: bảng xếp hạng giữa các câu xếp **các đội** (trượt lên/xuống hạng như bảng thường), màn câu hỏi đếm **số đội đã đoán đúng**, và người trả lời đúng có tim màu đội cạnh tên.
 
-**Thả cảm xúc:** ai đoán đúng rồi (và cả lúc xem đáp án, bảng xếp hạng) có thanh 👍 ❤️ 😆 🔥 👏 😮 ở cuối màn hình điện thoại; bấm là emoji bật lên đâu đó dưới đáy màn hình lớn rồi bay lên, ẩn danh. Mỗi người tối đa 8 lần trong 2 giây.
+**Thả cảm xúc:** ai đoán đúng rồi (và cả lúc xem đáp án, bảng xếp hạng) có thanh 👍 ❤️ 😆 🔥 👏 😮 ở cuối màn hình điện thoại; bấm là emoji bật lên đâu đó dưới đáy màn hình lớn rồi bay lên, ẩn danh, emoji động. Mỗi người 1 emoji mỗi giây (thanh emoji mờ đi trong lúc chờ); màn lớn nhận tối đa 20 emoji mỗi giây cho đỡ giật.
 
 **Điều khiển bằng điện thoại:** menu ☰ trên màn hình host → **Điều khiển bằng điện thoại** → quét mã QR. Điện thoại có các nút Bắt đầu / Hiện đáp án / Câu tiếp, Tạm dừng, Hiện mã QR vào phòng và Kết thúc. Ai quét mã này cũng điều khiển được phòng, nên mở nó khi người chơi không nhìn màn hình.
 

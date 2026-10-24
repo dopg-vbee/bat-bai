@@ -1,5 +1,5 @@
 import type { Server } from 'socket.io';
-import { REACTIONS, ROOM_NOT_FOUND, type ClientToServerEvents, type ServerToClientEvents } from '../shared/types.ts';
+import { REACTION_COOLDOWN_MS, REACTIONS, ROOM_NOT_FOUND, type ClientToServerEvents, type ServerToClientEvents } from '../shared/types.ts';
 import { checkPassword } from './auth.ts';
 import { createRateLimiter } from './game/rateLimit.ts';
 import { pickLuck } from './game/luck.ts';
@@ -25,7 +25,9 @@ const SWEEP_INTERVAL_MS = 5 * 60_000;
 const IDLE_ROOM_MS = 3 * 60 * 60_000;
 /** Reactions reach the big screen in small batches; the screen shows a few at a time anyway. */
 const REACTION_BATCH_MS = 200;
-const MAX_REACTIONS_PER_BATCH = 30;
+// At most 15 a second reach a room's big screen, however hard everyone spams: more would only make it
+// stutter, and the screen can't show them anyway (the rest are dropped).
+const MAX_REACTIONS_PER_BATCH = 3;
 
 const hostChannel = (code: string) => `host:${code}`;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -38,8 +40,8 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
   // Changes are coalesced: a burst of 60 joins or correct answers becomes one push per client.
   /** Last state sent to each phone, per room: a phone whose state did not change gets nothing. */
   const sentToPhones = new WeakMap<Room, Map<string, string>>();
-  /** Each phone may throw 8 reactions every 2 seconds: a little spamming is part of the fun. */
-  const reactionLimit = createRateLimiter(8, 2000);
+  /** One reaction a second per phone (the phone's bar waits as long too). */
+  const reactionLimit = createRateLimiter(1, REACTION_COOLDOWN_MS);
   const pendingReactions = new Map<string, string[]>();
   let reactionTimer: ReturnType<typeof setTimeout> | null = null;
 
