@@ -14,11 +14,22 @@
   border: 1px solid color-mix(in srgb, var(--team) 60%, transparent);
 }
 
+/* The headline on the left, the buttons in the top-right corner. */
+.lobby-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  width: 100%;
+}
+
 .lobby-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+  margin-left: auto;
 }
 
 .lobby-hint {

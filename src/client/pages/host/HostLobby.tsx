@@ -121,19 +121,21 @@ export function HostLobby({ state }: { state: HostState }) {
             </button>
           </div>
         )}
-        <h2 className="lobby-title">
-          {state.players.length ? `${state.players.length} người đã vào` : 'Đang chờ người chơi…'}
-        </h2>
-        {/* Above the list, so it stays on screen however many players join. */}
-        <div className="lobby-actions">
-          <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!canStart}>
-            <Play /> Bắt đầu ({state.qTotal} câu)
-          </button>
-          {teamPlay && (
-            <button className="btn btn-ghost btn-lg" onClick={handleShuffle} disabled={!state.players.length}>
-              <Shuffle /> Xếp đội ngẫu nhiên
+        {/* Above the list, so the buttons stay on screen however many players join. */}
+        <div className="lobby-head">
+          <h2 className="lobby-title">
+            {state.players.length ? `${state.players.length} người đã vào` : 'Đang chờ người chơi…'}
+          </h2>
+          <div className="lobby-actions">
+            {teamPlay && (
+              <button className="btn btn-ghost btn-lg" onClick={handleShuffle} disabled={!state.players.length}>
+                <Shuffle /> Xếp đội ngẫu nhiên
+              </button>
+            )}
+            <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!canStart}>
+              <Play /> Bắt đầu ({state.qTotal} câu)
             </button>
-          )}
+          </div>
         </div>
         {teamPlay && teamless > 0 && (
           <p className="lobby-hint">
