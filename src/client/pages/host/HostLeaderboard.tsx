@@ -1,7 +1,7 @@
 import { SkipForward, Trophy } from 'lucide-react';
 import { LEADERBOARD_MS, type HostState } from '../../../shared/types.ts';
 import { AnimatedLeaderboard } from '../../components/AnimatedLeaderboard.tsx';
-import { TeamBars } from '../../components/Team.tsx';
+import { teamBarRows, TeamBars } from '../../components/Team.tsx';
 import { socket, useServerNow } from '../../lib/socket.ts';
 
 /** Ticks on its own so the list above isn't re-rendered ten times a second. */
@@ -16,7 +16,7 @@ function AdvanceBar({ advanceAt, pausedAt }: { advanceAt: number; pausedAt: numb
   );
 }
 
-/** One team bar's height plus gap, and the gap under the bars: room the player list gives up. */
+/** One row of team bars' height plus gap, and the gap under the bars: room the player list gives up. */
 const TEAM_BAR_PITCH = 52;
 const TEAM_BARS_GAP = 16;
 
@@ -42,7 +42,7 @@ export function HostLeaderboard({ state }: { state: HostState }) {
           {state.teams.length > 0 && <TeamBars teams={state.teams} />}
           <AnimatedLeaderboard
             rows={state.leaderboard}
-            reserve={state.teams.length ? state.teams.length * TEAM_BAR_PITCH + TEAM_BARS_GAP : 0}
+            reserve={state.teams.length ? teamBarRows(state.teams.length) * TEAM_BAR_PITCH + TEAM_BARS_GAP : 0}
           />
         </>
       )}

@@ -152,7 +152,7 @@ export interface CreateRoomInput {
   /** Preview a single question instead of the whole set. */
   questionId?: string;
   teamMode?: TeamMode;
-  /** 2 to TEAMS.length, when playing in teams. */
+  /** MIN_TEAMS to TEAMS.length, when playing in teams. */
   teamCount?: number;
 }
 
@@ -243,14 +243,20 @@ export const audioUrl = (hash: string) => `/media/${hash}.mp3`;
  * correct answer counts for the whole team (everyone in it shares the points).
  */
 export type TeamMode = 'off' | 'average' | 'together';
-export const TEAM_COUNT_OPTIONS = [2, 3, 4];
-
+/** Teams in the order they are handed out; the host picks how many (MIN_TEAMS up to all of them). */
 export const TEAMS = [
   { name: 'Đỏ', color: '#ef4444', emoji: '❤️' },
   { name: 'Xanh', color: '#3b82f6', emoji: '💙' },
   { name: 'Vàng', color: '#eab308', emoji: '💛' },
   { name: 'Tím', color: '#a855f7', emoji: '💜' },
+  { name: 'Lục', color: '#22c55e', emoji: '💚' },
+  { name: 'Cam', color: '#f97316', emoji: '🧡' },
+  { name: 'Hồng', color: '#ec4899', emoji: '🩷' },
+  { name: 'Ngọc', color: '#06b6d4', emoji: '🩵' },
+  { name: 'Nâu', color: '#a16207', emoji: '🤎' },
+  { name: 'Xám', color: '#94a3b8', emoji: '🩶' },
 ];
+export const MIN_TEAMS = 2;
 
 export interface TeamStanding {
   /** Index into TEAMS. */

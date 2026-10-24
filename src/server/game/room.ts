@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import {
   audioUrl,
   LEADERBOARD_MS,
+  MIN_TEAMS,
   OPEN_CLIP_SEC,
   PREVIEW_BOTS,
   streakBonus,
@@ -119,7 +120,8 @@ export class Room {
     this.onChange = options.onChange;
     this.luck = options.luck ?? { doubleRounds: [], giftChance: 0 };
     this.teamMode = options.teamMode ?? 'off';
-    this.teamCount = this.teamMode === 'off' ? 0 : Math.min(Math.max(options.teamCount ?? 2, 2), TEAMS.length);
+    const teamCount = Math.round(options.teamCount ?? MIN_TEAMS);
+    this.teamCount = this.teamMode === 'off' ? 0 : Math.min(Math.max(teamCount, MIN_TEAMS), TEAMS.length);
     const bots = this.preview ? Math.min(MAX_PLAYERS - 10, options.bots ?? PREVIEW_BOTS) : 0;
     for (let i = 0; i < bots; i++) {
       const bot = this.addPlayer(i === 0 ? SURE_BOT_NAME : botName(i - 1), null, true);

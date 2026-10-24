@@ -346,6 +346,13 @@ describe('preview room', () => {
     expect(late.team).not.toBeNull();
   });
 
+  it('takes any number of teams from 2 up to all the colours', () => {
+    const teamsOf = (teamCount: number) =>
+      new Room({ code: '1234', setName: 'T', questions, durationMs: 10_000, countdownMs: 3000, teamMode: 'average', teamCount, onChange: () => {} })
+        .hostView().teams.length;
+    expect([1, 2, 7, 10, 99].map(teamsOf)).toEqual([2, 2, 7, 10, 10]);
+  });
+
   it('a room without teams leaves everyone teamless', () => {
     const room = makeRoom(false);
     const lan = room.join('Lan', undefined, 's1');

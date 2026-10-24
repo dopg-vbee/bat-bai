@@ -4,8 +4,9 @@ import {
   DEFAULT_DURATION_SEC,
   DURATION_OPTIONS,
   PREVIEW_BOT_OPTIONS,
+  MIN_TEAMS,
   PREVIEW_BOTS,
-  TEAM_COUNT_OPTIONS,
+  TEAMS,
   type QuestionSetDto,
   type TeamMode,
 } from '../../../shared/types.ts';
@@ -48,8 +49,10 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
     setTeamMode(event.target.value as TeamMode);
   }
 
-  function handleTeamCountChange(event: ChangeEvent<HTMLSelectElement>) {
-    setTeamCount(Number(event.target.value));
+  // Kept within MIN_TEAMS..TEAMS.length as it's typed, so the room never gets an impossible count.
+  function handleTeamCountChange(event: ChangeEvent<HTMLInputElement>) {
+    const count = Math.round(Number(event.target.value)) || MIN_TEAMS;
+    setTeamCount(Math.min(Math.max(count, MIN_TEAMS), TEAMS.length));
   }
 
   async function start(preview: boolean) {
@@ -107,13 +110,15 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
         {teamMode !== 'off' && (
           <label className="field-inline">
             <span>Số đội</span>
-            <select className="input input-sm" value={teamCount} onChange={handleTeamCountChange}>
-              {TEAM_COUNT_OPTIONS.map((n) => (
-                <option key={n} value={n}>
-                  {n} đội
-                </option>
-              ))}
-            </select>
+            <input
+              type="number"
+              className="input input-sm team-count-input"
+              min={MIN_TEAMS}
+              max={TEAMS.length}
+              value={teamCount}
+              onChange={handleTeamCountChange}
+              title={`Từ ${MIN_TEAMS} đến ${TEAMS.length} đội`}
+            />
           </label>
         )}
       </div>

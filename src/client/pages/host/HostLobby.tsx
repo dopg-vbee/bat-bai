@@ -1,4 +1,4 @@
-import { Play, Shuffle, Smartphone, X } from 'lucide-react';
+import { Play, Shuffle, Smartphone, Users, X } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { TEAMS, type HostState, type PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
@@ -32,18 +32,30 @@ function PlayerList({ players }: { players: PlayerSummary[] }) {
   );
 }
 
+/** Up to 5 team boxes a row; more teams split over two rows. */
+const boxColumns = (teams: number) => (teams <= 5 ? teams : Math.ceil(teams / 2));
+
 /** One box per team with its players, and those yet to pick a team below. */
 function TeamBoxes({ players, teamCount }: { players: PlayerSummary[]; teamCount: number }) {
   const teamless = players.filter((p) => p.team === null);
   return (
     <div className="team-area">
-      <div className="team-boxes" style={{ '--teams': teamCount } as CSSProperties}>
+      <div className="team-boxes" style={{ '--cols': boxColumns(teamCount) } as CSSProperties}>
         {TEAMS.slice(0, teamCount).map((team, i) => {
           const members = players.filter((p) => p.team === i);
           return (
             <section key={team.name} className="team-box" style={{ '--team': team.color } as CSSProperties}>
               <header className="team-box-head">
-                <TeamBadge team={i} /> {members.length} người
+                {teamCount > 5 ? (
+                  // Narrow boxes: the colour name and an icon count keep it on one line.
+                  <>
+                    <TeamBadge team={i} short /> <Users /> {members.length}
+                  </>
+                ) : (
+                  <>
+                    <TeamBadge team={i} /> {members.length} người
+                  </>
+                )}
               </header>
               <PlayerList players={members} />
             </section>
