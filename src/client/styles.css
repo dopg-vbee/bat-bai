@@ -371,7 +371,7 @@ button {
 }
 
 .lobby-hint {
-  color: var(--text-soft);
+  color: rgb(255 255 255 / 0.85);
   font-weight: 700;
 }
 
@@ -639,7 +639,7 @@ button {
 }
 
 .remote-status {
-  color: var(--text-soft);
+  color: rgb(255 255 255 / 0.85);
   font-weight: 700;
   font-size: 1.1rem;
 }
@@ -1407,6 +1407,7 @@ button {
   border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--border);
+  color: var(--text);
   text-align: center;
   animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
 }
@@ -2100,7 +2101,8 @@ button {
 }
 
 .stream-points {
-  color: var(--success);
+  /* On the page: a light green reads on dark and on the light theme's purple. */
+  color: #86efac;
   font-weight: 800;
   font-size: calc(var(--item) * 0.1);
 }
@@ -2142,7 +2144,8 @@ button {
   align-items: center;
   gap: 6px;
   margin-bottom: calc(var(--u) * 8px);
-  color: var(--danger-text);
+  /* On the page (dark, or purple in the light theme): a light tint reads on both. */
+  color: #fecaca;
   font-weight: 800;
   font-size: calc(var(--u) * 1.3rem);
 }
@@ -2556,9 +2559,10 @@ button {
   border-radius: 999px;
   font-weight: 800;
   white-space: nowrap;
-  background: rgb(255 106 26 / 0.22);
-  color: #fdba74;
-  border: 1px solid rgb(255 106 26 / 0.6);
+  /* Solid: it sits on white rows, the purple page and the dark theme alike. */
+  background: #ea580c;
+  color: #fff;
+  border: 1px solid #fdba74;
 }
 
 .streak-tag-lg {
@@ -2722,6 +2726,9 @@ button {
   position: absolute;
   top: 12px;
   right: 12px;
+  /* On the card, not the page: a ghost button would vanish on white. */
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .pause-overlay {
