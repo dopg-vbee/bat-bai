@@ -1,4 +1,15 @@
-import { CircleAlert, Flag, ListOrdered, Pause, Play, QrCode, SkipForward, Trophy, WifiOff } from 'lucide-react';
+import {
+  CircleAlert,
+  Flag,
+  ListOrdered,
+  Pause,
+  Play,
+  QrCode,
+  Shuffle,
+  SkipForward,
+  Trophy,
+  WifiOff,
+} from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import type { HostState } from '../../../shared/types.ts';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
@@ -32,7 +43,8 @@ function Status({ state }: { state: HostState }) {
       return <>{state.players.length} người đã vào phòng</>;
     case 'question': {
       const at = state.pausedAt || now;
-      const timer = at < state.startsAt ? 'đang đếm ngược' : `còn ${Math.max(0, Math.ceil((state.endsAt - at) / 1000))} giây`;
+      const left = Math.max(0, Math.ceil((state.endsAt - at) / 1000));
+      const timer = at < state.startsAt ? 'đang đếm ngược' : `còn ${left} giây`;
       return (
         <>
           Câu {state.qIndex + 1}/{state.qTotal} · {timer} · {state.correctFeed.length}/{state.players.length} đúng
@@ -73,7 +85,9 @@ export function RemotePage({ code }: { code: string }) {
         <div className="card stack text-center">
           <StatusBadge icon={CircleAlert} tone="danger" />
           <h2>{error}</h2>
-          <p className="muted">Quét lại mã "Điều khiển bằng điện thoại" trong menu của màn hình host.</p>
+          <p className="muted">
+            Quét lại mã "Điều khiển bằng điện thoại" trong menu của màn hình host.
+          </p>
         </div>
       </main>
     );
@@ -91,6 +105,8 @@ export function RemotePage({ code }: { code: string }) {
   const paused = Boolean(state.pausedAt);
   const pausable = ['question', 'reveal', 'leaderboard'].includes(state.phase);
   const inGame = state.phase !== 'lobby' && state.phase !== 'ended';
+  const teamLobby = state.phase === 'lobby' && state.teamMode !== 'off';
+  const teamless = state.players.filter((p) => p.team === null).length;
 
   function handleNext() {
     socket.emit('host:next');
@@ -102,6 +118,12 @@ export function RemotePage({ code }: { code: string }) {
 
   function handleToggleQr() {
     socket.emit('host:joinQr', !state?.joinQr);
+  }
+
+  function handleShuffleTeams() {
+    const anyChosen = state?.players.some((p) => p.team !== null);
+    if (anyChosen && !confirm('Xếp lại ngẫu nhiên tất cả người chơi vào các đội cho đều?')) return;
+    socket.emit('host:shuffleTeams');
   }
 
   function handleEnd() {
@@ -127,9 +149,14 @@ export function RemotePage({ code }: { code: string }) {
           <button
             className="btn btn-primary btn-xl"
             onClick={handleNext}
-            disabled={state.phase === 'lobby' && !state.players.length}
+            disabled={state.phase === 'lobby' && (!state.players.length || (teamLobby && teamless > 0))}
           >
             {step.icon} {step.label}
+          </button>
+        )}
+        {teamLobby && (
+          <button className="btn btn-ghost btn-lg" onClick={handleShuffleTeams} disabled={!state.players.length}>
+            <Shuffle /> Xếp đội ngẫu nhiên{teamless ? ` (${teamless} người chưa có đội)` : ''}
           </button>
         )}
         {pausable && (

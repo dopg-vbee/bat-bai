@@ -19,7 +19,7 @@ import {
 } from '../../shared/types.ts';
 import { AVATARS } from '../../shared/emoji.ts';
 import { checkGuess } from './match.ts';
-import { smallestTeam, teamStandings } from './teams.ts';
+import { dealTeams, smallestTeam, teamStandings } from './teams.ts';
 import { PausableTimers, type TimerEntry } from './timers.ts';
 
 export interface GameQuestion {
@@ -213,8 +213,8 @@ export class Room {
       lastGuessAt: 0,
       socketId,
       bot,
-      // Newcomers fill the smallest team; they can switch in the lobby.
-      team: this.teamCount ? smallestTeam([...this.players.values()], this.teamCount) : null,
+      // In the lobby players pick a team themselves; latecomers can't, so they fill the smallest one.
+      team: this.teamCount && this.phase !== 'lobby' ? smallestTeam([...this.players.values()], this.teamCount) : null,
       wrongTotal: 0,
       answers: new Map(),
     };
@@ -244,7 +244,7 @@ export class Room {
   /** Host "next"/"skip" button: moves one step along lobby → question → reveal → leaderboard → … → ended. */
   next(): void {
     this.resume();
-    if (this.phase === 'lobby') return this.startQuestion(0);
+    if (this.phase === 'lobby') return this.everyoneInATeam() ? this.startQuestion(0) : undefined;
     if (this.phase === 'question') return this.reveal();
     if (this.phase === 'reveal') return this.showLeaderboard();
     if (this.phase === 'leaderboard') return this.advance();
@@ -272,6 +272,18 @@ export class Room {
     if (!player) return false;
     if (this.phase === 'reveal' || this.phase === 'leaderboard') return true;
     return this.phase === 'question' && player.answers.has(this.qIndex);
+  }
+
+  /** A team game only starts once every player has picked (or been dealt) a team. */
+  everyoneInATeam(): boolean {
+    return !this.teamCount || [...this.players.values()].every((p) => p.team !== null);
+  }
+
+  /** Host button: deals everyone into teams at random, evenly. Lobby only. */
+  shuffleTeams(): void {
+    if (this.phase !== 'lobby' || !this.teamCount) return;
+    dealTeams([...this.players.values()], this.teamCount);
+    this.changed();
   }
 
   /** A player picks another team; only before the game starts. */

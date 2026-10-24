@@ -181,6 +181,8 @@ export interface ClientToServerEvents {
   'host:leave': () => void;
   'host:pause': () => void;
   'host:joinQr': (shown: boolean) => void;
+  /** Deal every player into teams at random, evenly (lobby only). */
+  'host:shuffleTeams': () => void;
   'host:resume': () => void;
   /** The answer video finished playing on the big screen. */
   'host:clipEnded': (qIndex: number) => void;

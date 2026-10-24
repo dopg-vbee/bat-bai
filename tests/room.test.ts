@@ -298,11 +298,16 @@ describe('preview room', () => {
       if (typeof player === 'string') throw new Error(player);
       return player;
     });
-    expect([lan, minh, hoa].map((p) => p.team)).toEqual([0, 1, 0]); // newcomers fill the smallest team
-    room.setTeam(minh.id, 0);
-    room.setTeam(minh.id, 1); // switching is allowed in the lobby
+    expect([lan, minh, hoa].map((p) => p.team)).toEqual([null, null, null]); // players pick in the lobby
+    room.setTeam(lan.id, 0);
+    room.setTeam(hoa.id, 0);
     room.next();
-    room.setTeam(minh.id, 0); // ...but not once the game is on
+    expect(room.phase).toBe('lobby'); // not with a player still teamless...
+    room.setTeam(minh.id, 0);
+    room.setTeam(minh.id, 1); // (switching is allowed in the lobby)
+    room.next();
+    expect(room.phase).toBe('question'); // ...but once everyone has one
+    room.setTeam(minh.id, 0); // no switching once the game is on
     expect(minh.team).toBe(1);
     vi.advanceTimersByTime(3000);
     expect(room.guess(lan.id, 'Lạc Trôi')).toMatchObject({ status: 'correct', points: 1000 });
@@ -318,6 +323,26 @@ describe('preview room', () => {
     ]);
     room.finish();
     expect(room.playerViews()[0].state.podium?.map((e) => e.name)).toEqual(['Đội Đỏ', 'Đội Xanh']);
+  });
+
+  it('the host can deal everyone into even teams; latecomers fill the smallest team', () => {
+    const room = new Room({
+      code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
+      preview: true, bots: 7, teamMode: 'average', teamCount: 3, onChange: () => {},
+    });
+    const players = () => room.hostView().players;
+    expect(players().every((p) => p.team === null)).toBe(true); // preview bots wait to be dealt too
+    room.shuffleTeams();
+    const sizes = [0, 1, 2].map((team) => players().filter((p) => p.team === team).length).sort();
+    expect(sizes).toEqual([2, 2, 3]);
+    room.next();
+    expect(room.phase).toBe('question');
+    const late = room.join('Muộn', undefined, 's9');
+    if (typeof late === 'string') throw new Error(late);
+    expect(late.team).not.toBeNull();
+    expect(players().filter((p) => p.team === late.team).length).toBe(3); // joined a team of two
+    room.shuffleTeams(); // lobby only
+    expect(late.team).not.toBeNull();
   });
 
   it('a room without teams leaves everyone teamless', () => {

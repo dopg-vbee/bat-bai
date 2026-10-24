@@ -1,4 +1,4 @@
-import { Play, Smartphone, X } from 'lucide-react';
+import { Play, Shuffle, Smartphone, X } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { TEAMS, type HostState, type PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
@@ -12,10 +12,7 @@ function PlayerChip({ player }: { player: PlayerSummary }) {
     if (confirm(`Mời "${player.name}" ra khỏi phòng?`)) socket.emit('host:kick', player.id);
   }
   return (
-    <li
-      className={`player-chip${player.connected ? '' : ' offline'}${player.team === null ? '' : ' in-team'}`}
-      style={player.team === null ? undefined : ({ '--team': TEAMS[player.team].color } as CSSProperties)}
-    >
+    <li className={`player-chip${player.connected ? '' : ' offline'}`}>
       <Avatar avatar={player.avatar} color={player.color} size="sm" />
       <span className="player-chip-name">{player.name}</span>
       <button className="player-chip-kick" onClick={handleKick} title="Mời ra">
@@ -25,9 +22,58 @@ function PlayerChip({ player }: { player: PlayerSummary }) {
   );
 }
 
+function PlayerList({ players }: { players: PlayerSummary[] }) {
+  return (
+    <ul className="player-grid">
+      {players.map((player) => (
+        <PlayerChip key={player.id} player={player} />
+      ))}
+    </ul>
+  );
+}
+
+/** One box per team with its players, and those yet to pick a team below. */
+function TeamBoxes({ players, teamCount }: { players: PlayerSummary[]; teamCount: number }) {
+  const teamless = players.filter((p) => p.team === null);
+  return (
+    <div className="team-area">
+      <div className="team-boxes" style={{ '--teams': teamCount } as CSSProperties}>
+        {TEAMS.slice(0, teamCount).map((team, i) => {
+          const members = players.filter((p) => p.team === i);
+          return (
+            <section key={team.name} className="team-box" style={{ '--team': team.color } as CSSProperties}>
+              <header className="team-box-head">
+                <TeamBadge team={i} /> {members.length} người
+              </header>
+              <PlayerList players={members} />
+            </section>
+          );
+        })}
+      </div>
+      {teamless.length > 0 && (
+        <section className="team-box teamless">
+          <header className="team-box-head">Chưa có đội · {teamless.length} người</header>
+          <PlayerList players={teamless} />
+        </section>
+      )}
+    </div>
+  );
+}
+
 export function HostLobby({ state }: { state: HostState }) {
+  const teamPlay = state.teamMode !== 'off';
+  const teamless = state.players.filter((p) => p.team === null).length;
+  // The server refuses too: a team game only starts once everyone has a team.
+  const canStart = state.players.length > 0 && (!teamPlay || teamless === 0);
+
   function handleStart() {
     socket.emit('host:next');
+  }
+
+  function handleShuffle() {
+    const anyChosen = state.players.some((p) => p.team !== null);
+    if (anyChosen && !confirm('Xếp lại ngẫu nhiên tất cả người chơi vào các đội cho đều?')) return;
+    socket.emit('host:shuffleTeams');
   }
 
   function handleOpenPlayer() {
@@ -53,25 +99,26 @@ export function HostLobby({ state }: { state: HostState }) {
           </div>
         )}
         {/* Above the list, so it stays on screen however many players join. */}
-        <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!state.players.length}>
-          <Play /> Bắt đầu ({state.qTotal} câu)
-        </button>
-        {state.teamMode !== 'off' && (
-          <div className="lobby-teams">
-            {[...state.teams]
-              .sort((a, b) => a.team - b.team)
-              .map((t) => (
-                <span key={t.team} className="lobby-team">
-                  <TeamBadge team={t.team} /> {t.members} người
-                </span>
-              ))}
-          </div>
+        <div className="lobby-actions">
+          <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!canStart}>
+            <Play /> Bắt đầu ({state.qTotal} câu)
+          </button>
+          {teamPlay && (
+            <button className="btn btn-ghost btn-lg" onClick={handleShuffle} disabled={!state.players.length}>
+              <Shuffle /> Xếp đội ngẫu nhiên
+            </button>
+          )}
+        </div>
+        {teamPlay && teamless > 0 && (
+          <p className="lobby-hint">
+            Còn {teamless} người chưa có đội: chờ họ chọn trên điện thoại, hoặc bấm "Xếp đội ngẫu nhiên".
+          </p>
         )}
-        <ul className="player-grid">
-          {state.players.map((player) => (
-            <PlayerChip key={player.id} player={player} />
-          ))}
-        </ul>
+        {teamPlay ? (
+          <TeamBoxes players={state.players} teamCount={state.teams.length} />
+        ) : (
+          <PlayerList players={state.players} />
+        )}
       </div>
     </section>
   );
