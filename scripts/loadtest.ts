@@ -1,6 +1,7 @@
 // Plays complete games with bot players against a running server and reports latency.
 // Usage: npm run loadtest -- [--url http://localhost:3000] [--rooms 3] [--players 60] [--duration 15]
 //                          [--questions 3 | all] [--set "tên bộ đề"]
+//                          [--teams average | together] [--team-count 4] [--reactions]
 // Needs ADMIN_PASSWORD (env or --password) and at least one question set with questions.
 import { parseArgs } from 'node:util';
 import { io as connect, type Socket } from 'socket.io-client';
@@ -17,8 +18,12 @@ const { values } = parseArgs({
     duration: { type: 'string', default: '15' },
     questions: { type: 'string', default: '3' },
     set: { type: 'string' },
+    teams: { type: 'string', default: 'off' },
+    'team-count': { type: 'string', default: '4' },
+    reactions: { type: 'boolean', default: false },
   },
 });
+const teamMode = values.teams === 'average' || values.teams === 'together' ? values.teams : 'off';
 const url = values.url!;
 const roomCount = Number(values.rooms);
 const playerCount = Number(values.players);
@@ -26,7 +31,9 @@ const durationSec = Number(values.duration);
 const maxQuestions = values.questions === 'all' ? Infinity : Number(values.questions);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const latencies = { join: [] as number[], guess: [] as number[] };
+/** sync: from a correct answer's ack to the big screen showing that player. */
+const latencies = { join: [] as number[], guess: [] as number[], sync: [] as number[] };
+const reactions = { sent: 0, shown: 0 };
 const errors: string[] = [];
 const sockets: Client[] = [];
 
@@ -59,10 +66,27 @@ async function playRoom(roomNo: number) {
     setId: set.id,
     durationSec,
     shuffle: true,
+    teamMode,
+    teamCount: Number(values['team-count']),
   });
   if (!created.ok) throw new Error(created.error);
+  // The server's clock decides when a question opens; this machine's may be off by seconds.
+  const sentAt = Date.now();
+  const serverNow = await host.timeout(5000).emitWithAck('time');
+  const clockOffset = serverNow - (sentAt + Date.now()) / 2;
   let hostState: HostState | null = null;
-  host.on('hostState', (s) => (hostState = s));
+  /** When each player's correct answer was acknowledged, until the big screen shows it. */
+  const correctAt = new Map<string, number>();
+  host.on('hostState', (s) => {
+    hostState = s;
+    for (const entry of s.correctFeed) {
+      const at = correctAt.get(entry.name);
+      if (at === undefined) continue;
+      latencies.sync.push(performance.now() - at);
+      correctAt.delete(entry.name);
+    }
+  });
+  host.on('reactions', (batch) => (reactions.shown += batch.emojis.length));
   await host.timeout(5000).emitWithAck('host:join', { code: created.code, hostToken: created.hostToken });
 
   const bots = await Promise.all(
@@ -76,6 +100,10 @@ async function playRoom(roomNo: number) {
     }),
   );
   console.log(`Phòng ${created.code}: ${bots.length} bot đã vào`);
+  if (teamMode !== 'off') {
+    host.emit('host:shuffleTeams');
+    await sleep(500);
+  }
 
   const rounds = Math.min(maxQuestions, set.questions.length);
   for (let round = 0; round < rounds; round++) {
@@ -84,13 +112,22 @@ async function playRoom(roomNo: number) {
     const { startsAt, audioUrl } = hostState! as HostState;
     // Bots don't receive the answer: the load test reads it from the admin API, like a cheating friend.
     const title = titles.get(audioUrl!)!;
-    await sleep(Math.max(0, startsAt - Date.now()) + 50);
+    await sleep(Math.max(0, startsAt - (Date.now() + clockOffset)) + 50);
     await Promise.all(
       bots.map(async (bot, i) => {
         await sleep(Math.random() * (durationSec * 600));
         if (i % 5 === 0) await timed('guess', () => bot.socket.timeout(5000).emitWithAck('player:guess', 'sai bét'));
         await sleep(350);
-        if (i % 7 !== 0) await timed('guess', () => bot.socket.timeout(5000).emitWithAck('player:guess', title));
+        if (i % 7 === 0) return;
+        const result = await timed('guess', () => bot.socket.timeout(5000).emitWithAck('player:guess', title));
+        if (result.status !== 'correct') return;
+        correctAt.set(`Bot ${roomNo}-${i}`, performance.now());
+        if (!values.reactions) return;
+        for (let k = 0; k < 3; k++) {
+          bot.socket.emit('player:react', '🔥');
+          reactions.sent++;
+          await sleep(300);
+        }
       }),
     );
     const roundStart = Date.now();
@@ -127,5 +164,7 @@ function report(label: string, samples: number[]) {
 console.log(`\n${roomCount} phòng × ${playerCount} người, ${((Date.now() - started) / 1000).toFixed(1)}s`);
 report('Vào phòng (gồm cả mở kết nối)', latencies.join);
 report('Gửi đáp án', latencies.guess);
+report('Màn hình lớn hiện người vừa đúng', latencies.sync);
+if (values.reactions) console.log(`Cảm xúc: gửi ${reactions.sent}, màn hình lớn nhận ${reactions.shown}`);
 console.log(errors.length ? `❌ ${errors.length} lỗi:\n${errors.slice(0, 10).join('\n')}` : '✅ Không có lỗi');
 process.exit(errors.length ? 1 : 0);
