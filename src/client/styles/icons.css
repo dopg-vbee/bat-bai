@@ -1,0 +1,171 @@
+/* ---------- theme toggle ---------- */
+
+.theme-toggle {
+  flex-shrink: 0;
+  padding: 6px 8px;
+}
+
+.theme-toggle.floating {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+/* Smooth switch when the theme is toggled. Not on leaderboard rows: their own transition slides them. */
+body,
+.card,
+.input,
+.player-chip {
+  transition:
+    background-color 0.25s,
+    color 0.25s,
+    border-color 0.25s;
+}
+
+/* ---------- icons (lucide) ---------- */
+
+/* Inline icons scale with the text they sit next to. */
+.btn svg,
+.pill svg,
+.banner svg,
+.link-subtle svg,
+.link-button svg,
+.join-step svg,
+.yt-clip-range svg,
+.clip-preview-actions a svg,
+.icon-heading svg,
+.player-chip-kick svg {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+.pill,
+.link-subtle,
+.link-button,
+.join-step,
+.yt-clip-range,
+.clip-preview-actions a,
+.icon-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.host-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+}
+
+.brand-icon {
+  width: 1.15em;
+  height: 1.15em;
+  color: #fde047;
+}
+
+.delta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.delta svg {
+  width: 0.95em;
+  height: 0.95em;
+}
+
+.player-chip-kick {
+  display: grid;
+  place-items: center;
+}
+
+.ended-trophy {
+  width: 1.3em;
+  height: 1.3em;
+  vertical-align: -0.3em;
+}
+
+/* ---------- emoji (Fluent static, Noto animated) ---------- */
+
+.lb-row .avatar {
+  width: 1.45em;
+  height: 1.45em;
+  font-size: inherit;
+}
+
+.lb-row .leaderboard-rank {
+  width: 1.5em;
+}
+
+span.emoji-animated {
+  display: inline-block;
+}
+
+.emoji {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.28em;
+  user-select: none;
+}
+
+.emoji.emoji-xl {
+  width: 104px;
+  height: 104px;
+  filter: drop-shadow(0 8px 10px rgb(0 0 0 / 0.2));
+}
+
+.avatar .emoji {
+  width: 74%;
+  height: 74%;
+  vertical-align: 0;
+}
+
+.podium-block .emoji {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.podium-large .podium-block .emoji {
+  width: 3.6rem;
+  height: 3.6rem;
+}
+
+.emoji-animated {
+  width: 128px;
+  height: 128px;
+  user-select: none;
+}
+
+.status-badge {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--accent);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.45);
+}
+
+.status-badge svg {
+  width: 56px;
+  height: 56px;
+}
+
+.status-danger {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+}

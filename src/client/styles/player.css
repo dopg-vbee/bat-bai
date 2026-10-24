@@ -1,0 +1,149 @@
+/* ---------- player ---------- */
+
+.player-screen {
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 12px;
+}
+
+.player-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white-10);
+  border-radius: 999px;
+  padding: 6px 16px 6px 6px;
+}
+
+.player-bar-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-bar-score {
+  font-weight: 800;
+}
+
+.player-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.player-body.center {
+  justify-content: center;
+}
+
+.question-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.urgent-text {
+  color: #fde047;
+  animation: pulse 0.6s ease-in-out infinite;
+}
+
+.time-bar {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--white-20);
+  overflow: hidden;
+}
+
+.time-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #fde047, #facc15);
+  border-radius: inherit;
+  transition: width 0.1s linear;
+}
+
+.guess-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-guess {
+  font-size: 1.35rem;
+  padding: 16px 18px;
+}
+
+.feedback {
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.feedback-wrong {
+  color: #fecaca;
+}
+
+/* Wrong, but nearly the name. */
+.feedback-close {
+  color: #fde68a;
+}
+
+.hint {
+  text-align: center;
+  opacity: 0.75;
+  font-size: 0.95rem;
+}
+
+.points-gain {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #fde047;
+  text-shadow: 0 4px 0 rgb(0 0 0 / 0.15);
+}
+
+.answer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.answer-card .label {
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.answer-title {
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+
+.rank-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-wrap: wrap;
+}
+
+.rank-big {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.countdown-number {
+  font-size: 8rem;
+  font-weight: 800;
+  line-height: 1;
+  animation: pop 0.9s ease-out;
+  text-shadow: 0 8px 0 rgb(0 0 0 / 0.18);
+}
+
+.countdown-xl {
+  font-size: 14rem;
+}

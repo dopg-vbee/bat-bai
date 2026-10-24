@@ -1,0 +1,480 @@
+/* ---------- admin ---------- */
+
+.admin-screen {
+  gap: 16px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.admin-brand {
+  text-decoration: none;
+}
+
+.back-link {
+  align-self: flex-start;
+}
+
+.create-set {
+  display: flex;
+  gap: 12px;
+}
+
+.set-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.set-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  text-decoration: none;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
+}
+
+.set-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px rgb(0 0 0 / 0.5);
+  border-color: rgb(192 132 252 / 0.4);
+}
+
+.set-card-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(140deg, var(--accent-strong), var(--accent-2));
+  color: #fff;
+  box-shadow: 0 6px 18px rgb(168 85 247 / 0.35);
+}
+
+.set-card-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.set-card-name {
+  font-size: 1.3rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.set-card-meta {
+  color: var(--text-soft);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.set-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.set-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.create-room {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: linear-gradient(120deg, rgb(250 204 21 / 0.12), rgb(236 72 153 / 0.12)), var(--surface);
+}
+
+.create-room-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.create-room-options {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.field-inline select {
+  width: auto;
+}
+
+.field-inline input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.question-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropzone-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 22px 16px;
+  border: 3px dashed rgb(192 132 252 / 0.45);
+  border-radius: 16px;
+  background: var(--surface-2);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+/* Children must not steal drag events, or dragleave fires while still over the zone. */
+.dropzone > * {
+  pointer-events: none;
+}
+
+.dropzone:hover,
+.dropzone:focus-visible,
+.dropzone.dragging {
+  border-color: var(--accent);
+  background: var(--surface-3);
+  outline: none;
+}
+
+.dropzone.dragging {
+  transform: scale(1.01);
+}
+
+.dropzone.has-file {
+  border-style: solid;
+  border-color: var(--success-text);
+  background: var(--success-soft);
+}
+
+.dropzone-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: 16px;
+  background: rgb(192 132 252 / 0.16);
+  color: var(--accent);
+}
+
+.dropzone-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.dropzone.has-file .dropzone-icon {
+  background: var(--success-soft);
+  color: var(--success-text);
+}
+
+.dropzone-title {
+  overflow-wrap: anywhere;
+}
+
+.dropzone-meta {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.dropzone-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropzone-preview audio {
+  height: 36px;
+  flex: 1;
+  min-width: 0;
+}
+
+.range-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.time-slider {
+  display: grid;
+  grid-template-columns: 96px auto 1fr auto 92px;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-slider.disabled .time-range,
+.time-slider.disabled .time-input {
+  opacity: 0.45;
+}
+
+.time-slider-label {
+  font-weight: 800;
+}
+
+.end-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.end-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.time-range {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.step-btn {
+  padding: 4px 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-input {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.range-summary {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+/* Hidden player used only to read a video's duration. */
+.yt-probe {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 200px;
+  height: 120px;
+  pointer-events: none;
+}
+
+.clip-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clip-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.clip-preview-actions a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.clip-preview .yt-clip,
+.question-clip .yt-clip {
+  max-width: 560px;
+}
+
+.yt-clip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.yt-clip-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 36px;
+}
+
+.yt-clip-range {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The reveal's video: as large as the screen allows below the title, kept 16:9 and centred. */
+.video-slot {
+  width: min(100%, calc((100dvh - 235px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+}
+
+.host-clip {
+  position: fixed;
+  z-index: 5;
+}
+
+/* Pre-buffering during the question: in the viewport (browsers pause off-screen video) but invisible. */
+.host-clip.warming {
+  left: 0;
+  bottom: 0;
+  width: 480px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.yt-clip-range {
+  font-weight: 800;
+}
+
+.question-clip {
+  grid-column: 1 / -1;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: left;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.question-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.question-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.question-index {
+  font-weight: 800;
+  color: var(--accent);
+  text-align: center;
+}
+
+.question-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.question-info strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.question-info a {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.question-audio {
+  height: 36px;
+  width: 220px;
+}
+
+.question-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.question-list-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.question-list-head h3 {
+  margin-right: auto;
+}
+
+/* A question's answer video that won't play in the game (or couldn't be checked). */
+.video-problem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.video-problem svg {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+}
+
+.video-unknown {
+  color: var(--text-soft);
+}
+
+.empty-state {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 48px 20px;
+}

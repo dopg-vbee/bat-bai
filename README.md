@@ -138,7 +138,9 @@ npm run loadtest -- --url http://localhost:3000 --rooms 3 --players 60
 
 ```
 src/server/   Express + Socket.IO: phòng chơi, chấm đáp án, API quản lý, lưu trữ (thư mục / S3)
+  game/       room (luồng một ván), player, luck (điểm, câu x2, hộp quà), teams, awards, match
 src/client/   React: trang chủ, màn người chơi, màn host, trang quản lý
+  styles/     CSS theo khu vực; styles.css nạp chúng theo đúng thứ tự
 src/shared/   kiểu dữ liệu, xử lý link YouTube, danh sách emoji dùng chung
 scripts/      backup, restore, loadtest, build-emoji
 tests/        vitest

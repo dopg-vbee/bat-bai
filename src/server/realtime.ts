@@ -2,7 +2,8 @@ import type { Server } from 'socket.io';
 import { REACTIONS, type ClientToServerEvents, type ServerToClientEvents } from '../shared/types.ts';
 import { checkPassword } from './auth.ts';
 import { createRateLimiter } from './game/rateLimit.ts';
-import { pickLuck, Room, type GameQuestion } from './game/room.ts';
+import { pickLuck } from './game/luck.ts';
+import { Room, type GameQuestion } from './game/room.ts';
 import type { Library } from './library.ts';
 
 interface SocketData {

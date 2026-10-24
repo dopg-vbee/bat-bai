@@ -1,0 +1,406 @@
+/* ---------- round flow: correct answers, leaderboard ---------- */
+
+.skip-btn {
+  align-self: flex-end;
+  margin-top: auto;
+}
+
+/* Correct answers under the question: a centred row, newcomers run in from the right (see
+   CorrectStream). --u scales everything with the screen height. */
+.correct-stream {
+  --item: 150px;
+  /* Extra room above the row for the flames of a streak; padding keeps it out of the measured height. */
+  --headroom: 150px;
+  grid-area: stream;
+  position: relative;
+  width: 100%;
+  height: calc(100% + var(--headroom));
+  margin: calc(-1 * var(--headroom)) 0 0;
+  padding: var(--headroom) 0 0;
+  list-style: none;
+  overflow: hidden;
+  /* Players leaving on the left fade out instead of being cut. */
+  mask-image: linear-gradient(to right, transparent 0, #000 120px);
+}
+
+.stream-slot {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.stream-correct {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  text-align: center;
+}
+
+.stream-correct .avatar {
+  width: calc(var(--item) * 0.74);
+  height: calc(var(--item) * 0.74);
+  font-size: calc(var(--item) * 0.3);
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.15),
+    0 0 0 3px rgb(134 239 172 / 0.6);
+}
+
+.stream-slot.newest .stream-correct .avatar {
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.15),
+    0 0 0 5px #86efac,
+    0 0 36px rgb(34 197 94 / 0.7);
+}
+
+.stream-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: calc(var(--item) * 0.13);
+  line-height: 1.1;
+}
+
+.stream-points {
+  /* On the page: a light green reads on dark and on the light theme's purple. */
+  color: #86efac;
+  font-weight: 800;
+  font-size: calc(var(--item) * 0.1);
+}
+
+/* Runs in from the right edge to its place next to the previous player. */
+.stream-correct.arriving {
+  animation: stream-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes stream-enter {
+  from {
+    transform: translateX(var(--enter-from));
+  }
+}
+
+/* Latest wrong guesses down the left edge: newest on top, older ones pushed down and fading. */
+.wrong-list {
+  --u: 1;
+  grid-area: wrong;
+  /* Takes the row's height without growing it; extra items are cut and faded at the bottom. */
+  contain: size;
+  min-height: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 80%, transparent);
+  pointer-events: none;
+}
+
+.wrong-list ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 8px);
+}
+
+.wrong-list-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: calc(var(--u) * 8px);
+  /* On the page (dark, or purple in the light theme): a light tint reads on both. */
+  color: #fecaca;
+  font-weight: 800;
+  font-size: calc(var(--u) * 1.3rem);
+}
+
+.wrong-list-title svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.wrong-item {
+  padding: calc(var(--u) * 9px) calc(var(--u) * 16px);
+  border-radius: 14px;
+  background: rgb(248 113 113 / 0.14);
+  border-left: 4px solid rgb(248 113 113 / 0.6);
+  color: var(--on-page);
+  font-weight: 800;
+  font-size: calc(var(--u) * 1.6rem);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: line-through;
+  text-decoration-color: rgb(248 113 113 / 0.7);
+  text-decoration-thickness: 2px;
+  transition: opacity 0.4s;
+}
+
+.wrong-item.arriving {
+  animation: wrong-drop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes wrong-drop {
+  from {
+    transform: translateY(-16px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.host-leaderboard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.leaderboard-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.lb-anim {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lb-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  font-size: inherit;
+  gap: 0.55em;
+  animation: none;
+  /* Own layers from the start, so the first slide doesn't stall while they are created. */
+  will-change: transform;
+  transition:
+    transform 1.2s cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 0.6s,
+    box-shadow 0.4s;
+}
+
+.lb-row.climbed {
+  box-shadow: 0 0 0 3px #86efac;
+}
+
+.lb-row.moving-up {
+  z-index: 2;
+  box-shadow:
+    0 0 0 3px #86efac,
+    0 12px 32px rgb(34 197 94 / 0.45);
+}
+
+.lb-row.moving-down {
+  z-index: 0;
+  opacity: 0.75;
+}
+
+.lb-row .leaderboard-gain {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.lb-row .leaderboard-gain.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.advance-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--white-20);
+  overflow: hidden;
+}
+
+.advance-bar-fill {
+  height: 100%;
+  background: #fde047;
+  transition: width 0.1s linear;
+}
+
+.total-line {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.total-line strong {
+  font-size: 1.6rem;
+  color: #fde047;
+}
+
+/* ---------- everyone answered correctly ---------- */
+
+.all-correct {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  background: radial-gradient(circle at center, rgb(12 10 24 / 0.82) 0%, rgb(12 10 24 / 0.55) 60%, transparent 100%);
+  pointer-events: none;
+  animation: all-correct-fade 2.6s ease-in-out forwards;
+}
+
+.all-correct-emoji {
+  width: min(32vh, 260px);
+  height: min(32vh, 260px);
+  animation: all-correct-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.all-correct-text {
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(90deg, #fde047, #f472b6, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 0 rgb(0 0 0 / 0.35));
+  animation: all-correct-pop 0.6s 0.15s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.all-correct-pill {
+  background: rgb(250 204 21 / 0.2);
+  color: #fde047;
+}
+
+@keyframes all-correct-pop {
+  from {
+    transform: scale(0.2) rotate(-8deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes all-correct-fade {
+  0%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* ---------- luck: double rounds, gift boxes ---------- */
+
+.lucky-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 26px 14px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgb(250 204 21 / 0.25), rgb(244 114 182 / 0.25));
+  border: 2px solid rgb(250 204 21 / 0.6);
+  box-shadow: 0 0 40px rgb(250 204 21 / 0.35);
+  animation: lucky-in 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both, lucky-glow 1.2s ease-in-out 0.6s infinite;
+}
+
+.lucky-bolt {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.lucky-title {
+  font-weight: 800;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lucky-x2 {
+  font-weight: 800;
+  font-size: 2.2rem;
+  line-height: 1;
+  color: #fde047;
+}
+
+.lucky-banner.large .lucky-bolt {
+  width: 4rem;
+  height: 4rem;
+}
+
+.lucky-banner.large .lucky-title {
+  font-size: 2rem;
+}
+
+.lucky-banner.large .lucky-x2 {
+  font-size: 4rem;
+}
+
+@keyframes lucky-in {
+  from {
+    transform: scale(0.3) rotate(-10deg);
+    opacity: 0;
+  }
+}
+
+@keyframes lucky-glow {
+  50% {
+    box-shadow: 0 0 70px rgb(250 204 21 / 0.6);
+  }
+}
+
+.double-tag,
+.gift-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.double-tag {
+  background: rgb(250 204 21 / 0.2);
+  color: #fde047;
+  border: 1px solid rgb(250 204 21 / 0.5);
+}
+
+.question-stats .double-tag {
+  font-size: clamp(1.1rem, 2.4vh, 1.7rem);
+}
+
+.gift-tag {
+  background: rgb(244 114 182 / 0.22);
+  color: #f9a8d4;
+  border: 1px solid rgb(244 114 182 / 0.55);
+}
+
+.gift-tag-lg {
+  font-size: 1.5rem;
+  padding: 4px 16px;
+  animation: lucky-in 0.6s 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.luck-line {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* Gift badge on the bottom-right of a correct-answer avatar (the row clips anything above it). */
+.stream-avatar {
+  position: relative;
+  display: inline-flex;
+}

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { pickLuck, Room } from '../src/server/game/room.ts';
+import { pickLuck } from '../src/server/game/luck.ts';
+import { Room } from '../src/server/game/room.ts';
 import { LEADERBOARD_MS, PREVIEW_BOTS, streakBonus } from '../src/shared/types.ts';
 
 const questions = [

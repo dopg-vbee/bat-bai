@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { checkGuess, normalize } from '../src/server/game/match.ts';
-import { scoreFor } from '../src/server/game/room.ts';
+import { scoreFor } from '../src/server/game/luck.ts';
 
 describe('normalize', () => {
   it('strips Vietnamese diacritics, đ and punctuation', () => {

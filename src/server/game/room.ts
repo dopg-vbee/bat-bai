@@ -4,9 +4,7 @@ import {
   LEADERBOARD_MS,
   OPEN_CLIP_SEC,
   PREVIEW_BOTS,
-  STREAK_MIN,
   streakBonus,
-  type GameAwards,
   type GuessResult,
   type HostState,
   type Phase,
@@ -18,7 +16,10 @@ import {
   TEAMS,
 } from '../../shared/types.ts';
 import { AVATARS } from '../../shared/emoji.ts';
+import { computeAwards } from './awards.ts';
+import { rollGift, scoreFor, type Luck } from './luck.ts';
 import { checkGuess } from './match.ts';
+import { identity, isOnline, streakAt, type Player } from './player.ts';
 import { dealTeams, smallestTeam, teamStandings } from './teams.ts';
 import { PausableTimers, type TimerEntry } from './timers.ts';
 
@@ -28,29 +29,6 @@ export interface GameQuestion {
   youtubeId: string;
   startSec: number;
   endSec: number | null;
-}
-
-interface Player {
-  id: string;
-  token: string;
-  name: string;
-  avatar: string;
-  color: string;
-  score: number;
-  /** Sum of answer times, breaks ties in the ranking. */
-  totalMs: number;
-  joinedAt: number;
-  prevRank: number;
-  lastGuessAt: number;
-  socketId: string | null;
-  bot: boolean;
-  /** Index into TEAMS, or null outside team play. */
-  team: number | null;
-  /** Wrong guesses over the whole game, for the "most wrong guesses" award. */
-  wrongTotal: number;
-  /** points = speed score (doubled on lucky rounds) + gift + streak bonus. */
-  /** byTeam: credited because a teammate got it right ("together" team mode). */
-  answers: Map<number, { points: number; gift: number; ms: number; byTeam?: boolean }>;
 }
 
 interface RoomOptions {
@@ -69,28 +47,6 @@ interface RoomOptions {
   onChange: () => void;
 }
 
-export interface Luck {
-  /** Question indexes worth double points. */
-  doubleRounds: number[];
-  /** Chance (0–1) that a correct answer also opens a gift box. */
-  giftChance: number;
-}
-
-const DOUBLE_SHARE = 0.2;
-const GIFT_CHANCE = 0.15;
-const GIFT_STEPS = [100, 150, 200, 250, 300];
-
-/** About a fifth of the questions (never the first) score double; 15% of correct answers get a gift. */
-export function pickLuck(questionCount: number, random = Math.random): Luck {
-  const candidates = Array.from({ length: Math.max(0, questionCount - 1) }, (_, i) => i + 1);
-  const count = questionCount >= 3 ? Math.max(1, Math.round(questionCount * DOUBLE_SHARE)) : 0;
-  const doubleRounds: number[] = [];
-  while (doubleRounds.length < count && candidates.length) {
-    doubleRounds.push(candidates.splice(Math.floor(random() * candidates.length), 1)[0]);
-  }
-  return { doubleRounds: doubleRounds.sort((a, b) => a - b), giftChance: GIFT_CHANCE };
-}
-
 /** Room size: ~60 players expected, with headroom for 100-bot load tests plus real players. */
 const MAX_PLAYERS = 150;
 const BOT_FRUITS = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Măng Cụt', 'Sầu Riêng'];
@@ -100,9 +56,9 @@ const SURE_BOT_NAME = 'Bot Luôn Đúng';
 const BOT_MISS_RATE = 0.25;
 /** Share of answering bots that first try another song of the set (makes "Chơi thử" lively). */
 const BOT_WRONG_RATE = 0.4;
-/** Wrong guesses kept per round for the big screen (older ones have scrolled off anyway). */
 /** Rows on the between-rounds leaderboard; the final screen lists everyone. */
 const LEADERBOARD_ROWS = 10;
+/** Wrong guesses kept per round for the big screen (older ones have scrolled off anyway). */
 const WRONG_FEED_SIZE = 40;
 const WRONG_TEXT_LENGTH = 40;
 const MAX_NAME_LENGTH = 20;
@@ -117,12 +73,6 @@ const REVEAL_FALLBACK_EXTRA_MS = 12_000;
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#ec4899'];
 
 const randomToken = () => randomBytes(12).toString('base64url');
-
-/** 1000 points for an instant answer, sliding down to 500 at the buzzer. */
-export function scoreFor(elapsedMs: number, durationMs: number): number {
-  const ratio = Math.min(Math.max(elapsedMs / durationMs, 0), 1);
-  return Math.round(1000 - 500 * ratio);
-}
 
 export class Room {
   readonly code: string;
@@ -363,7 +313,7 @@ export class Room {
 
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
     const speed = scoreFor(elapsed, this.durationMs) * (this.isDouble() ? 2 : 1);
-    const gift = Math.random() < this.luck.giftChance ? GIFT_STEPS[Math.floor(Math.random() * GIFT_STEPS.length)] : 0;
+    const gift = rollGift(this.luck);
     const streak = streakAt(player, this.qIndex - 1) + 1;
     const points = speed + gift + streakBonus(streak);
     player.answers.set(this.qIndex, { points, gift, ms: elapsed });
@@ -431,34 +381,11 @@ export class Room {
             .slice(0, this.phase === 'ended' ? undefined : LEADERBOARD_ROWS)
             .map((p, i) => this.rankRow(p, i + 1))
         : [],
-      awards: this.phase === 'ended' ? this.awards() : null,
+      awards:
+        this.phase === 'ended'
+          ? computeAwards([...this.players.values()], this.questions.map((q) => q.title), this.qIndex)
+          : null,
     };
-  }
-
-  /** Fun titles for the final screen; each is null when nobody earned it. */
-  private awards(): GameAwards {
-    const players = [...this.players.values()];
-    let fastest: GameAwards['fastest'] = null;
-    let streak: GameAwards['streak'] = null;
-    let guesser: GameAwards['guesser'] = null;
-    for (const p of players) {
-      for (const [index, { ms }] of p.answers) {
-        if (!fastest || ms < fastest.ms) fastest = { ...identity(p), ms, question: this.questions[index].title };
-      }
-      const best = longestStreak(p);
-      if (best >= STREAK_MIN && (!streak || best > streak.streak)) streak = { ...identity(p), streak: best };
-      if (p.wrongTotal > 0 && (!guesser || p.wrongTotal > guesser.wrong)) {
-        guesser = { ...identity(p), wrong: p.wrongTotal };
-      }
-    }
-    let hardest: GameAwards['hardest'] = null;
-    for (let i = 0; i <= this.qIndex; i++) {
-      const correct = players.filter((p) => p.answers.has(i)).length;
-      if (!hardest || correct < hardest.correct) {
-        hardest = { title: this.questions[i].title, correct, players: players.length };
-      }
-    }
-    return { fastest, streak, guesser, hardest };
   }
 
   /** One personalised state per connected player; the ranking is computed once. */
@@ -640,26 +567,4 @@ export class Room {
     this.lastActivity = Date.now();
     this.onChange();
   }
-}
-
-const isOnline = (p: Player) => p.bot || p.socketId !== null;
-const identity = (p: Player) => ({ id: p.id, name: p.name, avatar: p.avatar, color: p.color });
-
-/** Longest run of correct answers over the game. */
-function longestStreak(p: Player): number {
-  let best = 0;
-  for (const index of p.answers.keys()) {
-    if (p.answers.has(index - 1)) continue; // only count from the start of each run
-    let run = 1;
-    while (p.answers.has(index + run)) run++;
-    best = Math.max(best, run);
-  }
-  return best;
-}
-
-/** Correct answers in a row ending at question `index` (0 if that one was missed). */
-function streakAt(p: Player, index: number): number {
-  let streak = 0;
-  while (p.answers.has(index - streak)) streak++;
-  return streak;
 }
