@@ -8,6 +8,9 @@ const questions = [
   { title: 'Nơi Này Có Anh', audio: 'b'.repeat(64), youtubeId: 'Llw9Q6akRo4', startSec: 60, endSec: null },
 ];
 
+/** Question 2 isn't the final (x3) one here. */
+const threeQuestions = [...questions, { ...questions[0], title: 'Hãy Trao Cho Anh' }];
+
 const makeRoom = (preview: boolean) =>
   new Room({ code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000, preview, onChange: () => {} });
 
@@ -162,22 +165,34 @@ describe('preview room', () => {
     expect(room.hostView().wrongFeed).toEqual([]);
   });
 
-  it('lucky rounds score double, and are only revealed when they start', () => {
+  it('lucky rounds score double, the final one triple, only revealed when they start', () => {
     const room = new Room({
-      code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
+      code: '1234', setName: 'Test', questions: threeQuestions, durationMs: 10_000, countdownMs: 3000,
       luck: { doubleRounds: [1], giftChances: [0, 0, 0], stealShare: 0 }, onChange: () => {},
     });
     const lan = room.join('Lan', undefined, 's1');
     if (typeof lan === 'string') throw new Error(lan);
     room.next();
-    expect(room.hostView().double).toBe(false);
+    expect(room.hostView().multiplier).toBe(1);
     vi.advanceTimersByTime(3000);
     expect(room.guess(lan.id, 'Lạc Trôi')).toEqual({ status: 'correct', points: 1000, gift: 0, streak: 1, stolenFrom: null });
     room.next(); room.next(); room.next(); // reveal → leaderboard → question 2
-    expect(room.hostView().double).toBe(true);
-    expect(room.playerViews()[0].state.double).toBe(true);
+    expect(room.hostView().multiplier).toBe(2);
+    expect(room.playerViews()[0].state.multiplier).toBe(2);
     vi.advanceTimersByTime(3000);
     expect(room.guess(lan.id, 'Nơi Này Có Anh')).toEqual({ status: 'correct', points: 2000, gift: 0, streak: 2, stolenFrom: null });
+    room.next(); room.next(); room.next(); // the last question
+    expect(room.hostView().multiplier).toBe(3);
+    vi.advanceTimersByTime(3000);
+    expect(room.guess(lan.id, 'Hãy Trao Cho Anh')).toMatchObject({ points: 3000 + 50 }); // + streak of 3
+  });
+
+  it('a one-question preview is not a final', () => {
+    const room = new Room({
+      code: '1234', setName: 'Test', questions: [questions[0]], durationMs: 10_000, countdownMs: 3000, onChange: () => {},
+    });
+    room.next();
+    expect(room.hostView().multiplier).toBe(1);
   });
 
   it('a gift box adds a random bonus shown with the answer', () => {
@@ -222,7 +237,7 @@ describe('preview room', () => {
   });
 
   it('a gift box can steal from the leader at the start of the question, once a question, not in team play', () => {
-    const titles = ['Lạc Trôi', 'Nơi Này Có Anh'];
+    const titles = ['Lạc Trôi', 'Nơi Này Có Anh', 'Hãy Trao Cho Anh'];
     const luck = { doubleRounds: [], giftChances: [1, 1, 1], stealShare: 1 };
     const makeRoom = (teamMode: 'off' | 'average') => {
       const room = new Room({
@@ -429,7 +444,7 @@ describe('preview room', () => {
 
   it('tracks how teams move between questions, like players', () => {
     const room = new Room({
-      code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
+      code: '1234', setName: 'Test', questions: threeQuestions, durationMs: 10_000, countdownMs: 3000,
       teamMode: 'average', teamCount: 2, onChange: () => {},
     });
     const [lan, minh] = ['Lan', 'Minh'].map((name, i) => {
@@ -465,7 +480,8 @@ describe('preview room', () => {
     for (const [i, title] of titles.entries()) {
       vi.advanceTimersByTime(3000);
       // No +50 on the third answer in a row.
-      expect(room.guess(lan.id, title)).toEqual({ status: 'correct', points: 1000, gift: 0, streak: 0, stolenFrom: null });
+      const points = i === titles.length - 1 ? 3000 : 1000; // the final question scores triple
+      expect(room.guess(lan.id, title)).toEqual({ status: 'correct', points, gift: 0, streak: 0, stolenFrom: null });
       expect(room.hostView().correctFeed[0].streak).toBe(0);
       if (i < titles.length - 1) { room.next(); room.next(); room.next(); }
     }
@@ -488,13 +504,13 @@ describe('preview room', () => {
 });
 
 describe('pickLuck', () => {
-  it('picks about 15% of the questions, never the first, no duplicates', () => {
+  it('picks about 15% of the questions, never the first or last, no duplicates', () => {
     for (let run = 0; run < 50; run++) {
       const { doubleRounds, giftChances } = pickLuck(10);
       expect(doubleRounds).toHaveLength(2);
       expect(new Set(doubleRounds).size).toBe(2);
       expect(doubleRounds).not.toContain(0);
-      expect(doubleRounds.every((i) => i >= 1 && i <= 9)).toBe(true);
+      expect(doubleRounds.every((i) => i >= 1 && i <= 8)).toBe(true); // never the first or the (x3) last
       expect(giftChances).toEqual([0.12, 0.14, 0.16]);
     }
     expect(pickLuck(30).doubleRounds).toHaveLength(5);

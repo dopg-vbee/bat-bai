@@ -1,22 +1,29 @@
 import { useState } from 'react';
 import { Emoji, EmojiText } from './Emoji.tsx';
 
-/** Splash shown during the countdown of a lucky (double points) question. */
-export function LuckyBanner({ large = false }: { large?: boolean }) {
+/** What a question worth more points is called: x2 at random, x3 for the final one. */
+const MULTIPLIED: Record<number, { emoji: string; title: string }> = {
+  2: { emoji: '⚡', title: 'Câu may mắn' },
+  3: { emoji: '🏆', title: 'Câu chung kết' },
+};
+
+/** Splash shown during the countdown of a lucky (x2) or final (x3) question. */
+export function LuckyBanner({ multiplier, large = false }: { multiplier: number; large?: boolean }) {
+  const { emoji, title } = MULTIPLIED[multiplier];
   return (
     <div className={`lucky-banner${large ? ' large' : ''}`} role="status">
-      <Emoji char="⚡" className="lucky-bolt" />
-      <span className="lucky-title">Câu may mắn</span>
-      <span className="lucky-x2">x2 điểm</span>
+      <Emoji char={emoji} className="lucky-bolt" />
+      <span className="lucky-title">{title}</span>
+      <span className="lucky-x2">x{multiplier} điểm</span>
     </div>
   );
 }
 
-/** Small "⚡ x2" tag for the rest of a lucky question. */
-export function DoubleTag() {
+/** Small "⚡ x2" / "🏆 x3" tag for the rest of the question. */
+export function MultiplierTag({ multiplier }: { multiplier: number }) {
   return (
     <span className="double-tag">
-      <Emoji char="⚡" /> x2 điểm
+      <Emoji char={MULTIPLIED[multiplier].emoji} /> x{multiplier} điểm
     </span>
   );
 }

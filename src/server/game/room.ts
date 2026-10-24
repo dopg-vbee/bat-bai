@@ -59,6 +59,7 @@ const BOT_MISS_RATE = 0.25;
 const BOT_WRONG_RATE = 0.4;
 /** Rows on the between-rounds leaderboard; the final screen lists everyone. */
 const LEADERBOARD_ROWS = 10;
+const FINAL_MULTIPLIER = 3;
 /** Wrong guesses kept per round for the big screen (older ones have scrolled off anyway). */
 const WRONG_FEED_SIZE = 40;
 const WRONG_TEXT_LENGTH = 40;
@@ -319,7 +320,7 @@ export class Room {
     }
 
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
-    const speed = scoreFor(elapsed, this.durationMs) * (this.isDouble() ? 2 : 1);
+    const speed = scoreFor(elapsed, this.durationMs) * this.multiplier();
     // Joined during this question: counts as last.
     let gift = rollGift(this.luck, this.giftTiers.get(player.id) ?? 2);
     const victim = gift ? this.stealVictim(player) : undefined;
@@ -481,14 +482,19 @@ export class Room {
       startsAt: this.startsAt,
       endsAt: this.endsAt,
       allCorrect: this.allCorrect,
-      double: this.isDouble(),
+      multiplier: this.multiplier(),
       pausedAt: this.pausedAt,
     };
   }
 
-  /** Only revealed once the question starts (countdown), so nobody knows in advance. */
-  private isDouble(): boolean {
-    return this.phase !== 'lobby' && this.luck.doubleRounds.includes(this.qIndex);
+  /**
+   * x3 on the final question (of a real game, not a one-question preview), x2 on lucky ones. Lucky ones are
+   * only revealed once the question starts (countdown), so nobody knows in advance.
+   */
+  private multiplier(): number {
+    if (this.phase === 'lobby') return 1;
+    if (this.questions.length > 1 && this.qIndex === this.questions.length - 1) return FINAL_MULTIPLIER;
+    return this.luck.doubleRounds.includes(this.qIndex) ? 2 : 1;
   }
 
   private answerVisible(): boolean {

@@ -3,7 +3,7 @@ import { CountUp } from '../../components/AnimatedLeaderboard.tsx';
 import { AnimatedEmoji, Emoji, EmojiText } from '../../components/Emoji.tsx';
 import { StreakTag } from '../../components/Fire.tsx';
 import { Delta } from '../../components/Leaderboard.tsx';
-import { BorrowQuip, DoubleTag, GiftTag } from '../../components/Luck.tsx';
+import { BorrowQuip, GiftTag, MultiplierTag } from '../../components/Luck.tsx';
 import { TeamBadge } from '../../components/Team.tsx';
 
 export function PlayerReveal({ state }: { state: PlayerState }) {
@@ -16,9 +16,9 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
       <AnimatedEmoji char={round.correct ? '🥳' : round.robbed ? '😱' : '😅'} className="pop" once />
       <h2>{round.correct ? `+${round.points} điểm` : 'Tiếc quá!'}</h2>
       <StreakTag streak={round.streak} long className="streak-tag-lg" />
-      {(round.gift > 0 || (state.double && round.correct)) && (
+      {(round.gift > 0 || (state.multiplier > 1 && round.correct)) && (
         <p className="luck-line">
-          {state.double && round.correct && <DoubleTag />}
+          {state.multiplier > 1 && round.correct && <MultiplierTag multiplier={state.multiplier} />}
           {round.gift > 0 && <GiftTag gift={round.gift} stolenFrom={round.stolenFrom} long />}
         </p>
       )}

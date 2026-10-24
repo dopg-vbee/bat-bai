@@ -70,8 +70,8 @@ export interface HostState {
   advanceAt: number;
   /** The round ended early because everyone answered correctly. */
   allCorrect: boolean;
-  /** Lucky round: points count double. */
-  double: boolean;
+  /** Points multiplier: 2 on a lucky question, 3 on the final one, otherwise 1. */
+  multiplier: number;
   /** 0 while running; otherwise when the host paused. Clocks show this instant until resumed. */
   pausedAt: number;
   /** The join QR code is shown over the game (toggled from the host menu or a phone remote). */
@@ -122,7 +122,7 @@ export interface PlayerState {
   startsAt: number;
   endsAt: number;
   allCorrect: boolean;
-  double: boolean;
+  multiplier: number;
   pausedAt: number;
   playerCount: number;
   me: PlayerIdentity & { score: number; rank: number; delta: number; team: number | null };
