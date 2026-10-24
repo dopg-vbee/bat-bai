@@ -165,7 +165,7 @@ describe('preview room', () => {
   it('lucky rounds score double, and are only revealed when they start', () => {
     const room = new Room({
       code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
-      luck: { doubleRounds: [1], giftChance: 0 }, onChange: () => {},
+      luck: { doubleRounds: [1], giftChances: [0, 0, 0] }, onChange: () => {},
     });
     const lan = room.join('Lan', undefined, 's1');
     if (typeof lan === 'string') throw new Error(lan);
@@ -183,7 +183,7 @@ describe('preview room', () => {
   it('a gift box adds a random bonus shown with the answer', () => {
     const room = new Room({
       code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
-      luck: { doubleRounds: [], giftChance: 1 }, onChange: () => {},
+      luck: { doubleRounds: [], giftChances: [1, 1, 1] }, onChange: () => {},
     });
     const lan = room.join('Lan', undefined, 's1');
     if (typeof lan === 'string') throw new Error(lan);
@@ -193,6 +193,30 @@ describe('preview room', () => {
     expect(room.guess(lan.id, 'lac troi')).toEqual({ status: 'correct', points: 1300, gift: 300, streak: 1 });
     expect(room.hostView().correctFeed[0]).toMatchObject({ points: 1300, gift: 300 });
     expect(room.playerViews()[0].state.round).toEqual({ correct: true, points: 1300, gift: 300, streak: 1, byTeam: false });
+  });
+
+  it('gift chances follow the standings at the start of the question: ties share a third', () => {
+    const titles = ['Lạc Trôi', 'Nơi Này Có Anh'];
+    const room = new Room({
+      code: '1234', setName: 'Test', questions: titles.map((title) => ({ ...questions[0], title })),
+      durationMs: 10_000, countdownMs: 3000, luck: { doubleRounds: [], giftChances: [0, 0, 1] }, onChange: () => {},
+    });
+    const [lan, minh, an] = ['Lan', 'Minh', 'An'].map((name, i) => {
+      const player = room.join(name, undefined, `s${i}`);
+      if (typeof player === 'string') throw new Error(player);
+      return player;
+    });
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // a 200 gift whenever the chance allows
+    room.next();
+    vi.advanceTimersByTime(3000);
+    // Everyone on 0: all in the top third, no gifts.
+    expect(room.guess(lan.id, titles[0])).toMatchObject({ gift: 0 });
+    vi.advanceTimersByTime(1000);
+    expect(room.guess(minh.id, titles[0])).toMatchObject({ gift: 0 });
+    room.next(); room.next(); room.next(); // reveal → leaderboard → question 2
+    vi.advanceTimersByTime(3000);
+    // Lan 1st, Minh 2nd, An (no points) last: only An is in the bottom third.
+    expect([lan, minh, an].map((p) => (room.guess(p.id, titles[1]) as { gift: number }).gift)).toEqual([0, 0, 200]);
   });
 
   it('counts correct answers in a row: a bonus from the third, kept while a question is open, reset by a miss', () => {
@@ -416,12 +440,12 @@ describe('preview room', () => {
 describe('pickLuck', () => {
   it('picks about 15% of the questions, never the first, no duplicates', () => {
     for (let run = 0; run < 50; run++) {
-      const { doubleRounds, giftChance } = pickLuck(10);
+      const { doubleRounds, giftChances } = pickLuck(10);
       expect(doubleRounds).toHaveLength(2);
       expect(new Set(doubleRounds).size).toBe(2);
       expect(doubleRounds).not.toContain(0);
       expect(doubleRounds.every((i) => i >= 1 && i <= 9)).toBe(true);
-      expect(giftChance).toBe(0.12);
+      expect(giftChances).toEqual([0.12, 0.14, 0.16]);
     }
     expect(pickLuck(30).doubleRounds).toHaveLength(5);
     expect(pickLuck(3).doubleRounds).toHaveLength(1);

@@ -110,6 +110,8 @@ export class Room {
   private sureBotId: string | null = null;
   /** Each team's place and score when the question started, for the leaderboard's movement. */
   private teamsAtStart = new Map<number, { rank: number; score: number }>();
+  /** Each player's third of the standings when the question started (0 = top; ties share one). */
+  private giftTiers = new Map<string, number>();
   private joinCount = 0;
 
   constructor(options: RoomOptions) {
@@ -120,7 +122,7 @@ export class Room {
     this.countdownMs = options.countdownMs;
     this.preview = options.preview ?? false;
     this.onChange = options.onChange;
-    this.luck = options.luck ?? { doubleRounds: [], giftChance: 0 };
+    this.luck = options.luck ?? { doubleRounds: [], giftChances: [0, 0, 0] };
     this.teamMode = options.teamMode ?? 'off';
     const teamCount = Math.round(options.teamCount ?? MIN_TEAMS);
     this.teamCount = this.teamMode === 'off' ? 0 : Math.min(Math.max(teamCount, MIN_TEAMS), TEAMS.length);
@@ -317,7 +319,8 @@ export class Room {
 
     const elapsed = Math.min(Math.max(now - this.startsAt, 0), this.durationMs);
     const speed = scoreFor(elapsed, this.durationMs) * (this.isDouble() ? 2 : 1);
-    const gift = rollGift(this.luck);
+    // Joined during this question: counts as last.
+    const gift = rollGift(this.luck, this.giftTiers.get(player.id) ?? 2);
     const streak = this.teamMode === 'off' ? streakAt(player, this.qIndex - 1) + 1 : 0;
     const points = speed + gift + streakBonus(streak);
     player.answers.set(this.qIndex, { points, gift, ms: elapsed });
@@ -471,7 +474,11 @@ export class Room {
   }
 
   private startQuestion(index: number): void {
-    this.ranking().forEach((p, i) => (p.prevRank = i + 1));
+    const ranked = this.ranking();
+    ranked.forEach((p, i) => (p.prevRank = i + 1));
+    this.giftTiers = new Map(
+      ranked.map((p) => [p.id, Math.floor((ranked.filter((q) => q.score > p.score).length * 3) / ranked.length)]),
+    );
     this.teamsAtStart = new Map(this.teams().map((t, i) => [t.team, { rank: i + 1, score: t.score }]));
     this.qIndex = index;
     this.phase = 'question';
