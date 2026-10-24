@@ -31,6 +31,8 @@ export const storageKeys = {
   adminPassword: 'batbai:admin',
   lastName: 'batbai:name',
   theme: 'batbai:theme',
+  /** '0' when the host has folded the lobby's QR card away. */
+  lobbyQr: 'batbai:lobby-qr',
   player: (code: string) => `batbai:player:${code}`,
   host: (code: string) => `batbai:host:${code}`,
 };

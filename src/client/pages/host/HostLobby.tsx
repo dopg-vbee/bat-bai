@@ -1,10 +1,11 @@
-import { Play, Shuffle, Smartphone, Users, X } from 'lucide-react';
-import type { CSSProperties } from 'react';
+import { Eye, EyeOff, Play, Shuffle, Smartphone, Users, X } from 'lucide-react';
+import { useState, type CSSProperties } from 'react';
 import { TEAMS, type HostState, type PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { TeamBadge } from '../../components/Team.tsx';
 import { openPlayerWindow } from '../../lib/rooms.ts';
 import { socket } from '../../lib/socket.ts';
+import { readStorage, storageKeys, writeStorage } from '../../lib/storage.ts';
 import { JoinCard } from './JoinCard.tsx';
 
 function PlayerChip({ player }: { player: PlayerSummary }) {
@@ -77,6 +78,8 @@ export function HostLobby({ state }: { state: HostState }) {
   const teamless = state.players.filter((p) => p.team === null).length;
   // The server refuses too: a team game only starts once everyone has a team.
   const canStart = state.players.length > 0 && (!teamPlay || teamless === 0);
+  // Folding the QR away gives the players (and team boxes) the whole width; remembered on this screen.
+  const [qrShown, setQrShown] = useState(() => readStorage(storageKeys.lobbyQr) !== '0');
 
   function handleStart() {
     socket.emit('host:next');
@@ -88,14 +91,41 @@ export function HostLobby({ state }: { state: HostState }) {
     socket.emit('host:shuffleTeams');
   }
 
+  function handleToggleQr() {
+    writeStorage(storageKeys.lobbyQr, qrShown ? '0' : null);
+    setQrShown(!qrShown);
+  }
+
   function handleOpenPlayer() {
     openPlayerWindow(state.code);
   }
 
   return (
-    <section className="host-lobby">
-      <JoinCard code={state.code} />
+    <section className={`host-lobby${qrShown ? '' : ' qr-hidden'}`}>
+      {qrShown && (
+        <div className="lobby-qr">
+          <JoinCard code={state.code} />
+          <button
+            className="btn btn-ghost icon-btn lobby-qr-toggle"
+            onClick={handleToggleQr}
+            aria-label="Ẩn mã QR"
+            title="Ẩn mã QR"
+          >
+            <EyeOff />
+          </button>
+        </div>
+      )}
       <div className="lobby-side">
+        {!qrShown && (
+          <div className="lobby-code-bar">
+            <span>
+              Mã phòng <strong className="lobby-code">{state.code}</strong>
+            </span>
+            <button className="btn btn-ghost" onClick={handleToggleQr}>
+              <Eye /> Hiện mã QR
+            </button>
+          </div>
+        )}
         <h2 className="lobby-title">
           {state.players.length ? `${state.players.length} người đã vào` : 'Đang chờ người chơi…'}
         </h2>

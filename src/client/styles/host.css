@@ -38,6 +38,39 @@
   align-items: start;
 }
 
+.host-lobby.qr-hidden {
+  grid-template-columns: 1fr;
+}
+
+.lobby-qr {
+  position: relative;
+}
+
+/* On the card: a ghost button would vanish on the light theme's white card. */
+.lobby-qr-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* What is left of the QR card when folded away: the room code and a way back. */
+.lobby-code-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.lobby-code {
+  margin-left: 6px;
+  font-size: 2.2rem;
+  letter-spacing: 0.12em;
+  color: var(--code);
+}
+
 /* Sized by the screen height so the QR is as big as fits with the room code below it. */
 .join-card {
   width: clamp(320px, calc(100dvh - 290px), 760px);
