@@ -161,8 +161,6 @@ export interface CreateRoomInput {
   preview?: boolean;
   /** Bots in a preview room (default PREVIEW_BOTS). */
   bots?: number;
-  /** Preview a single question instead of the whole set. */
-  questionId?: string;
   teamMode?: TeamMode;
   /** MIN_TEAMS to TEAMS.length, when playing in teams. */
   teamCount?: number;

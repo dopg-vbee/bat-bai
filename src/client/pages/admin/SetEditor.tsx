@@ -1,16 +1,10 @@
-import { Eye, GripVertical, Pencil, Play, RefreshCw, Shuffle, Trash2, X } from 'lucide-react';
+import { GripVertical, Pencil, Play, RefreshCw, Shuffle, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent } from 'react';
-import {
-  DEFAULT_DURATION_SEC,
-  type QuestionDto,
-  type QuestionSetDto,
-  type VideoStatus,
-} from '../../../shared/types.ts';
+import type { QuestionDto, QuestionSetDto, VideoStatus } from '../../../shared/types.ts';
 import { shuffled } from '../../../shared/shuffle.ts';
 import { formatRange } from '../../../shared/youtube.ts';
 import { YoutubeClip } from '../../components/YoutubeClip.tsx';
 import { api } from '../../lib/api.ts';
-import { createRoom } from '../../lib/rooms.ts';
 import { CreateRoomPanel } from './CreateRoomPanel.tsx';
 import { QuestionForm } from './QuestionForm.tsx';
 import { VideoProblem } from './VideoProblem.tsx';
@@ -28,7 +22,6 @@ interface QuestionRowProps {
   index: number;
   question: QuestionDto;
   videoStatus: VideoStatus | undefined;
-  onPreview: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (question: QuestionDto) => void;
   dragging: boolean;
@@ -44,7 +37,6 @@ function QuestionRow({
   index,
   question,
   videoStatus,
-  onPreview,
   onEdit,
   onDelete,
   dragging,
@@ -71,9 +63,6 @@ function QuestionRow({
 
   function handleToggleClip() {
     setShowClip((shown) => !shown);
-  }
-  function handlePreview() {
-    onPreview(question.id);
   }
   function handleEdit() {
     onEdit(question.id);
@@ -106,9 +95,6 @@ function QuestionRow({
       </div>
       <audio className="question-audio" controls preload="none" src={question.audioUrl} />
       <div className="question-actions">
-        <button className="btn btn-ghost-dark btn-sm" onClick={handlePreview} title="Xem câu này như khi chơi thật">
-          <Eye /> Xem thử
-        </button>
         <button className="btn btn-ghost-dark btn-sm" onClick={handleEdit}>
           <Pencil /> Sửa
         </button>
@@ -199,18 +185,6 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
     });
   }
 
-  function handlePreviewQuestion(questionId: string) {
-    void run(async () => {
-      const failure = await createRoom({
-        setId: set.id,
-        questionId,
-        durationSec: DEFAULT_DURATION_SEC,
-        preview: true,
-      });
-      if (failure) throw new Error(failure);
-    });
-  }
-
   function handleDragStart(id: string) {
     setDraggingId(id);
   }
@@ -269,33 +243,36 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
   }
 
   return (
-    <div className="stack">
-      <div className="card set-header">
-        <div>
-          <h2>{set.name}</h2>
-          <p className="muted">{set.questions.length} câu hỏi</p>
+    // Wide screens: the set, room and question form on the left, the list beside them (see .set-editor).
+    <div className="set-editor">
+      <div className="set-editor-side">
+        <div className="card set-header">
+          <div>
+            <h2>{set.name}</h2>
+            <p className="muted">{set.questions.length} câu hỏi</p>
+          </div>
+          <div className="set-header-actions">
+            <button className="btn btn-ghost-dark btn-sm" onClick={handleRename}>
+              <Pencil /> Đổi tên
+            </button>
+            <button className="btn btn-danger btn-sm" onClick={handleDeleteSet}>
+              <Trash2 /> Xóa bộ đề
+            </button>
+          </div>
         </div>
-        <div className="set-header-actions">
-          <button className="btn btn-ghost-dark btn-sm" onClick={handleRename}>
-            <Pencil /> Đổi tên
-          </button>
-          <button className="btn btn-danger btn-sm" onClick={handleDeleteSet}>
-            <Trash2 /> Xóa bộ đề
-          </button>
-        </div>
+
+        <CreateRoomPanel set={set} brokenVideos={brokenVideos} />
+
+        {error && <p className="error-text">{error}</p>}
+
+        <QuestionForm
+          key={editing?.id ?? 'new'}
+          setId={set.id}
+          question={editing}
+          onSaved={handleSaved}
+          onCancel={editing ? handleCancelEdit : undefined}
+        />
       </div>
-
-      <CreateRoomPanel set={set} brokenVideos={brokenVideos} />
-
-      {error && <p className="error-text">{error}</p>}
-
-      <QuestionForm
-        key={editing?.id ?? 'new'}
-        setId={set.id}
-        question={editing}
-        onSaved={handleSaved}
-        onCancel={editing ? handleCancelEdit : undefined}
-      />
 
       <div className="card">
         <div className="question-list-head">
@@ -327,7 +304,6 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
               index={i}
               question={question}
               videoStatus={videos[question.id]}
-              onPreview={handlePreviewQuestion}
               onEdit={setEditingId}
               onDelete={handleDeleteQuestion}
               dragging={question.id === draggingId}

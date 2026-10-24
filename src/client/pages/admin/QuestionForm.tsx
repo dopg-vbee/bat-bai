@@ -45,8 +45,9 @@ export function QuestionForm({ setId, question, onSaved, onCancel }: QuestionFor
   const previewStart = useDebounced(startSec, PREVIEW_DEBOUNCE_MS);
   const previewEnd = useDebounced(endSec, PREVIEW_DEBOUNCE_MS);
   // Opened from a row's "Sửa" button, maybe far down the list (the form is keyed per question).
+  // Only scrolls when it is out of view: beside the list (wide screens) it already is in view.
   useEffect(() => {
-    if (question) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (question) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, []);
 
   const ready = title.trim() && youtube && (endSec === null || endSec > startSec) && (file || question);
@@ -110,8 +111,12 @@ export function QuestionForm({ setId, question, onSaved, onCancel }: QuestionFor
         {question ? <Pencil /> : <Plus />}
         {question ? `Sửa câu: ${question.title}` : 'Thêm câu hỏi'}
       </h3>
-      <AudioDropzone file={file} note={question ? 'bỏ trống nếu giữ file cũ' : undefined} onChange={setFile} />
+      {/* MP3, answer and video side by side: one compact row instead of a big drop area. */}
       <div className="form-grid">
+        <div className="field">
+          <span className="label">File MP3 (giọng đọc)</span>
+          <AudioDropzone file={file} note={question ? 'bỏ trống nếu giữ file cũ' : undefined} onChange={setFile} />
+        </div>
         <label className="field">
           <span className="label">Tên bài hát (đáp án)</span>
           <input

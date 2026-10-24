@@ -108,10 +108,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       const set = library.getSet(String(input.setId));
       if (!set?.questions.length) return cb({ ok: false, error: 'Bộ đề chưa có câu hỏi nào' });
 
-      const picked = input.questionId ? set.questions.filter((q) => q.id === input.questionId) : set.questions;
-      if (!picked.length) return cb({ ok: false, error: 'Không tìm thấy câu hỏi' });
-
-      const questions: GameQuestion[] = picked.map((q) => ({
+      const questions: GameQuestion[] = set.questions.map((q) => ({
         title: q.title,
         audio: q.audio,
         youtubeId: q.youtubeId,

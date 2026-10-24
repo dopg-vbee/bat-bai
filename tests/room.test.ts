@@ -187,7 +187,7 @@ describe('preview room', () => {
     expect(room.guess(lan.id, 'Hãy Trao Cho Anh')).toMatchObject({ points: 3000 + 50 }); // + streak of 3
   });
 
-  it('a one-question preview is not a final', () => {
+  it('a one-question game has no final', () => {
     const room = new Room({
       code: '1234', setName: 'Test', questions: [questions[0]], durationMs: 10_000, countdownMs: 3000, onChange: () => {},
     });

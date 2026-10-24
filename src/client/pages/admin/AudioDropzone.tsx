@@ -90,10 +90,15 @@ export function AudioDropzone({ file, note, onChange }: AudioDropzoneProps) {
     onChange(null);
   }
 
+  // Also the hover text: the narrow zone may cut it short.
+  const meta = file
+    ? `${(file.size / 1024 / 1024).toFixed(1)} MB · bấm hoặc kéo file khác để đổi`
+    : `hoặc bấm để chọn · tối đa ${MAX_AUDIO_MB}MB${note ? ` · ${note}` : ''}`;
   return (
     <div className="dropzone-field">
       <div
         className={`dropzone${dragging ? ' dragging' : ''}${file ? ' has-file' : ''}`}
+        title={meta}
         role="button"
         tabIndex={0}
         onClick={handleClick}
@@ -105,11 +110,7 @@ export function AudioDropzone({ file, note, onChange }: AudioDropzoneProps) {
         <input ref={inputRef} type="file" accept="audio/mpeg,.mp3" hidden onChange={handleInputChange} />
         <span className="dropzone-icon">{file ? <FileAudio /> : <FileUp />}</span>
         <strong className="dropzone-title">{file ? file.name : 'Kéo thả file MP3 vào đây'}</strong>
-        <span className="dropzone-meta">
-          {file
-            ? `${(file.size / 1024 / 1024).toFixed(1)} MB · bấm hoặc kéo file khác để đổi`
-            : `hoặc bấm để chọn · tối đa ${MAX_AUDIO_MB}MB${note ? ` · ${note}` : ''}`}
-        </span>
+        <span className="dropzone-meta">{meta}</span>
       </div>
       {error && <p className="error-text">{error}</p>}
       {previewUrl && (

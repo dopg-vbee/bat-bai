@@ -115,14 +115,14 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
       </div>
       <div className="create-room-actions">
         <button
-          className="btn btn-ghost-dark btn-lg"
+          className="btn btn-ghost-dark"
           onClick={handlePreview}
           disabled={disabled}
           title={`Chơi thử với ${bots} bot, xem trước đúng như ván thật`}
         >
           <Eye /> Chơi thử
         </button>
-        <button className="btn btn-primary btn-lg" onClick={handleCreate} disabled={disabled}>
+        <button className="btn btn-primary" onClick={handleCreate} disabled={disabled}>
           <Gamepad2 /> Tạo phòng chơi
         </button>
       </div>

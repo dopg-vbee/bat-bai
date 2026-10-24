@@ -22,7 +22,7 @@ export function SetPage({ setId, onLogout }: { setId: string; onLogout: () => vo
   }
 
   return (
-    <main className="screen admin-screen">
+    <main className="screen admin-screen admin-wide">
       <AdminHeader title={set?.name ?? 'Bộ đề'} onLogout={onLogout} />
       <Link to="/admin" className="link-subtle back-link">
         <ArrowLeft /> Tất cả bộ đề

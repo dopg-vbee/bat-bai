@@ -250,35 +250,19 @@ describe('a full game with 60 players', () => {
 });
 
 describe('preview rooms', () => {
-  it('can preview a single question with bots', async () => {
+  it('plays the whole set with bots', async () => {
     const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
-    const target = set.questions[1];
     const host = client();
-    const created = await host.emitWithAck('host:create', {
-      password: PASSWORD,
-      setId: set.id,
-      durationSec: 10,
-      preview: true,
-      questionId: target.id,
-    });
+    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, preview: true });
     if (!created.ok) throw new Error(created.error);
     let state: HostState | null = null;
     host.on('hostState', (s) => (state = s));
     await host.emitWithAck('host:join', { code: created.code, hostToken: created.hostToken });
     await waitFor(() => state !== null, 3000, 'host state');
     expect(state!.preview).toBe(true);
-    expect(state!.qTotal).toBe(1);
+    expect(state!.qTotal).toBe(set.questions.length);
     expect(state!.players).toHaveLength(PREVIEW_BOTS);
-    expect(state!.nextAudioUrl).toBe(target.audioUrl);
-
-    const missing = await host.emitWithAck('host:create', {
-      password: PASSWORD,
-      setId: set.id,
-      durationSec: 10,
-      preview: true,
-      questionId: 'nope',
-    });
-    expect(missing.ok).toBe(false);
+    expect(state!.nextAudioUrl).toBe(set.questions[0].audioUrl);
   });
 });
 

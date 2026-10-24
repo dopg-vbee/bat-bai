@@ -485,8 +485,8 @@ export class Room {
   }
 
   /**
-   * x3 on the final question (of a real game, not a one-question preview), x2 on lucky ones. Lucky ones are
-   * only revealed once the question starts (countdown), so nobody knows in advance.
+   * x3 on the final question (when there is more than one), x2 on lucky ones. Lucky ones are only revealed
+   * once the question starts (countdown), so nobody knows in advance.
    */
   private multiplier(): number {
     if (this.phase === 'lobby') return 1;
