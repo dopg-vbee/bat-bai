@@ -1,10 +1,11 @@
-import { memo, useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { memo, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { TEAMS, type CorrectEntry } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { Emoji } from '../../components/Emoji.tsx';
 import { OnFire, StreakTag } from '../../components/Fire.tsx';
 import { GiftTag } from '../../components/Luck.tsx';
 import { playCorrectChime } from '../../lib/sfx.ts';
+import { useSize } from '../../lib/useSize.ts';
 
 // The row of correct answers stays centred: each new one runs in from the right edge, stops
 // next to the previous one, and the whole row slides left by half a step to stay centred.
@@ -30,20 +31,6 @@ function layout(count: number, width: number, containerWidth: number): number[] 
   const rowWidth = count * width + Math.max(0, count - 1) * GAP;
   const start = rowWidth <= containerWidth ? (containerWidth - rowWidth) / 2 : containerWidth - EDGE_MARGIN - rowWidth;
   return Array.from({ length: count }, (_, i) => start + i * step);
-}
-
-function useSize(ref: RefObject<HTMLElement | null>) {
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new ResizeObserver(([entry]) =>
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height }),
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [ref]);
-  return size;
 }
 
 export function useScreenUnit() {

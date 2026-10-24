@@ -1,10 +1,11 @@
 import { Eye, EyeOff, Play, Shuffle, Users, X } from 'lucide-react';
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { TEAMS, type HostState, type PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { TeamBadge } from '../../components/Team.tsx';
 import { socket } from '../../lib/socket.ts';
 import { readStorage, storageKeys, writeStorage } from '../../lib/storage.ts';
+import { useSize } from '../../lib/useSize.ts';
 import { JoinCard } from './JoinCard.tsx';
 
 function PlayerChip({ player }: { player: PlayerSummary }) {
@@ -22,9 +23,48 @@ function PlayerChip({ player }: { player: PlayerSummary }) {
   );
 }
 
-function PlayerList({ players }: { players: PlayerSummary[] }) {
+// Avatars grow while few players are in and shrink as more join, to fill the list without scrolling.
+// Bounded: never huge for a handful, and below the minimum the list scrolls instead.
+const MIN_AVATAR = 52;
+const MAX_AVATAR = 120;
+/** Matches the gaps of .player-grid. */
+const GAP_X = 12;
+const GAP_Y = 16;
+
+/** A player tile for an avatar `size` px wide: the name (up to two lines) sits below it. */
+function tile(size: number) {
+  const font = Math.min(22, Math.max(13, Math.round(size * 0.2)));
+  return { width: size + 36, height: size + 6 + font * 2.4, font };
+}
+
+/** The largest avatar at which `count` players fit a `width` × `height` list. */
+function fitAvatar(count: number, width: number, height: number): number {
+  for (let size = MAX_AVATAR; size > MIN_AVATAR; size -= 4) {
+    const { width: w, height: h } = tile(size);
+    const columns = Math.max(1, Math.floor((width + GAP_X) / (w + GAP_X)));
+    if (Math.ceil(count / columns) * (h + GAP_Y) - GAP_Y <= height) return size;
+  }
+  return MIN_AVATAR;
+}
+
+interface PlayerListProps {
+  players: PlayerSummary[];
+  /** Size the tiles for this many players (team boxes share the size of the fullest one). */
+  fitCount?: number;
+  /** Never bigger than this, e.g. the team boxes' size for the players without a team. */
+  maxAvatar?: number;
+  onAvatar?: (size: number) => void;
+}
+
+function PlayerList({ players, fitCount = players.length, maxAvatar = MAX_AVATAR, onAvatar }: PlayerListProps) {
+  const ref = useRef<HTMLUListElement>(null);
+  const box = useSize(ref);
+  const size = box.width ? Math.min(maxAvatar, fitAvatar(fitCount, box.width, box.height)) : MIN_AVATAR;
+  useEffect(() => onAvatar?.(size), [size, onAvatar]);
+  const { width, font } = tile(size);
+  const style = { '--avatar': `${size}px`, '--chip': `${width}px`, '--chip-font': `${font}px` } as CSSProperties;
   return (
-    <ul className="player-grid">
+    <ul ref={ref} className="player-grid" style={style}>
       {players.map((player) => (
         <PlayerChip key={player.id} player={player} />
       ))}
@@ -38,34 +78,35 @@ const boxColumns = (teams: number) => (teams <= 5 ? teams : Math.ceil(teams / 2)
 /** One box per team with its players, and those yet to pick a team below. */
 function TeamBoxes({ players, teamCount }: { players: PlayerSummary[]; teamCount: number }) {
   const teamless = players.filter((p) => p.team === null);
+  const members = TEAMS.slice(0, teamCount).map((_, i) => players.filter((p) => p.team === i));
+  const fullest = Math.max(...members.map((m) => m.length));
+  const [teamAvatar, setTeamAvatar] = useState(MAX_AVATAR);
   return (
     <div className="team-area">
       <div className="team-boxes" style={{ '--cols': boxColumns(teamCount) } as CSSProperties}>
-        {TEAMS.slice(0, teamCount).map((team, i) => {
-          const members = players.filter((p) => p.team === i);
-          return (
-            <section key={team.name} className="team-box" style={{ '--team': team.color } as CSSProperties}>
-              <header className="team-box-head">
-                {teamCount > 5 ? (
-                  // Narrow boxes: the colour name and an icon count keep it on one line.
-                  <>
-                    <TeamBadge team={i} short /> <Users /> {members.length}
-                  </>
-                ) : (
-                  <>
-                    <TeamBadge team={i} /> {members.length} người
-                  </>
-                )}
-              </header>
-              <PlayerList players={members} />
-            </section>
-          );
-        })}
+        {TEAMS.slice(0, teamCount).map((team, i) => (
+          <section key={team.name} className="team-box" style={{ '--team': team.color } as CSSProperties}>
+            <header className="team-box-head">
+              {teamCount > 5 ? (
+                // Narrow boxes: the colour name and an icon count keep it on one line.
+                <>
+                  <TeamBadge team={i} short /> <Users /> {members[i].length}
+                </>
+              ) : (
+                <>
+                  <TeamBadge team={i} /> {members[i].length} người
+                </>
+              )}
+            </header>
+            {/* Every team box is the same size, so the first one speaks for all. */}
+            <PlayerList players={members[i]} fitCount={fullest} onAvatar={i === 0 ? setTeamAvatar : undefined} />
+          </section>
+        ))}
       </div>
       {teamless.length > 0 && (
         <section className="team-box teamless">
           <header className="team-box-head">Chưa có đội · {teamless.length} người</header>
-          <PlayerList players={teamless} />
+          <PlayerList players={teamless} maxAvatar={teamAvatar} />
         </section>
       )}
     </div>

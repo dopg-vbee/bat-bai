@@ -146,7 +146,10 @@
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
+  /* GAP_Y / GAP_X in HostLobby.tsx, which sizes the tiles (--avatar, --chip, --chip-font) to fill the list. */
   gap: 16px 12px;
+  flex: 1;
+  align-self: stretch;
   min-height: 0;
   overflow-y: auto;
 }
@@ -158,27 +161,20 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  width: 112px;
+  width: var(--chip);
   color: var(--on-page);
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: var(--chip-font);
   animation: pop 0.35s ease-out;
 }
 
 .team-box .player-chip {
-  width: 92px;
   color: var(--text);
-  font-size: 0.95rem;
 }
 
 .player-chip .avatar {
-  width: 76px;
-  height: 76px;
-}
-
-.team-box .player-chip .avatar {
-  width: 60px;
-  height: 60px;
+  width: var(--avatar);
+  height: var(--avatar);
 }
 
 .player-chip.offline {
