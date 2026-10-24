@@ -3,6 +3,8 @@ import { OPEN_CLIP_SEC } from '../../../shared/types.ts';
 import { formatTimestamp, parseTimestamp, roundTenth } from '../../../shared/youtube.ts';
 
 const STEP = 0.1;
+/** What the − / + buttons move the mark by. */
+const NUDGE_SEC = 1;
 const DEFAULT_CLIP_SEC = 20;
 /** Slider length while the video's real duration is still loading (or unavailable). */
 const FALLBACK_SPAN_SEC = 300;
@@ -23,11 +25,11 @@ function TimeSlider({ label, value, max, disabled = false, onChange }: TimeSlide
   }
 
   function handleMinus() {
-    onChange(value - STEP);
+    onChange(value - NUDGE_SEC);
   }
 
   function handlePlus() {
-    onChange(value + STEP);
+    onChange(value + NUDGE_SEC);
   }
 
   function handleDraftChange(event: ChangeEvent<HTMLInputElement>) {
@@ -51,7 +53,7 @@ function TimeSlider({ label, value, max, disabled = false, onChange }: TimeSlide
     <div className={`time-slider${disabled ? ' disabled' : ''}`}>
       <span className="time-slider-label">{label}</span>
       <button type="button" className="btn btn-ghost-dark btn-sm step-btn" onClick={handleMinus} disabled={disabled}>
-        −0.1
+        −1s
       </button>
       <input
         type="range"
@@ -64,7 +66,7 @@ function TimeSlider({ label, value, max, disabled = false, onChange }: TimeSlide
         disabled={disabled}
       />
       <button type="button" className="btn btn-ghost-dark btn-sm step-btn" onClick={handlePlus} disabled={disabled}>
-        +0.1
+        +1s
       </button>
       <input
         className="input input-sm time-input"
@@ -87,7 +89,7 @@ interface ClipRangeEditorProps {
   onChange: (startSec: number, endSec: number | null) => void;
 }
 
-/** Start/end sliders for the YouTube clip, each with ±0.1s nudges and an exact-time box. */
+/** Start/end sliders for the YouTube clip, each with ±1s nudges and an exact-time box. */
 export function ClipRangeEditor({ duration, startSec, endSec, onChange }: ClipRangeEditorProps) {
   const max = duration ?? Math.max(startSec, endSec ?? 0) + FALLBACK_SPAN_SEC;
 
