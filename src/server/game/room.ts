@@ -50,7 +50,8 @@ interface RoomOptions {
 
 /** Room size: ~60 players expected, with headroom for 100-bot load tests plus real players. */
 const MAX_PLAYERS = 150;
-const BOT_FRUITS = ['Mít', 'Na', 'Ổi', 'Xoài', 'Bưởi', 'Chôm Chôm', 'Măng Cụt', 'Sầu Riêng'];
+/** A few full-length (20-character) names among the first bots show how long names fit on screen. */
+const BOT_FRUITS = ['Mít', 'Xoài Cát Hòa Lộc', 'Na', 'Sầu Riêng Ri Sáu', 'Ổi', 'Bưởi Da Xanh Bến', 'Chôm Chôm', 'Măng Cụt'];
 const botName = (i: number) => `Bot ${BOT_FRUITS[i] ?? i + 1}`;
 /** The first preview bot never misses, so a streak (and its fire) can be watched growing. */
 const SURE_BOT_NAME = 'Bot Luôn Đúng';

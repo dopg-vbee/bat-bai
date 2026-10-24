@@ -187,9 +187,15 @@
 
 .player-chip-name {
   max-width: 100%;
+  /* Up to two lines, so a full 20-character name fits under the avatar. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .player-chip-kick {
