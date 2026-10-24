@@ -1,3 +1,4 @@
+import { shuffled } from '../../shared/shuffle.ts';
 import type { TeamStanding } from '../../shared/types.ts';
 
 type TeamScore = Pick<TeamStanding, 'team' | 'score' | 'members'>;
@@ -20,12 +21,7 @@ export function smallestTeam(members: TeamMember[], teamCount: number): number {
 
 /** Deals everyone into teams at random, as evenly as possible (sizes differ by one at most). */
 export function dealTeams(members: TeamMember[], teamCount: number, random = Math.random): void {
-  const order = [...members];
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  order.forEach((member, i) => (member.team = i % teamCount));
+  shuffled(members, random).forEach((member, i) => (member.team = i % teamCount));
 }
 
 /** Teams ranked by their members' average score (fair whatever their size), best first. */

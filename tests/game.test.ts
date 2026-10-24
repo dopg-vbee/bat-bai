@@ -137,7 +137,7 @@ describe('a full game with 60 players', () => {
 
   it('creates a room and lets 60 players join', async () => {
     host = client();
-    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, shuffle: false });
+    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10 });
     if (!created.ok) throw new Error(created.error);
     code = created.code;
     expect((await fetch(`${base}/api/rooms/${code}`)).status).toBe(200);
@@ -258,7 +258,6 @@ describe('preview rooms', () => {
       password: PASSWORD,
       setId: set.id,
       durationSec: 10,
-      shuffle: false,
       preview: true,
       questionId: target.id,
     });
@@ -276,7 +275,6 @@ describe('preview rooms', () => {
       password: PASSWORD,
       setId: set.id,
       durationSec: 10,
-      shuffle: false,
       preview: true,
       questionId: 'nope',
     });
@@ -288,7 +286,7 @@ describe('phone updates', () => {
   it('a phone re-joining on the same connection gets its state again', async () => {
     const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
     const host = client();
-    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, shuffle: false });
+    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10 });
     if (!created.ok) throw new Error(created.error);
     const phone = client();
     const states: PlayerState[] = [];
@@ -303,7 +301,7 @@ describe('phone updates', () => {
   it('only the phone whose state changed is sent an update during a question', async () => {
     const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
     const host = client();
-    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, shuffle: false });
+    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10 });
     if (!created.ok) throw new Error(created.error);
     await host.emitWithAck('host:join', { code: created.code, hostToken: created.hostToken });
     const phones = await Promise.all(
@@ -329,7 +327,7 @@ describe('phone updates', () => {
 describe('switching rooms on the same connection', () => {
   async function createRoom(host: Client, preview: boolean) {
     const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
-    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, shuffle: false, preview });
+    const created = await host.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10, preview });
     if (!created.ok) throw new Error(created.error);
     return created;
   }

@@ -26,7 +26,6 @@ interface CreateRoomPanelProps {
 
 export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
   const [durationSec, setDurationSec] = useState(DEFAULT_DURATION_SEC);
-  const [shuffle, setShuffle] = useState(true);
   const [bots, setBots] = useState(PREVIEW_BOTS);
   const [teamMode, setTeamMode] = useState<TeamMode>('off');
   const [teamCount, setTeamCount] = useState(2);
@@ -35,10 +34,6 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
 
   function handleDurationChange(event: ChangeEvent<HTMLSelectElement>) {
     setDurationSec(Number(event.target.value));
-  }
-
-  function handleShuffleChange(event: ChangeEvent<HTMLInputElement>) {
-    setShuffle(event.target.checked);
   }
 
   function handleBotsChange(event: ChangeEvent<HTMLSelectElement>) {
@@ -57,7 +52,7 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
 
   async function start(preview: boolean) {
     setBusy(true);
-    setError((await createRoom({ setId: set.id, durationSec, shuffle, preview, bots, teamMode, teamCount })) ?? '');
+    setError((await createRoom({ setId: set.id, durationSec, preview, bots, teamMode, teamCount })) ?? '');
     setBusy(false);
   }
 
@@ -82,10 +77,6 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
               </option>
             ))}
           </select>
-        </label>
-        <label className="field-inline">
-          <input type="checkbox" checked={shuffle} onChange={handleShuffleChange} />
-          <span>Trộn thứ tự câu</span>
         </label>
         <label className="field-inline" title="Chỉ áp dụng cho Chơi thử; chọn 100 để thử tải">
           <span>Bot chơi thử</span>

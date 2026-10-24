@@ -158,7 +158,6 @@ export interface CreateRoomInput {
   password: string;
   setId: string;
   durationSec: number;
-  shuffle: boolean;
   preview?: boolean;
   /** Bots in a preview room (default PREVIEW_BOTS). */
   bots?: number;

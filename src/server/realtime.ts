@@ -30,14 +30,6 @@ const MAX_REACTIONS_PER_BATCH = 30;
 const hostChannel = (code: string) => `host:${code}`;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
-function shuffle<T>(items: T[]): T[] {
-  for (let i = items.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
-  }
-  return items;
-}
-
 export function setupRealtime(io: GameServer, library: Library, options: RealtimeOptions) {
   const rooms = new Map<string, Room>();
   const dirty = new Set<Room>();
@@ -129,7 +121,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       const room: Room = new Room({
         code: newCode(),
         setName: set.name,
-        questions: input.shuffle ? shuffle(questions) : questions,
+        questions,
         durationMs: clamp(Math.round(Number(input.durationSec) || 30), 10, 120) * 1000,
         countdownMs: options.countdownMs,
         preview: Boolean(input.preview),

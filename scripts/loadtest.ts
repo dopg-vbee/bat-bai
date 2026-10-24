@@ -65,7 +65,6 @@ async function playRoom(roomNo: number) {
     password: values.password!,
     setId: set.id,
     durationSec,
-    shuffle: true,
     teamMode,
     teamCount: Number(values['team-count']),
   });

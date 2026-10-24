@@ -1,4 +1,4 @@
-import { Eye, GripVertical, Pencil, Play, RefreshCw, Trash2, X } from 'lucide-react';
+import { Eye, GripVertical, Pencil, Play, RefreshCw, Shuffle, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import {
   DEFAULT_DURATION_SEC,
@@ -6,6 +6,7 @@ import {
   type QuestionSetDto,
   type VideoStatus,
 } from '../../../shared/types.ts';
+import { shuffled } from '../../../shared/shuffle.ts';
 import { formatRange } from '../../../shared/youtube.ts';
 import { YoutubeClip } from '../../components/YoutubeClip.tsx';
 import { api } from '../../lib/api.ts';
@@ -13,6 +14,9 @@ import { createRoom } from '../../lib/rooms.ts';
 import { CreateRoomPanel } from './CreateRoomPanel.tsx';
 import { QuestionForm } from './QuestionForm.tsx';
 import { VideoProblem } from './VideoProblem.tsx';
+
+/** "Trộn thứ tự" can be pressed again after this long. */
+const SHUFFLE_COOLDOWN_MS = 1000;
 
 interface SetEditorProps {
   set: QuestionSetDto;
@@ -135,6 +139,7 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
   // a marker shows where it will land.
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropSlot, setDropSlot] = useState<number | null>(null);
+  const [shuffling, setShuffling] = useState(false);
   const dragFrom = set.questions.findIndex((q) => q.id === draggingId);
   // Right above or below itself is no move: no marker there.
   const moveTo = dropSlot === null || dropSlot === dragFrom || dropSlot === dragFrom + 1 ? null : dropSlot;
@@ -200,7 +205,6 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
         setId: set.id,
         questionId,
         durationSec: DEFAULT_DURATION_SEC,
-        shuffle: false,
         preview: true,
       });
       if (failure) throw new Error(failure);
@@ -225,6 +229,17 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
     const moved = set.questions[dragFrom];
     const questions = set.questions.filter((q) => q !== moved);
     questions.splice(moveTo > dragFrom ? moveTo - 1 : moveTo, 0, moved);
+    saveOrder(questions);
+  }
+
+  function handleShuffle() {
+    saveOrder(shuffled(set.questions));
+    setShuffling(true);
+    setTimeout(() => setShuffling(false), SHUFFLE_COOLDOWN_MS);
+  }
+
+  /** Shows the new order at once and saves it; puts the old one back if saving fails. */
+  function saveOrder(questions: QuestionDto[]) {
     const before = set;
     onChange({ ...set, questions });
     void run(async () => {
@@ -292,6 +307,14 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
                 ? `${brokenVideos} câu có video lỗi`
                 : 'Video đều phát được'}
           </span>
+          <button
+            className="btn btn-ghost-dark btn-sm"
+            onClick={handleShuffle}
+            disabled={shuffling || set.questions.length < 2}
+            title="Xáo thứ tự các câu và lưu luôn: phòng chơi theo đúng thứ tự này"
+          >
+            <Shuffle /> Trộn thứ tự
+          </button>
           <button className="btn btn-ghost-dark btn-sm" onClick={handleRecheckVideos} disabled={checkingVideos}>
             <RefreshCw /> Kiểm tra video
           </button>
