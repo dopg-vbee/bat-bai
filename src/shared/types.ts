@@ -231,7 +231,7 @@ export const streakBonus = (streak: number) =>
   streak < STREAK_MIN ? 0 : (Math.min(streak, STREAK_MAX) - STREAK_MIN + 1) * STREAK_BONUS_STEP;
 export const MAX_AUDIO_MB = 20;
 /** What a phone can throw at the big screen once it has answered. */
-export const REACTIONS = ['👍', '❤️', '😂', '🔥', '👏', '😮', '💯'];
+export const REACTIONS = ['👍', '❤️', '😆', '🔥', '👏', '😮'];
 
 /** Whether a question's video can play inside the game; blocked = embedding turned off (or private). */
 export type VideoStatus = 'ok' | 'blocked' | 'missing' | 'unknown';

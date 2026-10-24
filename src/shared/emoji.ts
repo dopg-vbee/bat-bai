@@ -74,7 +74,7 @@ export const EMOJI_NAMES: Record<string, string> = {
   '💙': 'blue-heart',
   '💛': 'yellow-heart',
   '💜': 'purple-heart',
-  '😂': 'face-with-tears-of-joy',
+  '😆': 'grinning-squinting-face',
   '👏': 'clapping-hands',
   '😮': 'face-with-open-mouth',
   // Inside sentences
