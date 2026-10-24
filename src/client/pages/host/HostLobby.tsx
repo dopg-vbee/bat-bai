@@ -13,7 +13,7 @@ function PlayerChip({ player }: { player: PlayerSummary }) {
   }
   return (
     <li className={`player-chip${player.connected ? '' : ' offline'}`}>
-      <Avatar avatar={player.avatar} color={player.color} size="sm" />
+      <Avatar avatar={player.avatar} color={player.color} size="lg" />
       <span className="player-chip-name">{player.name}</span>
       <button className="player-chip-kick" onClick={handleKick} title="Mời ra">
         <X />

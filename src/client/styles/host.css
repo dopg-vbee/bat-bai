@@ -141,27 +141,44 @@
 .player-grid {
   list-style: none;
   margin: 0;
-  padding: 0 4px 4px 0;
+  /* Room for the kick button, which pokes above the avatar. */
+  padding: 6px 4px 4px 0;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  gap: 10px;
+  gap: 16px 12px;
   min-height: 0;
   overflow-y: auto;
 }
 
+/* A player: round avatar with the name underneath; the kick button shows on hover. */
 .player-chip {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 4px 6px 4px 4px;
+  gap: 6px;
+  width: 112px;
+  color: var(--on-page);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   animation: pop 0.35s ease-out;
+}
+
+.team-box .player-chip {
+  width: 92px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.player-chip .avatar {
+  width: 76px;
+  height: 76px;
+}
+
+.team-box .player-chip .avatar {
+  width: 60px;
+  height: 60px;
 }
 
 .player-chip.offline {
@@ -169,20 +186,24 @@
 }
 
 .player-chip-name {
-  max-width: 180px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .player-chip-kick {
-  border: none;
-  background: transparent;
+  position: absolute;
+  top: -4px;
+  right: 2px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
   color: var(--text-soft);
-  font-size: 1.3rem;
-  line-height: 1;
+  font-size: 1rem;
   cursor: pointer;
-  padding: 0 6px;
   opacity: 0;
 }
 
