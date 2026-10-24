@@ -22,8 +22,8 @@ const STEPS: { art: string; title: string; text: string }[] = [
     // One bonus per line (the paragraph keeps line breaks).
     text: [
       '⚡ Câu x2: nhân đôi điểm. 🏆 Câu cuối: x3 điểm.',
-      '🎁 Hộp quà: thêm 100–300 điểm, người đang xếp sau dễ trúng hơn.',
-      '💸 Đôi khi hộp quà "mượn" 100–200 điểm của người đang đứng đầu.',
+      '🎁 Hộp quà: thêm 50–150 điểm, người đang xếp sau dễ trúng hơn.',
+      '💸 Đôi khi hộp quà "mượn" 50–100 điểm của người đang đứng đầu.',
       '🔥 Đúng từ 3 câu liên tiếp: được cộng thêm.',
     ].join('\n'),
   },

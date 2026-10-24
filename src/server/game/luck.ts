@@ -10,9 +10,9 @@ export interface Luck {
 const DOUBLE_SHARE = 0.15;
 /** Players further behind open gifts more often, so the leaders run away less. */
 const GIFT_CHANCES = [0.12, 0.14, 0.16];
-const GIFT_STEPS = [100, 150, 200, 250, 300];
+const GIFT_STEPS = [50, 75, 100, 125, 150];
 const STEAL_SHARE = 0.2;
-const STEAL_STEPS = [100, 150, 200];
+const STEAL_STEPS = [50, 75, 100];
 
 /** About 15% of the questions (never the first, nor the last: that one is x3) score double; 12–16% of correct answers get a gift. */
 export function pickLuck(questionCount: number, random = Math.random): Luck {
