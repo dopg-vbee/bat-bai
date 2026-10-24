@@ -1,9 +1,10 @@
-import { ArrowRight, CircleHelp, LogIn, ScanQrCode } from 'lucide-react';
+import { ArrowRight, CircleHelp, Download, LogIn, ScanQrCode } from 'lucide-react';
 import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react';
 import { ROOM_NOT_FOUND } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
 import { Overlay } from '../components/Overlay.tsx';
 import { ThemeToggle } from '../components/ThemeToggle.tsx';
+import { needsIosInstallHint, promptInstall, useCanInstall } from '../lib/install.ts';
 import { Link, navigate } from '../lib/router.tsx';
 import { HowToPlay } from './HowToPlay.tsx';
 
@@ -16,6 +17,8 @@ export function HomePage() {
   const [showScanner, setShowScanner] = useState(false);
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
+  const canInstall = useCanInstall();
+  const [iosHint] = useState(needsIosInstallHint);
 
   function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
     setCode(event.target.value.replace(/\D/g, '').slice(0, 4));
@@ -80,12 +83,20 @@ export function HomePage() {
           <ScanQrCode /> Quét mã QR
         </button>
       </form>
-      <button type="button" className="btn btn-ghost" onClick={handleShowGuide}>
-        <CircleHelp /> Hướng dẫn chơi
-      </button>
+      <div className="home-actions">
+        <button type="button" className="btn btn-ghost" onClick={handleShowGuide}>
+          <CircleHelp /> Hướng dẫn chơi
+        </button>
+        {canInstall && (
+          <button type="button" className="btn btn-ghost" onClick={promptInstall}>
+            <Download /> Cài app
+          </button>
+        )}
+      </div>
       <Link to="/admin" className="link-subtle">
         Tôi là host <ArrowRight />
       </Link>
+      {iosHint && <p className="install-hint">Cài app: bấm nút Chia sẻ rồi chọn “Thêm vào MH chính”</p>}
       {showScanner && (
         <Overlay onClose={handleHideScanner}>
           <Suspense fallback={<div className="card qr-scanner"><div className="spinner" /></div>}>
