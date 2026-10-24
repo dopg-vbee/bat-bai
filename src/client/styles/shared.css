@@ -290,14 +290,11 @@
   gap: 18px;
 }
 
-/* Steps slide in one after another, then their pictures bob in turn. */
 .how-steps li {
   display: grid;
   grid-template-columns: 64px 1fr;
   gap: 14px;
   align-items: start;
-  animation: slide-in 0.4s ease-out both;
-  animation-delay: calc(var(--i) * 80ms);
 }
 
 .how-step-art {
@@ -312,8 +309,6 @@
 .how-step-art .emoji {
   width: 44px;
   height: 44px;
-  animation: bounce 2.5s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.5s);
 }
 
 .how-steps strong {

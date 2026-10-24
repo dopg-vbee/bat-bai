@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import { Emoji, EmojiText } from '../components/Emoji.tsx';
 
 const STEPS: { art: string; title: string; text: string }[] = [
@@ -40,8 +39,8 @@ export function HowToPlay() {
     <div className="card how-to-play">
       <h2>Hướng dẫn chơi</h2>
       <ol className="how-steps">
-        {STEPS.map(({ art, title, text }, i) => (
-          <li key={title} style={{ '--i': i } as CSSProperties}>
+        {STEPS.map(({ art, title, text }) => (
+          <li key={title}>
             <span className="how-step-art">
               <Emoji char={art} />
             </span>
