@@ -1,4 +1,4 @@
-import type { GameAwards } from '../../../shared/types.ts';
+import { TEAMS, type GameAwards, type TeamStanding } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { Emoji } from '../../components/Emoji.tsx';
 
@@ -8,17 +8,24 @@ export const AWARD_STAGGER_MS = 400;
 interface AwardCard {
   icon: string;
   title: string;
-  /** Either a player or a song is the winner of the card. */
+  /** Either a player wins the card, or a thing (a song, a team) named by `text`. */
   player?: { name: string; avatar: string; color: string };
-  song?: string;
+  text?: string;
   detail: string;
 }
 
 const seconds = (ms: number) => (ms / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 1 });
 
-/** The cards to show, in order; titles nobody earned are left out. */
-export function awardCards({ fastest, streak, guesser, hardest }: GameAwards): AwardCard[] {
+/** The cards to show, in order; titles nobody earned are left out. `champion`: the best team, if any. */
+export function awardCards(awards: GameAwards, champion: TeamStanding | null): AwardCard[] {
+  const { fastest, streak, guesser, hardest } = awards;
   const cards: (AwardCard | null)[] = [
+    champion && {
+      icon: '🏆',
+      title: 'Đội vô địch',
+      text: `Đội ${TEAMS[champion.team].name}`,
+      detail: `trung bình ${champion.score.toLocaleString('vi-VN')} điểm · ${champion.members} người`,
+    },
     fastest && {
       icon: '⚡',
       title: 'Tay nhanh nhất',
@@ -40,7 +47,7 @@ export function awardCards({ fastest, streak, guesser, hardest }: GameAwards): A
     hardest && {
       icon: '🤔',
       title: 'Câu khó nhất',
-      song: hardest.title,
+      text: hardest.title,
       detail: `${hardest.correct}/${hardest.players} người đoán đúng`,
     },
   ];
@@ -62,7 +69,7 @@ export function Awards({ cards }: { cards: AwardCard[] }) {
               {card.player.name}
             </span>
           ) : (
-            <span className="award-winner">{card.song}</span>
+            <span className="award-winner">{card.text}</span>
           )}
           <span className="award-detail">{card.detail}</span>
         </li>

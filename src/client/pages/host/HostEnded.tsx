@@ -4,6 +4,7 @@ import type { HostState } from '../../../shared/types.ts';
 import { AnimatedEmoji } from '../../components/Emoji.tsx';
 import { Leaderboard } from '../../components/Leaderboard.tsx';
 import { Podium } from '../../components/Podium.tsx';
+import { TeamBars, teamPodium } from '../../components/Team.tsx';
 import { burst, celebrate, fireworks } from '../../lib/confetti.ts';
 import { Link } from '../../lib/router.tsx';
 import { playCorrectChime, playDrumroll, playFanfare, playPodiumHit, playWhoosh } from '../../lib/sfx.ts';
@@ -38,15 +39,18 @@ function spotOn(slot: Element): Spot {
  * drumroll before each, then the lights come back up on the award titles and everyone else.
  */
 export function HostEnded({ state }: { state: HostState }) {
-  const podium = state.leaderboard.slice(0, 3);
-  const rest = state.leaderboard.slice(3);
+  // "Together" mode: teammates all score alike, so the teams take the podium.
+  const byTeams = state.teamMode === 'together';
+  const podium = byTeams ? teamPodium(state.teams) : state.leaderboard.slice(0, 3);
+  const rest = byTeams ? [] : state.leaderboard.slice(3);
   const [revealFrom, setRevealFrom] = useState(3);
   const [lightsUp, setLightsUp] = useState(false);
   const [showRest, setShowRest] = useState(false);
   const [spot, setSpot] = useState<Spot | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const places = podium.length;
-  const cards = state.awards ? awardCards(state.awards) : [];
+  const champion = state.teamMode === 'average' ? (state.teams[0] ?? null) : null;
+  const cards = state.awards ? awardCards(state.awards, champion) : [];
   const cardCount = cards.length;
 
   useEffect(() => {
@@ -122,6 +126,7 @@ export function HostEnded({ state }: { state: HostState }) {
       {lightsUp && cardCount > 0 && <Awards cards={cards} />}
       {showRest && (
         <>
+          {byTeams && <TeamBars teams={state.teams} />}
           {rest.length > 0 && <Leaderboard rows={rest} />}
           <Link to="/admin" className="btn btn-ghost">
             <ArrowLeft /> Về trang quản lý

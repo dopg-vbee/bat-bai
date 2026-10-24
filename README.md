@@ -21,6 +21,10 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
 
 **Chơi thử trước:** ở trang quản lý, nút **👁 Chơi thử** tạo một phòng y hệt ván thật, có 4 bot tự vào và tự đoán. Nút **👁 Xem thử** ở từng câu chỉ chạy riêng câu đó, để kiểm MP3 và đoạn YouTube. Trong phòng chơi thử có nút **📱 Mở màn hình người chơi**, mở cửa sổ cỡ điện thoại để tự đoán như người chơi.
 
+**Chơi theo đội:** khi tạo phòng chọn **Chơi theo đội** (2–4 đội: Đỏ, Xanh, Vàng, Tím). Người chơi được tự xếp vào đội ít người nhất và đổi được đội ở phòng chờ.
+- **Điểm trung bình:** mọi người chơi như thường; điểm đội = trung bình điểm các thành viên (đội đông không có lợi thế). Bảng xếp hạng có thêm thanh điểm đội, cuối game có thẻ "Đội vô địch".
+- **Đồng đội:** người đầu tiên trong đội đoán đúng là cả đội đúng, cùng nhận điểm đó. Bảng xếp hạng và bục vinh danh tính theo đội.
+
 **Thả cảm xúc:** ai đoán đúng rồi (và cả lúc xem đáp án, bảng xếp hạng) có thanh 👍 ❤️ 😂 🔥 👏 😮 💯 ở cuối màn hình điện thoại; bấm là emoji bật lên đâu đó dưới đáy màn hình lớn rồi bay lên, ẩn danh. Mỗi người tối đa 8 lần trong 2 giây.
 
 **Điều khiển bằng điện thoại:** menu ☰ trên màn hình host → **Điều khiển bằng điện thoại** → quét mã QR. Điện thoại có các nút Bắt đầu / Hiện đáp án / Câu tiếp, Tạm dừng, Hiện mã QR vào phòng và Kết thúc. Ai quét mã này cũng điều khiển được phòng, nên mở nó khi người chơi không nhìn màn hình.

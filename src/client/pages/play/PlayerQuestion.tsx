@@ -71,10 +71,13 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
 
   const result = earned ?? (state.round.correct ? state.round : null);
   if (result) {
+    // "Together" team mode: a teammate's answer counted for this player too.
+    const byTeam = !earned && state.round.byTeam;
+    const title = byTeam ? 'Đội bạn đã đoán đúng!' : result.gift ? 'Chính xác! Trúng hộp quà!' : 'Chính xác!';
     return (
       <section className="player-body center">
         <AnimatedEmoji char={result.gift ? '🎁' : '🎉'} className="pop" once />
-        <h2>{result.gift ? 'Chính xác! Trúng hộp quà!' : 'Chính xác!'}</h2>
+        <h2>{title}</h2>
         <p className="points-gain">+{result.points}</p>
         {result.gift > 0 && <GiftTag gift={result.gift} className="gift-tag-lg" />}
         {state.double && <DoubleTag />}

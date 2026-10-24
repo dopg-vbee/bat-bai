@@ -191,7 +191,7 @@ describe('preview room', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.99); // the largest gift
     expect(room.guess(lan.id, 'lac troi')).toEqual({ status: 'correct', points: 1300, gift: 300, streak: 1 });
     expect(room.hostView().correctFeed[0]).toMatchObject({ points: 1300, gift: 300 });
-    expect(room.playerViews()[0].state.round).toEqual({ correct: true, points: 1300, gift: 300, streak: 1 });
+    expect(room.playerViews()[0].state.round).toEqual({ correct: true, points: 1300, gift: 300, streak: 1, byTeam: false });
   });
 
   it('counts correct answers in a row: a bonus from the third, kept while a question is open, reset by a miss', () => {
@@ -286,6 +286,47 @@ describe('preview room', () => {
     room.next(); // reveal
     expect(room.canReact(lan.id)).toBe(true);
     expect(room.canReact('nobody')).toBe(false);
+  });
+
+  it('plays "together": a team\'s first right answer counts for the whole team', () => {
+    const room = new Room({
+      code: '1234', setName: 'Test', questions, durationMs: 10_000, countdownMs: 3000,
+      teamMode: 'together', teamCount: 2, onChange: () => {},
+    });
+    const [lan, minh, hoa] = ['Lan', 'Minh', 'Hoa'].map((name, i) => {
+      const player = room.join(name, undefined, `s${i}`);
+      if (typeof player === 'string') throw new Error(player);
+      return player;
+    });
+    expect([lan, minh, hoa].map((p) => p.team)).toEqual([0, 1, 0]); // newcomers fill the smallest team
+    room.setTeam(minh.id, 0);
+    room.setTeam(minh.id, 1); // switching is allowed in the lobby
+    room.next();
+    room.setTeam(minh.id, 0); // ...but not once the game is on
+    expect(minh.team).toBe(1);
+    vi.advanceTimersByTime(3000);
+    expect(room.guess(lan.id, 'Lạc Trôi')).toMatchObject({ status: 'correct', points: 1000 });
+    expect(hoa.score).toBe(1000); // credited with Lan's answer
+    expect(minh.score).toBe(0);
+    expect(room.guess(hoa.id, 'Lạc Trôi')).toEqual({ status: 'already' });
+    const hoaPhone = room.playerViews().find((v) => v.socketId === 's2')!.state;
+    expect(hoaPhone.round).toMatchObject({ correct: true, points: 1000, byTeam: true });
+    expect(hoaPhone.teams).toBeNull(); // held back while the question is open
+    expect(room.hostView().teams).toEqual([
+      { team: 0, score: 1000, members: 2 },
+      { team: 1, score: 0, members: 1 },
+    ]);
+    room.finish();
+    expect(room.playerViews()[0].state.podium?.map((e) => e.name)).toEqual(['Đội Đỏ', 'Đội Xanh']);
+  });
+
+  it('a room without teams leaves everyone teamless', () => {
+    const room = makeRoom(false);
+    const lan = room.join('Lan', undefined, 's1');
+    if (typeof lan === 'string') throw new Error(lan);
+    room.setTeam(lan.id, 0);
+    expect(lan.team).toBeNull();
+    expect(room.hostView().teams).toEqual([]);
   });
 
   it('a normal room has no bots', () => {

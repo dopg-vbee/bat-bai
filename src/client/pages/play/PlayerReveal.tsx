@@ -4,9 +4,13 @@ import { AnimatedEmoji, Emoji, EmojiText } from '../../components/Emoji.tsx';
 import { StreakTag } from '../../components/Fire.tsx';
 import { Delta } from '../../components/Leaderboard.tsx';
 import { DoubleTag, GiftTag } from '../../components/Luck.tsx';
+import { TeamBadge } from '../../components/Team.tsx';
 
 export function PlayerReveal({ state }: { state: PlayerState }) {
   const { round, me } = state;
+  const teamRank = state.teams && me.team !== null ? state.teams.findIndex((t) => t.team === me.team) + 1 : 0;
+  // "Together" mode: teammates all score alike, so only the team's place means anything.
+  const byTeam = state.teamMode === 'together' && teamRank > 0;
   return (
     <section className="player-body center">
       <AnimatedEmoji char={round.correct ? '🥳' : '😅'} className="pop" once />
@@ -33,11 +37,23 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
           <CountUp from={me.score - round.points} to={me.score} run />
         </strong>
       </p>
-      <div className="rank-line">
-        <span>Hạng</span>
-        <strong className="rank-big">#{me.rank}</strong>
-        {me.delta !== 0 && <Delta value={me.delta} />}
-      </div>
+      {byTeam ? (
+        <div className="rank-line">
+          <span>Đội bạn hạng</span>
+          <strong className="rank-big">#{teamRank}</strong>
+        </div>
+      ) : (
+        <div className="rank-line">
+          <span>Hạng</span>
+          <strong className="rank-big">#{me.rank}</strong>
+          {me.delta !== 0 && <Delta value={me.delta} />}
+        </div>
+      )}
+      {!byTeam && teamRank > 0 && me.team !== null && (
+        <p className="team-rank-line">
+          <TeamBadge team={me.team} /> hạng #{teamRank}
+        </p>
+      )}
       <p className="muted-light">
         <EmojiText text="Xem bảng xếp hạng trên màn hình lớn 📺" />
       </p>

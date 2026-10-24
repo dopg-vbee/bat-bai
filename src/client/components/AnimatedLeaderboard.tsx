@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { RankRow } from '../../shared/types.ts';
+import { TEAMS, type RankRow } from '../../shared/types.ts';
 import { Avatar } from './Avatar.tsx';
+import { Emoji } from './Emoji.tsx';
 import { OnFire, StreakTag } from './Fire.tsx';
 import { Delta } from './Leaderboard.tsx';
 
@@ -18,17 +19,22 @@ const RESERVED_HEIGHT = 310;
 /** Text size as a share of the row pitch: everything in a row scales with it. */
 const FONT_PER_PITCH = 0.46;
 
-/** Row height plus gap, shrunk so the whole list fits the screen height. Rows are absolutely positioned. */
-function useRowPitch(count: number) {
-  const fit = () =>
-    Math.max(MIN_PITCH, Math.min(MAX_PITCH, Math.floor((window.innerHeight - RESERVED_HEIGHT) / Math.max(count, 1))));
+/**
+ * Row height plus gap, shrunk so the whole list fits the screen height (less `reserve` px taken by
+ * something else, like team bars). Rows are absolutely positioned.
+ */
+function useRowPitch(count: number, reserve: number) {
+  const fit = () => {
+    const room = window.innerHeight - RESERVED_HEIGHT - reserve;
+    return Math.max(MIN_PITCH, Math.min(MAX_PITCH, Math.floor(room / Math.max(count, 1))));
+  };
   const [pitch, setPitch] = useState(fit);
   useEffect(() => {
     const update = () => setPitch(fit());
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
-  }, [count]);
+  }, [count, reserve]);
   return pitch;
 }
 
@@ -59,11 +65,11 @@ export function CountUp({ from, to, run }: { from: number; to: number; run: bool
  * Starts from the previous round's order and scores, then slides every row to its new rank
  * while the scores count up. Players climbing in from outside the top list fade in from below.
  */
-export function AnimatedLeaderboard({ rows }: { rows: RankRow[] }) {
+export function AnimatedLeaderboard({ rows, reserve = 0 }: { rows: RankRow[]; reserve?: number }) {
   const [settled, setSettled] = useState(false);
   const [renumbered, setRenumbered] = useState(false);
   const [moved, setMoved] = useState(false);
-  const pitch = useRowPitch(rows.length);
+  const pitch = useRowPitch(rows.length, reserve);
 
   useEffect(() => {
     const timers = [
@@ -97,7 +103,9 @@ export function AnimatedLeaderboard({ rows }: { rows: RankRow[] }) {
             <OnFire streak={row.streak}>
               <Avatar avatar={row.avatar} color={row.color} size="sm" />
             </OnFire>
-            <span className="leaderboard-name">{row.name}</span>
+            <span className="leaderboard-name">
+              {row.name} {row.team !== null && <Emoji char={TEAMS[row.team].emoji} />}
+            </span>
             <StreakTag streak={row.streak} />
             {row.roundPoints > 0 && <span className={`leaderboard-gain${settled ? ' show' : ''}`}>+{row.roundPoints}</span>}
             {renumbered && <Delta value={row.delta} />}

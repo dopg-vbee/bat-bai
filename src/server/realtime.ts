@@ -134,6 +134,8 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
         preview: Boolean(input.preview),
         bots: Math.round(Number(input.bots)) || undefined,
         luck: pickLuck(questions.length),
+        teamMode: input.teamMode === 'average' || input.teamMode === 'together' ? input.teamMode : 'off',
+        teamCount: Math.round(Number(input.teamCount)) || undefined,
         onChange: () => markDirty(room),
       });
       rooms.set(room.code, room);
@@ -192,6 +194,12 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       const room = role === 'player' ? rooms.get(code ?? '') : undefined;
       if (!room || !playerId) return cb({ status: 'closed' });
       cb(room.guess(playerId, String(text ?? '')));
+    });
+
+    socket.on('player:team', (team) => {
+      const { role, code, playerId } = socket.data;
+      const room = role === 'player' ? rooms.get(code ?? '') : undefined;
+      if (room && playerId) room.setTeam(playerId, Number(team));
     });
 
     socket.on('player:react', (emoji) => {

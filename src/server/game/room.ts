@@ -12,10 +12,14 @@ import {
   type Phase,
   type PlayerState,
   type RankRow,
+  type TeamMode,
+  type TeamStanding,
   type WrongEntry,
+  TEAMS,
 } from '../../shared/types.ts';
 import { AVATARS } from '../../shared/emoji.ts';
 import { checkGuess } from './match.ts';
+import { smallestTeam, teamStandings } from './teams.ts';
 import { PausableTimers, type TimerEntry } from './timers.ts';
 
 export interface GameQuestion {
@@ -40,10 +44,13 @@ interface Player {
   lastGuessAt: number;
   socketId: string | null;
   bot: boolean;
+  /** Index into TEAMS, or null outside team play. */
+  team: number | null;
   /** Wrong guesses over the whole game, for the "most wrong guesses" award. */
   wrongTotal: number;
   /** points = speed score (doubled on lucky rounds) + gift + streak bonus. */
-  answers: Map<number, { points: number; gift: number; ms: number }>;
+  /** byTeam: credited because a teammate got it right ("together" team mode). */
+  answers: Map<number, { points: number; gift: number; ms: number; byTeam?: boolean }>;
 }
 
 interface RoomOptions {
@@ -57,6 +64,8 @@ interface RoomOptions {
   bots?: number;
   /** Random twists; omitted = none (tests). See pickLuck. */
   luck?: Luck;
+  teamMode?: TeamMode;
+  teamCount?: number;
   onChange: () => void;
 }
 
@@ -121,6 +130,9 @@ export class Room {
   readonly setName: string;
   readonly durationMs: number;
   readonly preview: boolean;
+  readonly teamMode: TeamMode;
+  /** 0 outside team play. */
+  readonly teamCount: number;
   phase: Phase = 'lobby';
   qIndex = -1;
   startsAt = 0;
@@ -156,6 +168,8 @@ export class Room {
     this.preview = options.preview ?? false;
     this.onChange = options.onChange;
     this.luck = options.luck ?? { doubleRounds: [], giftChance: 0 };
+    this.teamMode = options.teamMode ?? 'off';
+    this.teamCount = this.teamMode === 'off' ? 0 : Math.min(Math.max(options.teamCount ?? 2, 2), TEAMS.length);
     const bots = this.preview ? Math.min(MAX_PLAYERS - 10, options.bots ?? PREVIEW_BOTS) : 0;
     for (let i = 0; i < bots; i++) {
       const bot = this.addPlayer(i === 0 ? SURE_BOT_NAME : botName(i - 1), null, true);
@@ -199,6 +213,8 @@ export class Room {
       lastGuessAt: 0,
       socketId,
       bot,
+      // Newcomers fill the smallest team; they can switch in the lobby.
+      team: this.teamCount ? smallestTeam([...this.players.values()], this.teamCount) : null,
       wrongTotal: 0,
       answers: new Map(),
     };
@@ -256,6 +272,14 @@ export class Room {
     if (!player) return false;
     if (this.phase === 'reveal' || this.phase === 'leaderboard') return true;
     return this.phase === 'question' && player.answers.has(this.qIndex);
+  }
+
+  /** A player picks another team; only before the game starts. */
+  setTeam(playerId: string, team: number): void {
+    const player = this.players.get(playerId);
+    if (!player || this.phase !== 'lobby' || !Number.isInteger(team) || team < 0 || team >= this.teamCount) return;
+    player.team = team;
+    this.changed();
   }
 
   /** Shows or hides the join QR code over the game for latecomers. */
@@ -334,6 +358,15 @@ export class Room {
     player.score += points;
     player.totalMs += elapsed;
     this.correctOrder.push(player.id);
+    if (this.teamMode === 'together') {
+      // The whole team is right with this answer: everyone in it gets the same points.
+      for (const mate of this.players.values()) {
+        if (mate.team !== player.team || mate.answers.has(this.qIndex)) continue;
+        mate.answers.set(this.qIndex, { points, gift, ms: elapsed, byTeam: true });
+        mate.score += points;
+        mate.totalMs += elapsed;
+      }
+    }
     this.revealIfEveryoneCorrect();
     this.changed();
     return { status: 'correct', points, gift, streak };
@@ -356,12 +389,15 @@ export class Room {
       durationMs: this.durationMs,
       advanceAt: this.advanceAt,
       joinQr: this.joinQr,
+      teamMode: this.teamMode,
+      teams: this.teams(),
       players: [...this.players.values()].map((p) => ({
         ...identity(p),
         score: p.score,
         connected: isOnline(p),
         correct: p.answers.has(this.qIndex),
         bot: p.bot,
+        team: p.team,
       })),
       audioUrl: inRound && question ? audioUrl(question.audio) : null,
       nextAudioUrl: upcoming ? audioUrl(upcoming.audio) : null,
@@ -418,10 +454,9 @@ export class Room {
     const ranked = this.ranking();
     const base = this.baseView();
     const answer = this.answerVisible() ? this.questions[this.qIndex].title : null;
-    const podium =
-      this.phase === 'ended'
-        ? ranked.slice(0, 3).map((p) => ({ name: p.name, avatar: p.avatar, color: p.color, score: p.score }))
-        : null;
+    // Held back while a question is open (see PlayerState.teams).
+    const teams = this.teamCount && this.phase !== 'question' ? this.teams() : null;
+    const podium = this.phase === 'ended' ? this.podium(ranked, teams) : null;
     // Phones only show the rank after the reveal; holding it during the question keeps everyone
     // else's state unchanged when one player scores, so it isn't re-sent to all of them.
     const holdRank = this.phase === 'question';
@@ -438,6 +473,7 @@ export class Room {
                   score: p.score,
                   rank: holdRank ? p.prevRank : i + 1,
                   delta: holdRank ? 0 : p.prevRank - (i + 1),
+                  team: p.team,
                 },
                 round: {
                   correct: p.answers.has(this.qIndex),
@@ -446,7 +482,10 @@ export class Room {
                   // While the question is open an unanswered one hasn't broken the streak yet.
                   streak:
                     holdRank && !p.answers.has(this.qIndex) ? streakAt(p, this.qIndex - 1) : streakAt(p, this.qIndex),
+                  byTeam: Boolean(p.answers.get(this.qIndex)?.byTeam),
                 },
+                teamMode: this.teamMode,
+                teams,
                 answer,
                 podium,
               },
@@ -548,6 +587,21 @@ export class Room {
     );
   }
 
+  private teams(): TeamStanding[] {
+    return this.teamCount ? teamStandings([...this.players.values()], this.teamCount) : [];
+  }
+
+  /** Top three players, or top three teams in "together" mode, where teammates all score alike. */
+  private podium(ranked: Player[], teams: TeamStanding[] | null) {
+    if (this.teamMode === 'together' && teams) {
+      return teams.slice(0, 3).map(({ team, score }) => {
+        const { name, emoji, color } = TEAMS[team];
+        return { name: `Đội ${name}`, avatar: emoji, color, score };
+      });
+    }
+    return ranked.slice(0, 3).map((p) => ({ name: p.name, avatar: p.avatar, color: p.color, score: p.score }));
+  }
+
   private rankRow(p: Player, rank: number): RankRow {
     return {
       ...identity(p),
@@ -556,6 +610,7 @@ export class Room {
       delta: p.prevRank - rank,
       roundPoints: p.answers.get(this.qIndex)?.points ?? 0,
       streak: streakAt(p, this.qIndex),
+      team: p.team,
     };
   }
 

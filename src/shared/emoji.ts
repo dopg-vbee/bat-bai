@@ -70,6 +70,10 @@ export const EMOJI_NAMES: Record<string, string> = {
   // Reactions thrown at the big screen
   '👍': 'thumbs-up',
   '❤️': 'red-heart',
+  // Team badges (❤️ above is the red team)
+  '💙': 'blue-heart',
+  '💛': 'yellow-heart',
+  '💜': 'purple-heart',
   '😂': 'face-with-tears-of-joy',
   '👏': 'clapping-hands',
   '😮': 'face-with-open-mouth',

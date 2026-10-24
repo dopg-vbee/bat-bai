@@ -5,9 +5,17 @@ import {
   DURATION_OPTIONS,
   PREVIEW_BOT_OPTIONS,
   PREVIEW_BOTS,
+  TEAM_COUNT_OPTIONS,
   type QuestionSetDto,
+  type TeamMode,
 } from '../../../shared/types.ts';
 import { createRoom } from '../../lib/rooms.ts';
+
+const TEAM_MODES: { value: TeamMode; label: string }[] = [
+  { value: 'off', label: 'Không' },
+  { value: 'average', label: 'Điểm trung bình' },
+  { value: 'together', label: 'Đồng đội (1 người đúng = cả đội đúng)' },
+];
 
 interface CreateRoomPanelProps {
   set: QuestionSetDto;
@@ -19,6 +27,8 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
   const [durationSec, setDurationSec] = useState(DEFAULT_DURATION_SEC);
   const [shuffle, setShuffle] = useState(true);
   const [bots, setBots] = useState(PREVIEW_BOTS);
+  const [teamMode, setTeamMode] = useState<TeamMode>('off');
+  const [teamCount, setTeamCount] = useState(2);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -34,9 +44,17 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
     setBots(Number(event.target.value));
   }
 
+  function handleTeamModeChange(event: ChangeEvent<HTMLSelectElement>) {
+    setTeamMode(event.target.value as TeamMode);
+  }
+
+  function handleTeamCountChange(event: ChangeEvent<HTMLSelectElement>) {
+    setTeamCount(Number(event.target.value));
+  }
+
   async function start(preview: boolean) {
     setBusy(true);
-    setError((await createRoom({ setId: set.id, durationSec, shuffle, preview, bots })) ?? '');
+    setError((await createRoom({ setId: set.id, durationSec, shuffle, preview, bots, teamMode, teamCount })) ?? '');
     setBusy(false);
   }
 
@@ -76,6 +94,28 @@ export function CreateRoomPanel({ set, brokenVideos }: CreateRoomPanelProps) {
             ))}
           </select>
         </label>
+        <label className="field-inline">
+          <span>Chơi theo đội</span>
+          <select className="input input-sm" value={teamMode} onChange={handleTeamModeChange}>
+            {TEAM_MODES.map((mode) => (
+              <option key={mode.value} value={mode.value}>
+                {mode.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {teamMode !== 'off' && (
+          <label className="field-inline">
+            <span>Số đội</span>
+            <select className="input input-sm" value={teamCount} onChange={handleTeamCountChange}>
+              {TEAM_COUNT_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n} đội
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
       <div className="create-room-actions">
         <button

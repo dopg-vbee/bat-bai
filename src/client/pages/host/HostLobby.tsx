@@ -1,6 +1,8 @@
 import { Play, Smartphone, X } from 'lucide-react';
-import type { HostState, PlayerSummary } from '../../../shared/types.ts';
+import type { CSSProperties } from 'react';
+import { TEAMS, type HostState, type PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
+import { TeamBadge } from '../../components/Team.tsx';
 import { openPlayerWindow } from '../../lib/rooms.ts';
 import { socket } from '../../lib/socket.ts';
 import { JoinCard } from './JoinCard.tsx';
@@ -10,7 +12,10 @@ function PlayerChip({ player }: { player: PlayerSummary }) {
     if (confirm(`Mời "${player.name}" ra khỏi phòng?`)) socket.emit('host:kick', player.id);
   }
   return (
-    <li className={`player-chip${player.connected ? '' : ' offline'}`}>
+    <li
+      className={`player-chip${player.connected ? '' : ' offline'}${player.team === null ? '' : ' in-team'}`}
+      style={player.team === null ? undefined : ({ '--team': TEAMS[player.team].color } as CSSProperties)}
+    >
       <Avatar avatar={player.avatar} color={player.color} size="sm" />
       <span className="player-chip-name">{player.name}</span>
       <button className="player-chip-kick" onClick={handleKick} title="Mời ra">
@@ -51,6 +56,17 @@ export function HostLobby({ state }: { state: HostState }) {
         <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!state.players.length}>
           <Play /> Bắt đầu ({state.qTotal} câu)
         </button>
+        {state.teamMode !== 'off' && (
+          <div className="lobby-teams">
+            {[...state.teams]
+              .sort((a, b) => a.team - b.team)
+              .map((t) => (
+                <span key={t.team} className="lobby-team">
+                  <TeamBadge team={t.team} /> {t.members} người
+                </span>
+              ))}
+          </div>
+        )}
         <ul className="player-grid">
           {state.players.map((player) => (
             <PlayerChip key={player.id} player={player} />

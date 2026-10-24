@@ -1,6 +1,6 @@
 import { ArrowLeft, DoorOpen, Pause, Users, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { PlayerState } from '../../../shared/types.ts';
+import { TEAMS, type PlayerState } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { Emoji, EmojiText, preloadAnimatedEmoji } from '../../components/Emoji.tsx';
 import { OnFire } from '../../components/Fire.tsx';
@@ -14,6 +14,7 @@ import { PlayerEnded } from './PlayerEnded.tsx';
 import { PlayerQuestion } from './PlayerQuestion.tsx';
 import { PlayerReveal } from './PlayerReveal.tsx';
 import { ReactionBar } from './ReactionBar.tsx';
+import { TeamPicker } from './TeamPicker.tsx';
 
 /** Animated emoji shown on correct/missed answers and the podium (see PlayerQuestion/Reveal/Ended). */
 const CELEBRATIONS = ['🎉', '🎁', '🥳', '😅', '🏆'];
@@ -105,7 +106,9 @@ export function PlayPage({ code }: { code: string }) {
         <OnFire streak={state.round.streak}>
           <Avatar avatar={state.me.avatar} color={state.me.color} size="sm" />
         </OnFire>
-        <strong className="player-bar-name">{state.me.name}</strong>
+        <strong className="player-bar-name">
+          {state.me.name} {state.me.team !== null && <Emoji char={TEAMS[state.me.team].emoji} />}
+        </strong>
         <span className="player-bar-score">{state.me.score.toLocaleString('vi-VN')} điểm</span>
         <ThemeToggle />
       </header>
@@ -129,6 +132,7 @@ export function PlayPage({ code }: { code: string }) {
           <p className="pill">
             <Users /> {state.playerCount} người chơi
           </p>
+          {state.teams && <TeamPicker teams={state.teams} mine={state.me.team} />}
         </section>
       )}
       {state.phase === 'question' && <PlayerQuestion key={state.qIndex} state={state} />}

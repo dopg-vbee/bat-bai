@@ -14,6 +14,8 @@ export interface PlayerSummary extends PlayerIdentity {
   correct: boolean;
   /** Played by the server in a "Chơi thử" room. */
   bot: boolean;
+  /** Index into TEAMS; null when the room is not played in teams. */
+  team: number | null;
 }
 
 export interface CorrectEntry extends PlayerIdentity {
@@ -39,6 +41,7 @@ export interface RankRow extends PlayerIdentity {
   roundPoints: number;
   /** Correct answers in a row up to this round; 0 once one is missed. */
   streak: number;
+  team: number | null;
 }
 
 export interface ClipInfo {
@@ -69,6 +72,9 @@ export interface HostState {
   pausedAt: number;
   /** The join QR code is shown over the game (toggled from the host menu or a phone remote). */
   joinQr: boolean;
+  teamMode: TeamMode;
+  /** Best team first; empty when the room is not played in teams. */
+  teams: TeamStanding[];
   players: PlayerSummary[];
   audioUrl: string | null;
   nextAudioUrl: string | null;
@@ -115,9 +121,15 @@ export interface PlayerState {
   double: boolean;
   pausedAt: number;
   playerCount: number;
-  me: PlayerIdentity & { score: number; rank: number; delta: number };
-  /** streak: correct answers in a row, still counting the previous ones while this question is open. */
-  round: { correct: boolean; points: number; gift: number; streak: number };
+  me: PlayerIdentity & { score: number; rank: number; delta: number; team: number | null };
+  /**
+   * streak: correct answers in a row, still counting the previous ones while this question is open.
+   * byTeam: in "together" mode, a teammate got it right for the whole team.
+   */
+  round: { correct: boolean; points: number; gift: number; streak: number; byTeam: boolean };
+  teamMode: TeamMode;
+  /** Held back (null) while a question is open, so one team scoring doesn't re-send every phone. */
+  teams: TeamStanding[] | null;
   answer: string | null;
   podium: PodiumEntry[] | null;
 }
@@ -139,6 +151,9 @@ export interface CreateRoomInput {
   bots?: number;
   /** Preview a single question instead of the whole set. */
   questionId?: string;
+  teamMode?: TeamMode;
+  /** 2 to TEAMS.length, when playing in teams. */
+  teamCount?: number;
 }
 
 interface JoinInput {
@@ -173,6 +188,8 @@ export interface ClientToServerEvents {
   'player:join': (input: JoinInput, cb: (res: Ack<{ playerId: string; token: string }>) => void) => void;
   'player:guess': (text: string, cb: (res: GuessResult) => void) => void;
   'player:react': (emoji: string) => void;
+  /** Switch team, in the lobby only. */
+  'player:team': (team: number) => void;
   'player:leave': () => void;
 }
 
@@ -218,3 +235,25 @@ export const REACTIONS = ['👍', '❤️', '😂', '🔥', '👏', '😮', '�
 export type VideoStatus = 'ok' | 'blocked' | 'missing' | 'unknown';
 
 export const audioUrl = (hash: string) => `/media/${hash}.mp3`;
+
+/**
+ * Team play: off; teams scored on their members' average; or "together", where a team's first
+ * correct answer counts for the whole team (everyone in it shares the points).
+ */
+export type TeamMode = 'off' | 'average' | 'together';
+export const TEAM_COUNT_OPTIONS = [2, 3, 4];
+
+export const TEAMS = [
+  { name: 'Đỏ', color: '#ef4444', emoji: '❤️' },
+  { name: 'Xanh', color: '#3b82f6', emoji: '💙' },
+  { name: 'Vàng', color: '#eab308', emoji: '💛' },
+  { name: 'Tím', color: '#a855f7', emoji: '💜' },
+];
+
+export interface TeamStanding {
+  /** Index into TEAMS. */
+  team: number;
+  /** Average score of its members, rounded. */
+  score: number;
+  members: number;
+}
