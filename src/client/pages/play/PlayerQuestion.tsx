@@ -64,7 +64,11 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
         <div className="countdown-number" key={Math.ceil((state.startsAt - now) / 1000)}>
           {Math.ceil((state.startsAt - now) / 1000)}
         </div>
-        {state.multiplier > 1 ? <LuckyBanner multiplier={state.multiplier} /> : <p className="muted-light">Chuẩn bị nghe…</p>}
+        {state.multiplier > 1 ? (
+          <LuckyBanner multiplier={state.multiplier} />
+        ) : (
+          <p className="muted-light">Chuẩn bị nghe…</p>
+        )}
       </section>
     );
   }
@@ -85,7 +89,9 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
         <AnimatedEmoji char={result.stolenFrom ? '💸' : result.gift ? '🎁' : '🎉'} className="pop" once />
         <h2>{title}</h2>
         <p className="points-gain">+{result.points}</p>
-        {result.gift > 0 && <GiftTag gift={result.gift} stolenFrom={result.stolenFrom} long className="gift-tag-lg" />}
+        {result.gift > 0 && (
+          <GiftTag gift={result.gift} stolenFrom={result.stolenFrom} long className="gift-tag-lg" />
+        )}
         {result.stolenFrom && <BorrowQuip />}
         {state.multiplier > 1 && <MultiplierTag multiplier={state.multiplier} />}
         <StreakTag streak={result.streak} long className="streak-tag-lg" />
@@ -100,7 +106,8 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
     <section className="player-body">
       <div className="question-head">
         <span>
-          Câu {state.qIndex + 1}/{state.qTotal} {state.multiplier > 1 && <MultiplierTag multiplier={state.multiplier} />}
+          Câu {state.qIndex + 1}/{state.qTotal}{' '}
+          {state.multiplier > 1 && <MultiplierTag multiplier={state.multiplier} />}
         </span>
         <span className={remaining <= 5000 ? 'urgent-text' : ''}>{Math.ceil(remaining / 1000)}s</span>
       </div>

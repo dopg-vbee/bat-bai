@@ -35,7 +35,11 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
         <div className="countdown-number countdown-xl" key={Math.ceil((state.startsAt - now) / 1000)}>
           {Math.ceil((state.startsAt - now) / 1000)}
         </div>
-        {state.multiplier > 1 ? <LuckyBanner multiplier={state.multiplier} large /> : <p className="host-sub">Lắng nghe thật kỹ nhé…</p>}
+        {state.multiplier > 1 ? (
+          <LuckyBanner multiplier={state.multiplier} large />
+        ) : (
+          <p className="host-sub">Lắng nghe thật kỹ nhé…</p>
+        )}
       </section>
     );
   }

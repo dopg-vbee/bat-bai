@@ -120,7 +120,9 @@ export const CorrectStream = memo(function CorrectStream({ entries }: { entries:
                     <Avatar avatar={entry.avatar} color={entry.color} size="lg" />
                   </OnFire>
                   <StreakTag streak={entry.streak} className="stream-streak" />
-                  {entry.gift > 0 && <GiftTag gift={entry.gift} stolenFrom={entry.stolenFrom} className="stream-gift" />}
+                  {entry.gift > 0 && (
+                    <GiftTag gift={entry.gift} stolenFrom={entry.stolenFrom} className="stream-gift" />
+                  )}
                 </span>
                 <span className="stream-name">
                   {entry.name} {entry.team !== null && <Emoji char={TEAMS[entry.team].emoji} />}

@@ -41,10 +41,16 @@ export function QrScanner() {
       const video = videoRef.current;
       if (cancelled || !video || !context) return;
       if (video.videoWidth) {
-        canvas.width = SCAN_WIDTH;
-        canvas.height = Math.round((video.videoHeight / video.videoWidth) * SCAN_WIDTH);
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const found = jsQR(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+        const height = Math.round((video.videoHeight / video.videoWidth) * SCAN_WIDTH);
+        // Resizing reallocates the canvas: only when the camera picture changes shape.
+        if (canvas.height !== height) {
+          canvas.width = SCAN_WIDTH;
+          canvas.height = height;
+        }
+        context.drawImage(video, 0, 0, SCAN_WIDTH, height);
+        const pixels = context.getImageData(0, 0, SCAN_WIDTH, height).data;
+        // The big screen's code is dark on white: skip jsQR's second, colour-inverted pass.
+        const found = jsQR(pixels, SCAN_WIDTH, height, { inversionAttempts: 'dontInvert' });
         const url = found && joinUrl(found.data);
         if (url) {
           // Same server: switch page in place; another address (a LAN host): open it like a QR app would.

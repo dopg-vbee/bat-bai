@@ -437,40 +437,36 @@ export class Room {
     // Phones only show the rank after the reveal; holding it during the question keeps everyone
     // else's state unchanged when one player scores, so it isn't re-sent to all of them.
     const holdRank = this.phase === 'question';
-    return ranked.flatMap((p, i) =>
-      p.socketId
-        ? [
-            {
-              socketId: p.socketId,
-              state: {
-                ...base,
-                playerCount: this.players.size,
-                me: {
-                  ...identity(p),
-                  score: p.score,
-                  rank: holdRank ? p.prevRank : i + 1,
-                  delta: holdRank ? 0 : p.prevRank - (i + 1),
-                  team: p.team,
-                },
-                round: {
-                  correct: p.answers.has(this.qIndex),
-                  points: p.answers.get(this.qIndex)?.points ?? 0,
-                  gift: p.answers.get(this.qIndex)?.gift ?? 0,
-                  stolenFrom: p.answers.get(this.qIndex)?.stolenFrom?.name ?? null,
-                  robbed: p.robbed.get(this.qIndex) ?? 0,
-                  // While the question is open an unanswered one hasn't broken the streak yet.
-                  streak: this.streakAt(p, holdRank && !p.answers.has(this.qIndex) ? this.qIndex - 1 : this.qIndex),
-                  byTeam: Boolean(p.answers.get(this.qIndex)?.byTeam),
-                },
-                teamMode: this.teamMode,
-                teams,
-                answer,
-                podium,
-              },
-            },
-          ]
-        : [],
-    );
+    return ranked.flatMap((p, i) => {
+      if (!p.socketId) return [];
+      const mine = p.answers.get(this.qIndex);
+      const state: PlayerState = {
+        ...base,
+        playerCount: this.players.size,
+        me: {
+          ...identity(p),
+          score: p.score,
+          rank: holdRank ? p.prevRank : i + 1,
+          delta: holdRank ? 0 : p.prevRank - (i + 1),
+          team: p.team,
+        },
+        round: {
+          correct: mine !== undefined,
+          points: mine?.points ?? 0,
+          gift: mine?.gift ?? 0,
+          stolenFrom: mine?.stolenFrom?.name ?? null,
+          robbed: p.robbed.get(this.qIndex) ?? 0,
+          // While the question is open an unanswered one hasn't broken the streak yet.
+          streak: this.streakAt(p, holdRank && !mine ? this.qIndex - 1 : this.qIndex),
+          byTeam: Boolean(mine?.byTeam),
+        },
+        teamMode: this.teamMode,
+        teams,
+        answer,
+        podium,
+      };
+      return [{ socketId: p.socketId, state }];
+    });
   }
 
   private baseView() {
@@ -503,10 +499,14 @@ export class Room {
 
   private startQuestion(index: number): void {
     const ranked = this.ranking();
-    ranked.forEach((p, i) => (p.prevRank = i + 1));
-    this.giftTiers = new Map(
-      ranked.map((p) => [p.id, Math.floor((ranked.filter((q) => q.score > p.score).length * 3) / ranked.length)]),
-    );
+    // The ranking is by score first, so tied players sit together and share the third of the first of them.
+    let ahead = 0;
+    this.giftTiers = new Map();
+    ranked.forEach((p, i) => {
+      p.prevRank = i + 1;
+      if (i > 0 && p.score < ranked[i - 1].score) ahead = i;
+      this.giftTiers.set(p.id, Math.floor((ahead * 3) / ranked.length));
+    });
     this.teamsAtStart = new Map(this.teams().map((t, i) => [t.team, { rank: i + 1, score: t.score }]));
     this.qIndex = index;
     this.phase = 'question';
