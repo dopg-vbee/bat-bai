@@ -48,7 +48,7 @@ const closeTypos = (length: number) => allowedTypos(length) + (length < 5 ? 1 : 
 /** "lạc trôi sơn tùng" counts for "Lạc Trôi": extra words after a name this long are ignored. */
 const PREFIX_MIN_LENGTH = 5;
 
-export type GuessMatch = 'correct' | 'close' | 'wrong';
+type GuessMatch = 'correct' | 'close' | 'wrong';
 
 export function checkGuess(guess: string, title: string): GuessMatch {
   const attempt = compact(guess);

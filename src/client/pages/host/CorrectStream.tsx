@@ -98,6 +98,9 @@ export const CorrectStream = memo(function CorrectStream({ entries }: { entries:
     <ol ref={listRef} className="correct-stream" style={{ '--item': `${width}px` } as CSSProperties}>
       {containerWidth > 0 &&
         entries.map((entry, i) => {
+          // Off the left edge for good: not rendered (100 burning avatars nobody sees add up).
+          // One step of slack lets the last one finish sliding out first.
+          if (lefts[i] + 2 * (width + GAP) < 0) return null;
           const delay = delayOf(entry.id);
           const style = {
             width,

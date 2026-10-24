@@ -3,7 +3,7 @@ import { animatedEmojiUrl } from '../../shared/emoji.ts';
 import { STREAK_MAX, STREAK_MIN, streakBonus } from '../../shared/types.ts';
 import { Emoji } from './Emoji.tsx';
 
-export const isOnFire = (streak: number) => streak >= STREAK_MIN;
+const isOnFire = (streak: number) => streak >= STREAK_MIN;
 
 const FIRE_STEPS = 4;
 
