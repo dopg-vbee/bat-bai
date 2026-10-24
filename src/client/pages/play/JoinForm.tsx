@@ -1,7 +1,8 @@
-import { Music } from 'lucide-react';
+import { ArrowLeft, Music } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Logo } from '../../components/Brand.tsx';
 import { ThemeToggle } from '../../components/ThemeToggle.tsx';
+import { Link } from '../../lib/router.tsx';
 import { socket } from '../../lib/socket.ts';
 import { readStorage, storageKeys } from '../../lib/storage.ts';
 import type { PlayerSession } from './PlayPage.tsx';
@@ -67,6 +68,9 @@ export function JoinForm({ code, initialError, onJoined }: JoinFormProps) {
           )}
         </button>
       </form>
+      <Link to="/" className="link-subtle">
+        <ArrowLeft /> Về trang chủ
+      </Link>
     </main>
   );
 }
