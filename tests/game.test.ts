@@ -83,6 +83,24 @@ describe('admin API', () => {
     await admin(`/sets/${set.id}`, { method: 'DELETE' });
   });
 
+  it('reorders questions and rejects an order that does not match the set', async () => {
+    const set = await admin<QuestionSetDto>('/sets', { method: 'POST', body: JSON.stringify({ name: 'Thứ tự' }) });
+    await addQuestion(set.id, 'Một', 5);
+    await addQuestion(set.id, 'Hai', 5);
+    const withThree = await addQuestion(set.id, 'Ba', 5);
+    const [a, b, c] = withThree.questions.map((q) => q.id);
+    const reorder = (order: unknown) => admin<QuestionSetDto>(`/sets/${set.id}/order`, { method: 'PUT', body: JSON.stringify({ order }) });
+    const moved = await reorder([c, a, b]);
+    expect(moved.questions.map((q) => q.title)).toEqual(['Ba', 'Một', 'Hai']);
+    await expect(reorder([c, a])).rejects.toThrow('400');
+    await expect(reorder([c, a, a])).rejects.toThrow('400');
+    await expect(reorder([c, a, 'khac'])).rejects.toThrow('400');
+    // A deleted question stays out of the order.
+    await admin(`/sets/${set.id}/questions/${a}`, { method: 'DELETE' });
+    expect((await reorder([b, c])).questions.map((q) => q.title)).toEqual(['Hai', 'Ba']);
+    await admin(`/sets/${set.id}`, { method: 'DELETE' });
+  });
+
   it('rejects a non-MP3 upload with a friendly message', async () => {
     const set = await admin<QuestionSetDto>('/sets', { method: 'POST', body: JSON.stringify({ name: 'Rác' }) });
     const form = new FormData();

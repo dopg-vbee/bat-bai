@@ -171,6 +171,25 @@ export function adminRouter(library: Library, store: BlobStore, password: string
     },
   );
 
+  /** Body `{ order: questionIds }`: every live question exactly once, in the new order. */
+  router.put('/sets/:id/order', async (req, res) => {
+    const order: unknown = req.body?.order;
+    const set = await library.mutate((data) => {
+      const target = findSet(data, req.params.id);
+      const live = new Map(target.questions.filter((q) => !q.deletedAt).map((q) => [q.id, q]));
+      const valid =
+        Array.isArray(order) &&
+        order.length === live.size &&
+        new Set(order).size === live.size &&
+        order.every((id) => live.has(id));
+      if (!valid) throw new HttpError(400, 'Danh sách câu đã thay đổi, hãy tải lại trang');
+      target.questions = [...order.map((id) => live.get(id)!), ...target.questions.filter((q) => q.deletedAt)];
+      target.updatedAt = new Date().toISOString();
+      return target;
+    });
+    res.json(toSetDto(set));
+  });
+
   router.delete('/sets/:id/questions/:qid', async (req, res) => {
     const set = await library.mutate((data) => {
       const target = findSet(data, req.params.id);

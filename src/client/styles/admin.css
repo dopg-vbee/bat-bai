@@ -399,7 +399,7 @@
 
 .question-row {
   display: grid;
-  grid-template-columns: 32px 1fr auto auto;
+  grid-template-columns: 52px 1fr auto auto;
   align-items: center;
   gap: 12px;
   padding: 10px;
@@ -408,9 +408,32 @@
 }
 
 .question-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   font-weight: 800;
   color: var(--accent);
-  text-align: center;
+  cursor: grab;
+}
+
+.question-index svg {
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--text-soft);
+}
+
+/* The row being dragged stays faded in place; a line in the gap shows where it will land. */
+.question-row.dragging {
+  opacity: 0.4;
+}
+
+.question-row.drop-above {
+  box-shadow: 0 -5px 0 -1px var(--accent);
+}
+
+.question-row.drop-below {
+  box-shadow: 0 5px 0 -1px var(--accent);
 }
 
 .question-info {

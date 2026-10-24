@@ -24,7 +24,7 @@
   }
 
   .question-row {
-    grid-template-columns: 28px 1fr;
+    grid-template-columns: 48px 1fr;
   }
 
   .question-audio,

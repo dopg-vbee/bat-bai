@@ -1,5 +1,5 @@
-import { Eye, Pencil, Play, RefreshCw, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Eye, GripVertical, Pencil, Play, RefreshCw, Trash2, X } from 'lucide-react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import {
   DEFAULT_DURATION_SEC,
   type QuestionDto,
@@ -27,10 +27,43 @@ interface QuestionRowProps {
   onPreview: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (question: QuestionDto) => void;
+  dragging: boolean;
+  /** Where the dragged question would land, relative to this row. */
+  dropMark: 'above' | 'below' | null;
+  onDragStart: (id: string) => void;
+  /** `slot`: the index the dragged question would be inserted before. */
+  onDragOver: (slot: number) => void;
+  onDragEnd: () => void;
 }
 
-function QuestionRow({ index, question, videoStatus, onPreview, onEdit, onDelete }: QuestionRowProps) {
+function QuestionRow({
+  index,
+  question,
+  videoStatus,
+  onPreview,
+  onEdit,
+  onDelete,
+  dragging,
+  dropMark,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+}: QuestionRowProps) {
   const [showClip, setShowClip] = useState(false);
+  const rowRef = useRef<HTMLLIElement>(null);
+
+  // Only the handle starts a drag (the rest of the row has buttons and an audio player),
+  // but the whole row is what follows the pointer.
+  function handleDragStart(event: DragEvent<HTMLSpanElement>) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', question.id);
+    if (rowRef.current) event.dataTransfer.setDragImage(rowRef.current, 24, 24);
+    onDragStart(question.id);
+  }
+  function handleDragOver(event: DragEvent<HTMLLIElement>) {
+    const box = event.currentTarget.getBoundingClientRect();
+    onDragOver(event.clientY > box.top + box.height / 2 ? index + 1 : index);
+  }
 
   function handleToggleClip() {
     setShowClip((shown) => !shown);
@@ -45,8 +78,20 @@ function QuestionRow({ index, question, videoStatus, onPreview, onEdit, onDelete
     onDelete(question);
   }
   return (
-    <li className="question-row">
-      <span className="question-index">{index + 1}</span>
+    <li
+      ref={rowRef}
+      className={`question-row${dragging ? ' dragging' : ''}${dropMark ? ` drop-${dropMark}` : ''}`}
+      onDragOver={handleDragOver}
+    >
+      <span
+        className="question-index"
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={onDragEnd}
+        title="Kéo để đổi vị trí"
+      >
+        <GripVertical /> {index + 1}
+      </span>
       <div className="question-info">
         <strong>{question.title}</strong>
         <button type="button" className="link-button" onClick={handleToggleClip}>
@@ -86,6 +131,13 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
   const [error, setError] = useState('');
   const [videos, setVideos] = useState<Record<string, VideoStatus>>({});
   const [checkingVideos, setCheckingVideos] = useState(false);
+  // The list stays put while dragging (moving the dragged row in the DOM cancels the drag);
+  // a marker shows where it will land.
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dropSlot, setDropSlot] = useState<number | null>(null);
+  const dragFrom = set.questions.findIndex((q) => q.id === draggingId);
+  // Right above or below itself is no move: no marker there.
+  const moveTo = dropSlot === null || dropSlot === dragFrom || dropSlot === dragFrom + 1 ? null : dropSlot;
   const editing = set.questions.find((q) => q.id === editingId) ?? null;
   const brokenVideos = set.questions.filter((q) => videos[q.id] === 'blocked' || videos[q.id] === 'missing').length;
   // Re-checked whenever a question is added, removed or gets another video.
@@ -155,6 +207,43 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
     });
   }
 
+  function handleDragStart(id: string) {
+    setDraggingId(id);
+  }
+
+  function handleDragOver(slot: number) {
+    if (draggingId) setDropSlot(slot);
+  }
+
+  function handleListDragOver(event: DragEvent<HTMLOListElement>) {
+    if (draggingId) event.preventDefault(); // allow dropping anywhere on the list, gaps included
+  }
+
+  function handleDrop(event: DragEvent<HTMLOListElement>) {
+    event.preventDefault();
+    if (moveTo === null) return;
+    const moved = set.questions[dragFrom];
+    const questions = set.questions.filter((q) => q !== moved);
+    questions.splice(moveTo > dragFrom ? moveTo - 1 : moveTo, 0, moved);
+    const before = set;
+    onChange({ ...set, questions });
+    void run(async () => {
+      try {
+        const body = JSON.stringify({ order: questions.map((q) => q.id) });
+        onChange(await api<QuestionSetDto>(`/sets/${set.id}/order`, { method: 'PUT', body }));
+      } catch (err) {
+        onChange(before);
+        throw err;
+      }
+    });
+  }
+
+  // Fires after a drop too, and when the drag is cancelled (Esc, dropped outside the list).
+  function handleDragEnd() {
+    setDraggingId(null);
+    setDropSlot(null);
+  }
+
   function handleSaved(updated: QuestionSetDto) {
     onChange(updated);
     setEditingId(null);
@@ -208,7 +297,7 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
           </button>
         </div>
         {set.questions.length === 0 && <p className="muted">Chưa có câu nào. Thêm câu đầu tiên ở trên nhé!</p>}
-        <ol className="question-list">
+        <ol className="question-list" onDragOver={handleListDragOver} onDrop={handleDrop}>
           {set.questions.map((question, i) => (
             <QuestionRow
               key={question.id}
@@ -218,6 +307,11 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
               onPreview={handlePreviewQuestion}
               onEdit={setEditingId}
               onDelete={handleDeleteQuestion}
+              dragging={question.id === draggingId}
+              dropMark={moveTo === i ? 'above' : moveTo === i + 1 && i === set.questions.length - 1 ? 'below' : null}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
             />
           ))}
         </ol>
