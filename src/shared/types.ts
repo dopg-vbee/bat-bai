@@ -151,6 +151,8 @@ export interface ServerToClientEvents {
   hostState: (state: HostState) => void;
   playerState: (state: PlayerState) => void;
   kicked: () => void;
+  /** Emoji thrown from phones since the last batch, anonymous, for the big screen. */
+  reactions: (batch: { code: string; emojis: string[] }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -170,6 +172,7 @@ export interface ClientToServerEvents {
   'host:kick': (playerId: string) => void;
   'player:join': (input: JoinInput, cb: (res: Ack<{ playerId: string; token: string }>) => void) => void;
   'player:guess': (text: string, cb: (res: GuessResult) => void) => void;
+  'player:react': (emoji: string) => void;
   'player:leave': () => void;
 }
 
@@ -208,6 +211,8 @@ const STREAK_BONUS_STEP = 50;
 export const streakBonus = (streak: number) =>
   streak < STREAK_MIN ? 0 : (Math.min(streak, STREAK_MAX) - STREAK_MIN + 1) * STREAK_BONUS_STEP;
 export const MAX_AUDIO_MB = 20;
+/** What a phone can throw at the big screen once it has answered. */
+export const REACTIONS = ['👍', '❤️', '😂', '🔥', '👏', '😮', '💯'];
 
 /** Whether a question's video can play inside the game; blocked = embedding turned off (or private). */
 export type VideoStatus = 'ok' | 'blocked' | 'missing' | 'unknown';

@@ -273,6 +273,21 @@ describe('preview room', () => {
     expect(room.hostView().joinQr).toBe(false);
   });
 
+  it('lets players react once they have answered, and while the answer and ranking show', () => {
+    const room = makeRoom(false);
+    const lan = room.join('Lan', undefined, 's1');
+    if (typeof lan === 'string') throw new Error(lan);
+    expect(room.canReact(lan.id)).toBe(false); // lobby
+    room.next();
+    vi.advanceTimersByTime(3000);
+    expect(room.canReact(lan.id)).toBe(false); // still guessing
+    room.guess(lan.id, 'Lạc Trôi');
+    expect(room.canReact(lan.id)).toBe(true);
+    room.next(); // reveal
+    expect(room.canReact(lan.id)).toBe(true);
+    expect(room.canReact('nobody')).toBe(false);
+  });
+
   it('a normal room has no bots', () => {
     expect(makeRoom(false).hostView().players).toHaveLength(0);
   });

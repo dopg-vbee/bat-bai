@@ -67,6 +67,12 @@ export const EMOJI_NAMES: Record<string, string> = {
   '🎁': 'wrapped-gift',
   '🔥': 'fire',
   '😅': 'grinning-face-with-sweat',
+  // Reactions thrown at the big screen
+  '👍': 'thumbs-up',
+  '❤️': 'red-heart',
+  '😂': 'face-with-tears-of-joy',
+  '👏': 'clapping-hands',
+  '😮': 'face-with-open-mouth',
   // Inside sentences
   '🤔': 'thinking-face',
   '😄': 'grinning-face-with-smiling-eyes',

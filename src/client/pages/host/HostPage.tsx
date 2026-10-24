@@ -14,6 +14,7 @@ import { HostQuestion } from './HostQuestion.tsx';
 import { HostReveal } from './HostReveal.tsx';
 import { JoinCard, QrOverlay, RemoteCard } from './JoinCard.tsx';
 import { PauseOverlay } from './PauseOverlay.tsx';
+import { ReactionLayer } from './ReactionLayer.tsx';
 import { useHostRoom } from './useHostRoom.ts';
 import { useQuestionAudio } from './useQuestionAudio.ts';
 
@@ -134,6 +135,7 @@ export function HostPage({ code }: { code: string }) {
           <RemoteCard code={state.code} />
         </QrOverlay>
       )}
+      {state.phase !== 'lobby' && <ReactionLayer code={state.code} />}
       {paused && <PauseOverlay onResume={handleTogglePause} />}
     </main>
   );

@@ -250,6 +250,14 @@ export class Room {
     if (this.phase === 'reveal' && qIndex === this.qIndex && !this.pausedAt) this.showLeaderboard();
   }
 
+  /** Reactions come from those who are done: answered this question, or watching the answer or ranking. */
+  canReact(playerId: string): boolean {
+    const player = this.players.get(playerId);
+    if (!player) return false;
+    if (this.phase === 'reveal' || this.phase === 'leaderboard') return true;
+    return this.phase === 'question' && player.answers.has(this.qIndex);
+  }
+
   /** Shows or hides the join QR code over the game for latecomers. */
   showJoinQr(shown: boolean): void {
     if (this.joinQr === shown) return;

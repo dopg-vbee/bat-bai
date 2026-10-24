@@ -13,6 +13,7 @@ import { JoinForm } from './JoinForm.tsx';
 import { PlayerEnded } from './PlayerEnded.tsx';
 import { PlayerQuestion } from './PlayerQuestion.tsx';
 import { PlayerReveal } from './PlayerReveal.tsx';
+import { ReactionBar } from './ReactionBar.tsx';
 
 /** Animated emoji shown on correct/missed answers and the podium (see PlayerQuestion/Reveal/Ended). */
 const CELEBRATIONS = ['🎉', '🎁', '🥳', '😅', '🏆'];
@@ -133,6 +134,10 @@ export function PlayPage({ code }: { code: string }) {
       {state.phase === 'question' && <PlayerQuestion key={state.qIndex} state={state} />}
       {(state.phase === 'reveal' || state.phase === 'leaderboard') && <PlayerReveal key={state.qIndex} state={state} />}
       {state.phase === 'ended' && <PlayerEnded state={state} />}
+      {/* Same rule as the server: once answered, or while the answer and ranking are shown. */}
+      {((state.phase === 'question' && state.round.correct) ||
+        state.phase === 'reveal' ||
+        state.phase === 'leaderboard') && <ReactionBar />}
     </main>
   );
 }

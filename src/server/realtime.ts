@@ -1,6 +1,7 @@
 import type { Server } from 'socket.io';
-import type { ClientToServerEvents, ServerToClientEvents } from '../shared/types.ts';
+import { REACTIONS, type ClientToServerEvents, type ServerToClientEvents } from '../shared/types.ts';
 import { checkPassword } from './auth.ts';
+import { createRateLimiter } from './game/rateLimit.ts';
 import { pickLuck, Room, type GameQuestion } from './game/room.ts';
 import type { Library } from './library.ts';
 
@@ -21,6 +22,9 @@ interface RealtimeOptions {
 const BROADCAST_DELAY_MS = 80;
 const SWEEP_INTERVAL_MS = 5 * 60_000;
 const IDLE_ROOM_MS = 3 * 60 * 60_000;
+/** Reactions reach the big screen in small batches; the screen shows a few at a time anyway. */
+const REACTION_BATCH_MS = 200;
+const MAX_REACTIONS_PER_BATCH = 20;
 
 const hostChannel = (code: string) => `host:${code}`;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -41,6 +45,16 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
   // Changes are coalesced: a burst of 60 joins or correct answers becomes one push per client.
   /** Last state sent to each phone, per room: a phone whose state did not change gets nothing. */
   const sentToPhones = new WeakMap<Room, Map<string, string>>();
+  /** Each phone may throw 3 reactions every 2 seconds. */
+  const reactionLimit = createRateLimiter(3, 2000);
+  const pendingReactions = new Map<string, string[]>();
+  let reactionTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function flushReactions() {
+    reactionTimer = null;
+    for (const [code, emojis] of pendingReactions) io.to(hostChannel(code)).emit('reactions', { code, emojis });
+    pendingReactions.clear();
+  }
 
   function flush() {
     flushTimer = null;
@@ -180,9 +194,23 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       cb(room.guess(playerId, String(text ?? '')));
     });
 
+    socket.on('player:react', (emoji) => {
+      const { role, code, playerId } = socket.data;
+      const room = role === 'player' ? rooms.get(code ?? '') : undefined;
+      if (!room || !playerId || !REACTIONS.includes(String(emoji)) || !room.canReact(playerId)) return;
+      if (!reactionLimit.allow(socket.id)) return;
+      const batch = pendingReactions.get(room.code) ?? [];
+      if (batch.length < MAX_REACTIONS_PER_BATCH) batch.push(String(emoji));
+      pendingReactions.set(room.code, batch);
+      reactionTimer ??= setTimeout(flushReactions, REACTION_BATCH_MS);
+    });
+
     socket.on('host:leave', () => detach(socket, { closingHostScreen: true }));
     socket.on('player:leave', () => detach(socket));
-    socket.on('disconnect', () => detach(socket));
+    socket.on('disconnect', () => {
+      reactionLimit.forget(socket.id);
+      detach(socket);
+    });
   });
 
   const sweep = setInterval(() => {
