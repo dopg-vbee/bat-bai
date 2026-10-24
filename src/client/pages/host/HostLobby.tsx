@@ -1,9 +1,8 @@
-import { Eye, EyeOff, Play, Shuffle, Smartphone, Users, X } from 'lucide-react';
+import { Eye, EyeOff, Play, Shuffle, Users, X } from 'lucide-react';
 import { useState, type CSSProperties } from 'react';
 import { TEAMS, type HostState, type PlayerSummary } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { TeamBadge } from '../../components/Team.tsx';
-import { openPlayerWindow } from '../../lib/rooms.ts';
 import { socket } from '../../lib/socket.ts';
 import { readStorage, storageKeys, writeStorage } from '../../lib/storage.ts';
 import { JoinCard } from './JoinCard.tsx';
@@ -96,10 +95,6 @@ export function HostLobby({ state }: { state: HostState }) {
     setQrShown(!qrShown);
   }
 
-  function handleOpenPlayer() {
-    openPlayerWindow(state.code);
-  }
-
   return (
     <section className={`host-lobby${qrShown ? '' : ' qr-hidden'}`}>
       {qrShown && (
@@ -129,17 +124,6 @@ export function HostLobby({ state }: { state: HostState }) {
         <h2 className="lobby-title">
           {state.players.length ? `${state.players.length} người đã vào` : 'Đang chờ người chơi…'}
         </h2>
-        {state.preview && (
-          <div className="preview-note">
-            <p>
-              Đây là phòng <strong>chơi thử</strong>: {state.players.filter((p) => p.bot).length} bot sẽ tự đoán như người thật; riêng <strong>Bot Luôn Đúng</strong> câu nào cũng đúng để xem chuỗi lửa. Mở thêm màn hình người chơi
-              để tự trả lời trên "điện thoại".
-            </p>
-            <button className="btn btn-ghost" onClick={handleOpenPlayer}>
-              <Smartphone /> Mở màn hình người chơi
-            </button>
-          </div>
-        )}
         {/* Above the list, so it stays on screen however many players join. */}
         <div className="lobby-actions">
           <button className="btn btn-primary btn-xl" onClick={handleStart} disabled={!canStart}>

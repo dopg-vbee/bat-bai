@@ -19,7 +19,7 @@ Game party chơi qua trình duyệt: nghe đoạn lời bài hát, đoán tên b
    - Ở trang quản lý bấm **▶ Xem trước đoạn YouTube** (trong form) hoặc **▶ YouTube 0:30 – 0:36** (ở từng câu) để nghe đúng đoạn đó.
 5. Hết câu cuối sẽ hiện bục vinh danh top 3. Bằng điểm thì ai trả lời nhanh hơn (tổng thời gian) xếp trên.
 
-**Chơi thử trước:** ở trang quản lý, nút **👁 Chơi thử** tạo một phòng y hệt ván thật, có 4 bot tự vào và tự đoán. Nút **👁 Xem thử** ở từng câu chỉ chạy riêng câu đó, để kiểm MP3 và đoạn YouTube. Trong phòng chơi thử có nút **📱 Mở màn hình người chơi**, mở cửa sổ cỡ điện thoại để tự đoán như người chơi.
+**Chơi thử trước:** ở trang quản lý, nút **👁 Chơi thử** tạo một phòng y hệt ván thật, có 4 bot tự vào và tự đoán. Nút **👁 Xem thử** ở từng câu chỉ chạy riêng câu đó, để kiểm MP3 và đoạn YouTube. Trong phòng chơi thử, menu ☰ có mục **Mở màn hình người chơi**, mở cửa sổ cỡ điện thoại để tự đoán như người chơi. Bot **Bot Luôn Đúng** câu nào cũng đúng, để xem chuỗi lửa lớn dần.
 
 **Chơi theo đội:** khi tạo phòng chọn **Chơi theo đội** (nhập số đội từ 2 đến 10; mỗi đội một màu: Đỏ, Xanh, Vàng, Tím, Lục, Cam, Hồng, Ngọc, Nâu, Xám). Ở phòng chờ, màn hình lớn có một khung cho mỗi đội; người chơi tự chọn (và đổi) đội trên điện thoại, ai chưa chọn nằm ở khung "Chưa có đội". Chỉ bắt đầu được khi mọi người đều có đội; nút **Xếp đội ngẫu nhiên** chia lại tất cả cho đều. Ai vào sau khi game đã bắt đầu thì được xếp vào đội ít người nhất.
 - **Điểm trung bình:** mọi người chơi như thường; điểm đội = trung bình điểm các thành viên (đội đông không có lợi thế). Bảng xếp hạng có thêm thanh điểm đội, cuối game có thẻ "Đội vô địch".

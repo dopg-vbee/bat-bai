@@ -138,18 +138,6 @@
   color: var(--primary-ink);
 }
 
-.preview-note {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  background: var(--white-10);
-  border: 2px dashed var(--white-20);
-  border-radius: 16px;
-  padding: 14px 16px;
-  font-size: 1.05rem;
-}
-
 .player-grid {
   list-style: none;
   margin: 0;

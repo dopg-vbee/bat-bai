@@ -1,6 +1,7 @@
-import { ArrowLeft, Eye, Flag, Menu, Moon, QrCode, Smartphone, Sun, Users } from 'lucide-react';
+import { ArrowLeft, Eye, Flag, Menu, Moon, QrCode, Smartphone, SquareUser, Sun, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { HostState } from '../../../shared/types.ts';
+import { openPlayerWindow } from '../../lib/rooms.ts';
 import { Link } from '../../lib/router.tsx';
 import { toggleTheme, useTheme } from '../../lib/theme.ts';
 
@@ -34,6 +35,12 @@ export function HostMenu({ state, onEnd, onShowQr, onShowRemote }: HostMenuProps
     onShowQr();
   }
 
+  // "Chơi thử": a phone-sized window to answer alongside the bots.
+  function handleOpenPlayer() {
+    handleLeave();
+    openPlayerWindow(state.code);
+  }
+
   function handleShowRemote() {
     handleLeave();
     onShowRemote();
@@ -60,6 +67,11 @@ export function HostMenu({ state, onEnd, onShowQr, onShowRemote }: HostMenuProps
           <Link to="/admin" className="host-menu-item">
             <ArrowLeft /> Về trang quản lý
           </Link>
+        )}
+        {state.preview && state.phase !== 'ended' && (
+          <button className="host-menu-item" role="menuitem" onClick={handleOpenPlayer}>
+            <SquareUser /> Mở màn hình người chơi
+          </button>
         )}
         {/* The lobby already shows the QR code. */}
         {state.phase !== 'lobby' && state.phase !== 'ended' && (
