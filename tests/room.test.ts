@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { pickLuck } from '../src/server/game/luck.ts';
 import { Room } from '../src/server/game/room.ts';
-import { LEADERBOARD_MS, PREVIEW_BOTS, streakBonus } from '../src/shared/types.ts';
+import { LEADERBOARD_MS, PREVIEW_BOTS, REACTIONS, streakBonus } from '../src/shared/types.ts';
 
 const questions = [
   { title: 'Lạc Trôi', audio: 'a'.repeat(64), youtubeId: 'Llw9Q6akRo4', startSec: 30, endSec: 50 },
@@ -516,6 +516,25 @@ describe('pickLuck', () => {
     expect(pickLuck(30).doubleRounds).toHaveLength(5);
     expect(pickLuck(3).doubleRounds).toHaveLength(1);
     expect(pickLuck(2).doubleRounds).toEqual([]);
+  });
+});
+
+describe('preview bots', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('throw emoji at the big screen while the answer plays', () => {
+    const emojis: string[] = [];
+    const room = new Room({
+      code: '1234', setName: 'T', questions, durationMs: 10_000, countdownMs: 3000, preview: true, bots: 20,
+      onChange: () => {}, onReaction: (emoji) => emojis.push(emoji),
+    });
+    room.next();
+    vi.advanceTimersByTime(3000 + 10_000 + 500); // the bots answer, the round ends
+    expect(room.phase).toBe('reveal');
+    vi.advanceTimersByTime(7000);
+    expect(emojis.length).toBeGreaterThanOrEqual(12); // 12 while the answer plays (the cap), maybe a few cheers
+    expect(emojis.every((emoji) => REACTIONS.includes(emoji))).toBe(true);
   });
 });
 

@@ -5,6 +5,7 @@ import {
   MIN_TEAMS,
   OPEN_CLIP_SEC,
   PREVIEW_BOTS,
+  REACTIONS,
   streakBonus,
   type GuessResult,
   type HostState,
@@ -46,6 +47,8 @@ interface RoomOptions {
   teamMode?: TeamMode;
   teamCount?: number;
   onChange: () => void;
+  /** An emoji a preview bot throws at the big screen. */
+  onReaction?: (emoji: string) => void;
 }
 
 /** Room size: ~60 players expected, with headroom for 100-bot load tests plus real players. */
@@ -58,6 +61,11 @@ const SURE_BOT_NAME = 'Bot Luôn Đúng';
 const BOT_MISS_RATE = 0.25;
 /** Share of answering bots that first try another song of the set (makes "Chơi thử" lively). */
 const BOT_WRONG_RATE = 0.4;
+/** Bots throw emoji too: some right after answering, a few more while the answer plays and the ranking shows. */
+const BOT_CHEER_RATE = 0.25;
+const BOT_REACTIONS_PER_BOT = 0.6;
+const BOT_REACTIONS_MAX = 12;
+const BOT_REACTIONS_SPREAD_MS = 7000;
 /** Rows on the between-rounds leaderboard; the final screen lists everyone. */
 const LEADERBOARD_ROWS = 10;
 const FINAL_MULTIPLIER = 3;
@@ -97,6 +105,7 @@ export class Room {
   private readonly questions: GameQuestion[];
   private readonly countdownMs: number;
   private readonly onChange: () => void;
+  private readonly onReaction?: (emoji: string) => void;
   private readonly players = new Map<string, Player>();
   private correctOrder: string[] = [];
   /** Anonymous on purpose: the big screen shows what was guessed, not who guessed it. */
@@ -124,6 +133,7 @@ export class Room {
     this.countdownMs = options.countdownMs;
     this.preview = options.preview ?? false;
     this.onChange = options.onChange;
+    this.onReaction = options.onReaction;
     this.luck = options.luck ?? { doubleRounds: [], giftChances: [0, 0, 0], stealShare: 0 };
     this.teamMode = options.teamMode ?? 'off';
     const teamCount = Math.round(options.teamCount ?? MIN_TEAMS);
@@ -217,6 +227,7 @@ export class Room {
     const { startSec, endSec } = this.questions[this.qIndex];
     const clipMs = ((endSec ?? startSec + OPEN_CLIP_SEC) - startSec) * 1000;
     this.schedule(clipMs + REVEAL_FALLBACK_EXTRA_MS, () => this.showLeaderboard());
+    if (this.preview) this.scheduleBotReactions();
     this.changed();
   }
 
@@ -548,8 +559,32 @@ export class Room {
         const wrongAt = Math.max(this.countdownMs + 200, delay - 1500);
         this.botTimers.push(this.timers.set(wrongAt, () => this.guess(p.id, wrong)));
       }
-      this.botTimers.push(this.timers.set(delay, () => this.guess(p.id, title)));
+      this.botTimers.push(
+        this.timers.set(delay, () => {
+          if (this.guess(p.id, title).status === 'correct' && Math.random() < BOT_CHEER_RATE) {
+            this.botReact(p, 400 + Math.random() * 800);
+          }
+        }),
+      );
     }
+  }
+
+  /** A few bots throw emoji while the answer plays and the ranking shows (about one each for a handful of bots). */
+  private scheduleBotReactions(): void {
+    const bots = [...this.players.values()].filter((p) => p.bot);
+    const count = Math.min(BOT_REACTIONS_MAX, Math.ceil(bots.length * BOT_REACTIONS_PER_BOT));
+    for (let i = 0; i < count; i++) {
+      this.botReact(bots[Math.floor(Math.random() * bots.length)], Math.random() * BOT_REACTIONS_SPREAD_MS);
+    }
+  }
+
+  /** A random emoji from `bot` after `delayMs`, if it may react by then (same rule as phones). */
+  private botReact(bot: Player, delayMs: number): void {
+    this.botTimers.push(
+      this.timers.set(delayMs, () => {
+        if (this.canReact(bot.id)) this.onReaction?.(REACTIONS[Math.floor(Math.random() * REACTIONS.length)]);
+      }),
+    );
   }
 
   private clearBotTimers(): void {

@@ -43,6 +43,13 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
   const pendingReactions = new Map<string, string[]>();
   let reactionTimer: ReturnType<typeof setTimeout> | null = null;
 
+  function queueReaction(code: string, emoji: string) {
+    const batch = pendingReactions.get(code) ?? [];
+    if (batch.length < MAX_REACTIONS_PER_BATCH) batch.push(emoji);
+    pendingReactions.set(code, batch);
+    reactionTimer ??= setTimeout(flushReactions, REACTION_BATCH_MS);
+  }
+
   function flushReactions() {
     reactionTimer = null;
     for (const [code, emojis] of pendingReactions) io.to(hostChannel(code)).emit('reactions', { code, emojis });
@@ -127,6 +134,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
         teamMode: input.teamMode === 'average' || input.teamMode === 'together' ? input.teamMode : 'off',
         teamCount: Math.round(Number(input.teamCount)) || undefined,
         onChange: () => markDirty(room),
+        onReaction: (emoji) => queueReaction(room.code, emoji),
       });
       rooms.set(room.code, room);
       cb({ ok: true, code: room.code, hostToken: room.hostToken });
@@ -197,11 +205,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       const { role, code, playerId } = socket.data;
       const room = role === 'player' ? rooms.get(code ?? '') : undefined;
       if (!room || !playerId || !REACTIONS.includes(String(emoji)) || !room.canReact(playerId)) return;
-      if (!reactionLimit.allow(socket.id)) return;
-      const batch = pendingReactions.get(room.code) ?? [];
-      if (batch.length < MAX_REACTIONS_PER_BATCH) batch.push(String(emoji));
-      pendingReactions.set(room.code, batch);
-      reactionTimer ??= setTimeout(flushReactions, REACTION_BATCH_MS);
+      if (reactionLimit.allow(socket.id)) queueReaction(room.code, String(emoji));
     });
 
     socket.on('host:leave', () => detach(socket, { closingHostScreen: true }));
