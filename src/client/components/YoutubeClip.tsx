@@ -66,9 +66,13 @@ export function YoutubeClip({
   const onEndedRef = useRef(onEnded);
   const [scale, setScale] = useState(0);
   const [status, setStatus] = useState<Status>('loading');
+  const statusRef = useRef(status);
+  /** Consecutive polls that found the player playing since the last play(). */
+  const playingPollsRef = useRef(0);
 
   optionsRef.current = { startSec, endSec, active };
   onEndedRef.current = onEnded;
+  statusRef.current = status;
 
   function later(fn: () => void, ms: number) {
     timersRef.current.push(setTimeout(fn, ms));
@@ -85,6 +89,7 @@ export function YoutubeClip({
     if (!player) return;
     clearTimers();
     setStatus('loading');
+    playingPollsRef.current = 0;
     player.unMute();
     player.setVolume(100);
     // A seek throws away the decoded frames and can rebuffer; skip it when the warm-up
@@ -155,8 +160,17 @@ export function YoutubeClip({
         });
         // We stop at the marks ourselves: YouTube's own `end` shows its related-videos screen.
         poll = setInterval(() => {
-          if (playerRef.current !== player || player.getPlayerState() !== PLAYING) return;
+          if (playerRef.current !== player || player.getPlayerState() !== PLAYING) {
+            playingPollsRef.current = 0;
+            return;
+          }
           const { startSec: start, endSec: end, active: isActive } = optionsRef.current;
+          // Revealed while the warm-up was still running just before the start: play() only unmutes,
+          // and YouTube sends no new "playing" event. Lift the cover once it has kept playing a moment.
+          playingPollsRef.current++;
+          if (isActive && statusRef.current === 'loading' && playingPollsRef.current * END_POLL_MS > START_FLASH_MS) {
+            setStatus('playing');
+          }
           const time = player.getCurrentTime();
           if (!isActive && time >= start - WARMUP_STOP_EARLY_SEC) {
             player.pauseVideo();
