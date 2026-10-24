@@ -1,5 +1,5 @@
 // Plays complete games with bot players against a running server and reports latency.
-// Usage: npm run loadtest -- [--url http://localhost:3000] [--rooms 3] [--players 60] [--duration 15]
+// Usage: npm run loadtest -- [--url http://localhost:3001] [--rooms 3] [--players 60] [--duration 15]
 //                          [--questions 3 | all] [--set "tên bộ đề"]
 //                          [--teams average | together] [--team-count 4] [--reactions]
 // Needs ADMIN_PASSWORD (env or --password) and at least one question set with questions.
@@ -11,7 +11,7 @@ type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const { values } = parseArgs({
   options: {
-    url: { type: 'string', default: 'http://localhost:3000' },
+    url: { type: 'string', default: 'http://localhost:3001' },
     password: { type: 'string', default: process.env.ADMIN_PASSWORD ?? 'batbai' },
     rooms: { type: 'string', default: '1' },
     players: { type: 'string', default: '60' },

@@ -40,14 +40,14 @@ Cần Node.js 22.18 trở lên.
 ```bash
 npm install
 npm run build
-npm start            # http://localhost:3000, mật khẩu mặc định: batbai
+npm start            # http://localhost:3001, mật khẩu mặc định: batbai
 ```
 
 - Đặt mật khẩu thật: copy `.env.example` thành `.env` và sửa `ADMIN_PASSWORD`.
-- **Chơi trong mạng LAN** (laptop nối TV, mọi người dùng chung Wi-Fi): cứ mở `http://localhost:3000` trên laptop.
+- **Chơi trong mạng LAN** (laptop nối TV, mọi người dùng chung Wi-Fi): cứ mở `http://localhost:3001` trên laptop.
   - Mã QR tự trỏ sang IP Wi-Fi của máy, bỏ qua các card mạng ảo (Hyper-V, WSL, VPN…). Lúc khởi động, terminal cũng in dòng `Điện thoại vào: http://…`.
   - Điện thoại quét QR mà chỉ thấy **màn hình trắng hoặc đen, không tải được**: kiểm tra điện thoại có cùng Wi-Fi với laptop không. Sau đó kiểm tra tường lửa Windows có cho Node.js ở mạng **Private** không (Windows Security → Firewall → Allow an app → Node.js). Wi-Fi ở nhà nên đặt là Private.
-  - Vẫn không được thì đặt `PUBLIC_URL=http://<IP-Wi-Fi>:3000` trong `.env`, QR sẽ dùng đúng địa chỉ đó.
+  - Vẫn không được thì đặt `PUBLIC_URL=http://<IP-Wi-Fi>:3001` trong `.env`, QR sẽ dùng đúng địa chỉ đó.
 - Khi phát triển: `npm run dev` (tự reload khi sửa code).
 
 ## Deploy online: Render + Cloudflare R2 (miễn phí)
@@ -129,7 +129,7 @@ Muốn chuyển dữ liệu từ máy lên R2: chạy `npm run backup` khi chưa
 ```bash
 npm test             # unit test + 1 ván đầy đủ 60 người qua Socket.IO + test khởi động lại server
 npm run typecheck
-npm run loadtest -- --url http://localhost:3000 --rooms 3 --players 60
+npm run loadtest -- --url http://localhost:3001 --rooms 3 --players 60
 ```
 
 `loadtest` cần server đang chạy và ít nhất một bộ đề có câu hỏi. Nó cho bot chơi trọn các ván rồi báo độ trễ. Đo trên máy dev với 3 phòng × 60 người: gửi đáp án p95 khoảng 8ms, không lỗi.

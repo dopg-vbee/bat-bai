@@ -26,7 +26,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error('S3_BUCKET đã đặt nhưng thiếu S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY');
   }
   return {
-    port: Number(env.PORT) || 3000,
+    port: Number(env.PORT) || 3001,
     adminPassword: env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD,
     publicUrl: env.PUBLIC_URL?.replace(/\/+$/, '') || undefined,
     dataDir: env.DATA_DIR || 'data',
