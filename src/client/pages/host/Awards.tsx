@@ -1,6 +1,7 @@
 import { TEAMS, type GameAwards, type TeamStanding } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { Emoji } from '../../components/Emoji.tsx';
+import { formatPoints } from '../../lib/format.ts';
 
 /** Delay between two cards appearing; HostEnded plays a chime on the same beat. */
 export const AWARD_STAGGER_MS = 400;
@@ -24,7 +25,7 @@ export function awardCards(awards: GameAwards, champion: TeamStanding | null): A
       icon: '🏆',
       title: 'Đội vô địch',
       text: `Đội ${TEAMS[champion.team].name}`,
-      detail: `trung bình ${champion.score.toLocaleString('vi-VN')} điểm · ${champion.members} người`,
+      detail: `trung bình ${formatPoints(champion.score)} điểm · ${champion.members} người`,
     },
     fastest && {
       icon: '⚡',

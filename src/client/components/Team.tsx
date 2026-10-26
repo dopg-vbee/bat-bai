@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { TEAMS, type PodiumEntry, type RankRow, type TeamStanding } from '../../shared/types.ts';
 import { Emoji } from './Emoji.tsx';
+import { formatPoints } from '../lib/format.ts';
 
 const teamStyle = (team: number, extra: Record<string, number> = {}) =>
   ({ '--team': TEAMS[team].color, ...extra }) as CSSProperties;
@@ -43,7 +44,7 @@ export function TeamBars({ teams }: { teams: TeamStanding[] }) {
           <span className="team-bar-track">
             <span className="team-bar-fill" />
           </span>
-          <span className="team-bar-score">{score.toLocaleString('vi-VN')}</span>
+          <span className="team-bar-score">{formatPoints(score)}</span>
         </li>
       ))}
     </ol>

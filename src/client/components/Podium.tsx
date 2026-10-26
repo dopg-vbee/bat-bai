@@ -1,6 +1,7 @@
 import type { PodiumEntry } from '../../shared/types.ts';
 import { Avatar } from './Avatar.tsx';
 import { Emoji } from './Emoji.tsx';
+import { formatPoints } from '../lib/format.ts';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 /** Visual order: 2nd, 1st, 3rd. */
@@ -25,7 +26,7 @@ export function Podium({ entries, large = false, revealFrom }: PodiumProps) {
           <div key={place} className={`podium-slot place-${place + 1}${pending ? ' pending' : ''}`}>
             <Avatar avatar={entry.avatar} color={entry.color} size={large ? 'lg' : 'md'} />
             <strong className="podium-name">{entry.name}</strong>
-            <span className="podium-score">{entry.score.toLocaleString('vi-VN')}</span>
+            <span className="podium-score">{formatPoints(entry.score)}</span>
             <div className="podium-block">
               <Emoji char={MEDALS[place]} />
             </div>

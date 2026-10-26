@@ -5,6 +5,7 @@ import { AnimatedEmoji } from '../../components/Emoji.tsx';
 import { Podium } from '../../components/Podium.tsx';
 import { TeamBadge } from '../../components/Team.tsx';
 import { celebrate } from '../../lib/confetti.ts';
+import { formatPoints } from '../../lib/format.ts';
 import { Link } from '../../lib/router.tsx';
 
 export function PlayerEnded({ state }: { state: PlayerState }) {
@@ -26,7 +27,7 @@ export function PlayerEnded({ state }: { state: PlayerState }) {
       <div className="rank-line">
         <span>{byTeam ? 'Đội bạn hạng' : 'Bạn hạng'}</span>
         <strong className="rank-big">#{rank}</strong>
-        <span>với {me.score.toLocaleString('vi-VN')} điểm</span>
+        <span>với {formatPoints(me.score)} điểm</span>
       </div>
       {!byTeam && teamRank > 0 && me.team !== null && (
         <p className="team-rank-line">

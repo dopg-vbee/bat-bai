@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TEAMS, type RankRow } from '../../shared/types.ts';
+import { formatPoints } from '../lib/format.ts';
 import { Avatar } from './Avatar.tsx';
 import { Emoji } from './Emoji.tsx';
 import { OnFire, StreakTag } from './Fire.tsx';
@@ -33,27 +34,32 @@ function useRowPitch(count: number) {
   return pitch;
 }
 
-/** Animates a number from `from` to `to` once `run` turns true. */
+/**
+ * Animates a number from `from` to `to` once `run` turns true. Each frame writes the text directly:
+ * ten rows counting at 60 fps would otherwise mean 600 React renders a second.
+ */
 export function CountUp({ from, to, run }: { from: number; to: number; run: boolean }) {
-  const [value, setValue] = useState(from);
+  const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
     if (!run || from === to) {
-      setValue(run ? to : from);
+      el.textContent = formatPoints(run ? to : from);
       return;
     }
     let frame = 0;
     const start = performance.now();
     const tick = (now: number) => {
       const progress = Math.min(1, (now - start) / COUNT_UP_MS);
-      setValue(Math.round(from + (to - from) * (1 - (1 - progress) ** 3)));
+      el.textContent = formatPoints(Math.round(from + (to - from) * (1 - (1 - progress) ** 3)));
       if (progress < 1) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [run, from, to]);
 
-  return <>{value.toLocaleString('vi-VN')}</>;
+  return <span ref={ref}>{formatPoints(from)}</span>;
 }
 
 /**

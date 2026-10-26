@@ -6,6 +6,7 @@ import { Emoji, EmojiText, preloadAnimatedEmoji } from '../../components/Emoji.t
 import { OnFire } from '../../components/Fire.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { ThemeToggle } from '../../components/ThemeToggle.tsx';
+import { formatPoints } from '../../lib/format.ts';
 import { Link } from '../../lib/router.tsx';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { readJson, storageKeys, writeJson, writeStorage } from '../../lib/storage.ts';
@@ -109,7 +110,7 @@ export function PlayPage({ code }: { code: string }) {
         <strong className="player-bar-name">
           {state.me.name} {state.me.team !== null && <Emoji char={TEAMS[state.me.team].emoji} />}
         </strong>
-        <span className="player-bar-score">{state.me.score.toLocaleString('vi-VN')} điểm</span>
+        <span className="player-bar-score">{formatPoints(state.me.score)} điểm</span>
         <ThemeToggle />
       </header>
       {!connected && (

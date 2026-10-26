@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import type { RankRow } from '../../shared/types.ts';
 import { Avatar } from './Avatar.tsx';
+import { formatPoints } from '../lib/format.ts';
 
 export function Delta({ value }: { value: number }) {
   if (value > 0) {
@@ -35,7 +36,7 @@ export function Leaderboard({ rows }: { rows: RankRow[] }) {
           <span className="leaderboard-rank">{row.rank}</span>
           <Avatar avatar={row.avatar} color={row.color} size="sm" />
           <span className="leaderboard-name">{row.name}</span>
-          <span className="leaderboard-score">{row.score.toLocaleString('vi-VN')}</span>
+          <span className="leaderboard-score">{formatPoints(row.score)}</span>
         </li>
       ))}
     </ol>
