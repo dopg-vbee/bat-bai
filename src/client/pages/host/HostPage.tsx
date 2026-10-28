@@ -7,6 +7,7 @@ import { Overlay } from '../../components/Overlay.tsx';
 import { preloadAnimatedEmoji } from '../../components/Emoji.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { Link } from '../../lib/router.tsx';
+import { useLingering } from '../../lib/useLingering.ts';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { HostClip } from './HostClip.tsx';
 import { HostEnded } from './HostEnded.tsx';
@@ -22,12 +23,18 @@ import { ReactionLayer } from './ReactionLayer.tsx';
 import { useHostRoom } from './useHostRoom.ts';
 import { useQuestionAudio } from './useQuestionAudio.ts';
 
+/** At least the .host-clip.closing animation (0.3 s), plus slack for the render. */
+const CLIP_EXIT_MS = 600;
+
 export function HostPage({ code }: { code: string }) {
   const { state, error } = useHostRoom(code);
   const [videoSlot, setVideoSlot] = useState<HTMLElement | null>(null);
   const [showRemote, setShowRemote] = useState(false);
   const connected = useConnected();
   const audio = useQuestionAudio(state);
+  // The answer video lives from the question (pre-buffering) to the end of the reveal, and fades out.
+  const roundClip = state?.clip ? { qIndex: state.qIndex, clip: state.clip, title: state.answer ?? '' } : null;
+  const { value: clip, leaving: clipLeaving } = useLingering(roundClip, CLIP_EXIT_MS);
   const paused = Boolean(state?.pausedAt);
   const pausable = state !== null && ['question', 'reveal', 'leaderboard', 'finale'].includes(state.phase);
 
@@ -121,14 +128,15 @@ export function HostPage({ code }: { code: string }) {
       {state.phase === 'leaderboard' && <HostLeaderboard key={state.qIndex} state={state} />}
       {state.phase === 'finale' && <HostFinale state={state} />}
       {state.phase === 'ended' && <HostEnded state={state} />}
-      {state.clip && (
+      {clip && (
         <HostClip
-          key={state.qIndex}
-          qIndex={state.qIndex}
+          key={clip.qIndex}
+          qIndex={clip.qIndex}
           paused={paused}
-          clip={state.clip}
-          title={state.answer ?? ''}
+          clip={clip.clip}
+          title={clip.title}
           active={state.phase === 'reveal'}
+          closing={clipLeaving}
           slot={videoSlot}
         />
       )}

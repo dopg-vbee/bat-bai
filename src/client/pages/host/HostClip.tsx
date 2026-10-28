@@ -9,6 +9,8 @@ interface HostClipProps {
   clip: ClipInfo;
   title: string;
   active: boolean;
+  /** The reveal is over: the video fades out where it is, then goes. */
+  closing: boolean;
   /** Placeholder in the reveal layout that the player is drawn over. */
   slot: HTMLElement | null;
 }
@@ -18,7 +20,7 @@ interface HostClipProps {
  * pre-buffering HD) is the same one shown at reveal: moving an iframe in the DOM reloads it,
  * so instead of moving it we position it over the reveal layout's slot.
  */
-export function HostClip({ qIndex, paused, clip, title, active, slot }: HostClipProps) {
+export function HostClip({ qIndex, paused, clip, title, active, closing, slot }: HostClipProps) {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   // The server moves on to the leaderboard when the answer clip is over.
@@ -28,7 +30,8 @@ export function HostClip({ qIndex, paused, clip, title, active, slot }: HostClip
 
   useLayoutEffect(() => {
     if (!active || !slot) {
-      setRect(null);
+      // Closing: stay where it is while it fades out.
+      if (!closing) setRect(null);
       return;
     }
     const update = () => setRect(slot.getBoundingClientRect());
@@ -42,11 +45,11 @@ export function HostClip({ qIndex, paused, clip, title, active, slot }: HostClip
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);
     };
-  }, [active, slot]);
+  }, [active, slot, closing]);
 
   const style: CSSProperties | undefined = rect ? { top: rect.top, left: rect.left, width: rect.width } : undefined;
   return (
-    <div className={rect ? 'host-clip' : 'host-clip warming'} style={style} aria-hidden={!rect}>
+    <div className={`host-clip${rect ? '' : ' warming'}${closing ? ' closing' : ''}`} style={style} aria-hidden={!rect}>
       <YoutubeClip
         youtubeId={clip.youtubeId}
         startSec={clip.startSec}
