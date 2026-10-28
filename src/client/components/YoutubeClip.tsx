@@ -19,6 +19,8 @@ interface YoutubeClipProps {
   onEnded?: () => void;
   /** Host paused the game: hold the video where it is, continue when false again. */
   paused?: boolean;
+  /** The video is on its way out (its picture fades): bring the sound down with it. */
+  fadeOut?: boolean;
 }
 
 type Status = 'loading' | 'playing' | 'stopped' | 'blocked' | 'error';
@@ -45,6 +47,12 @@ const WARMUP_STOP_EARLY_SEC = 0.3;
 /** Already parked this close before the start (warm-up done): play on without seeking. */
 const NO_SEEK_WINDOW_SEC = 1.5;
 const ERROR_END_DELAY_MS = 4000;
+/** The sound comes up with the picture and goes down just before the end mark. YouTube only takes volume steps. */
+const FADE_IN_MS = 500;
+const FADE_OUT_MS = 400;
+const FADE_STEP_MS = 50;
+/** The poll is coarse (END_POLL_MS): start the end fade a little early so it still finishes before the stop. */
+const FADE_OUT_LEAD_SEC = FADE_OUT_MS / 1000 + 0.15;
 
 /** Bare video + audio for [startSec, endSec] (OPEN_CLIP_SEC when there is no end): no YouTube chrome. */
 export function YoutubeClip({
@@ -57,6 +65,7 @@ export function YoutubeClip({
   tone = 'light',
   onEnded,
   paused = false,
+  fadeOut = false,
 }: YoutubeClipProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -69,6 +78,8 @@ export function YoutubeClip({
   const statusRef = useRef(status);
   /** Consecutive polls that found the player playing since the last play(). */
   const playingPollsRef = useRef(0);
+  const fadeRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const fadingOutRef = useRef(false);
 
   optionsRef.current = { startSec, endSec, active };
   onEndedRef.current = onEnded;
@@ -83,6 +94,19 @@ export function YoutubeClip({
     timersRef.current = [];
   }
 
+  /** Moves the volume to `target` over `ms`, replacing any fade under way (from `from`: getVolume lags a set). */
+  function fadeTo(target: number, ms: number, from = playerRef.current?.getVolume() ?? 100) {
+    clearInterval(fadeRef.current);
+    const player = playerRef.current;
+    if (!player) return;
+    const startedAt = performance.now();
+    fadeRef.current = setInterval(() => {
+      const done = Math.min(1, (performance.now() - startedAt) / ms);
+      player.setVolume(Math.round(from + (target - from) * done));
+      if (done >= 1) clearInterval(fadeRef.current);
+    }, FADE_STEP_MS);
+  }
+
   /** Plays the clip from its start, with sound. */
   function play() {
     const player = playerRef.current;
@@ -90,8 +114,10 @@ export function YoutubeClip({
     clearTimers();
     setStatus('loading');
     playingPollsRef.current = 0;
+    fadingOutRef.current = false;
     player.unMute();
-    player.setVolume(100);
+    player.setVolume(0);
+    fadeTo(100, FADE_IN_MS, 0);
     // A seek throws away the decoded frames and can rebuffer; skip it when the warm-up
     // already parked the video just before the start.
     const start = optionsRef.current.startSec;
@@ -172,9 +198,14 @@ export function YoutubeClip({
             setStatus('playing');
           }
           const time = player.getCurrentTime();
+          const stopAt = end ?? start + OPEN_CLIP_SEC;
+          if (isActive && !fadingOutRef.current && time >= stopAt - FADE_OUT_LEAD_SEC) {
+            fadingOutRef.current = true;
+            fadeTo(0, FADE_OUT_MS);
+          }
           if (!isActive && time >= start - WARMUP_STOP_EARLY_SEC) {
             player.pauseVideo();
-          } else if (isActive && time >= (end ?? start + OPEN_CLIP_SEC)) {
+          } else if (isActive && time >= stopAt) {
             player.pauseVideo();
             clearTimers();
             setStatus('stopped');
@@ -188,6 +219,7 @@ export function YoutubeClip({
     return () => {
       cancelled = true;
       clearInterval(poll);
+      clearInterval(fadeRef.current);
       clearTimers();
       playerRef.current?.destroy();
       playerRef.current = null;
@@ -198,6 +230,10 @@ export function YoutubeClip({
   useEffect(() => {
     if (active) play();
   }, [active, startSec, endSec]);
+
+  useEffect(() => {
+    if (fadeOut) fadeTo(0, 300);
+  }, [fadeOut]);
 
   useEffect(() => {
     const player = playerRef.current;

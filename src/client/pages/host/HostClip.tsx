@@ -59,6 +59,7 @@ export function HostClip({ qIndex, paused, clip, title, active, closing, slot }:
         showControls={false}
         onEnded={handleEnded}
         paused={paused}
+        fadeOut={closing}
       />
     </div>
   );
