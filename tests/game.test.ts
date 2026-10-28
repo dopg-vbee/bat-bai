@@ -238,8 +238,9 @@ describe('a full game with 60 players', () => {
     expect(hostState!.correctFeed.map((e) => e.name)).toEqual([players[10].name]);
 
     host.emit('host:next'); // skip the clip
-    await waitFor(() => hostState?.phase === 'leaderboard', 3000, 'leaderboard 2');
-    host.emit('host:next'); // last question: leaderboard → podium
+    await waitFor(() => hostState?.phase === 'finale', 3000, 'finale');
+    expect(hostState!.leaderboard).toEqual([]); // no ranking after the last question
+    host.emit('host:next'); // skip the announcement → podium
     await waitFor(() => hostState?.phase === 'ended', 3000, 'ended');
     expect(hostState!.leaderboard).toHaveLength(PLAYERS); // the final screen lists everyone
     await waitFor(() => players[0].states.at(-1)?.phase === 'ended', 3000, 'player ended');

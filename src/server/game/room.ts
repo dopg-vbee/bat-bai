@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import {
   audioUrl,
+  FINALE_MS,
   LEADERBOARD_MS,
   MIN_TEAMS,
   OPEN_CLIP_SEC,
@@ -210,13 +211,14 @@ export class Room {
     return player.socketId;
   }
 
-  /** Host "next"/"skip" button: moves one step along lobby → question → reveal → leaderboard → … → ended. */
+  /** Host "next"/"skip" button: moves one step along lobby → question → reveal → leaderboard → … → finale → ended. */
   next(): void {
     this.resume();
     if (this.phase === 'lobby') return this.everyoneInATeam() ? this.startQuestion(0) : undefined;
     if (this.phase === 'question') return this.reveal();
     if (this.phase === 'reveal') return this.showLeaderboard();
     if (this.phase === 'leaderboard') return this.advance();
+    if (this.phase === 'finale') return this.finish();
   }
 
   reveal(): void {
@@ -240,7 +242,7 @@ export class Room {
   canReact(playerId: string): boolean {
     const player = this.players.get(playerId);
     if (!player) return false;
-    if (this.phase === 'reveal' || this.phase === 'leaderboard') return true;
+    if (this.phase === 'reveal' || this.phase === 'leaderboard' || this.phase === 'finale') return true;
     return this.phase === 'question' && player.answers.has(this.qIndex);
   }
 
@@ -273,7 +275,7 @@ export class Room {
 
   /** Freezes the round: clocks, timers, bots and guesses. Only while a round is running. */
   pause(): void {
-    if (this.pausedAt || !['question', 'reveal', 'leaderboard'].includes(this.phase)) return;
+    if (this.pausedAt || !['question', 'reveal', 'leaderboard', 'finale'].includes(this.phase)) return;
     this.pausedAt = Date.now();
     this.timers.pause();
     this.changed();
@@ -301,16 +303,18 @@ export class Room {
     this.changed();
   }
 
+  /** After the answer: the ranking, or after the last question a pause that announces the end instead. */
   private showLeaderboard(): void {
     if (this.phase !== 'reveal') return;
-    this.phase = 'leaderboard';
-    this.advanceAt = Date.now() + LEADERBOARD_MS;
-    this.schedule(LEADERBOARD_MS, () => this.advance());
+    const last = this.qIndex + 1 >= this.questions.length;
+    this.phase = last ? 'finale' : 'leaderboard';
+    const ms = last ? FINALE_MS : LEADERBOARD_MS;
+    this.advanceAt = Date.now() + ms;
+    this.schedule(ms, () => (last ? this.finish() : this.advance()));
     this.changed();
   }
 
   private advance(): void {
-    if (this.qIndex + 1 >= this.questions.length) return this.finish();
     this.startQuestion(this.qIndex + 1);
   }
 

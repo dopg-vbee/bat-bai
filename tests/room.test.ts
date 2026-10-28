@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { pickLuck } from '../src/server/game/luck.ts';
 import { Room } from '../src/server/game/room.ts';
-import { LEADERBOARD_MS, PREVIEW_BOTS, REACTIONS, streakBonus } from '../src/shared/types.ts';
+import { FINALE_MS, LEADERBOARD_MS, PREVIEW_BOTS, REACTIONS, streakBonus } from '../src/shared/types.ts';
 
 const questions = [
   { title: 'Lạc Trôi', audio: 'a'.repeat(64), youtubeId: 'Llw9Q6akRo4', startSec: 30, endSec: 50 },
@@ -77,10 +77,24 @@ describe('preview room', () => {
     expect(room.phase).toBe('question');
     expect(room.qIndex).toBe(1);
 
+    // After the last answer: no ranking, a beat that announces the end, then the final results.
     room.reveal();
     room.clipEnded(1);
-    expect(room.phase).toBe('leaderboard');
-    vi.advanceTimersByTime(LEADERBOARD_MS);
+    expect(room.phase).toBe('finale');
+    expect(room.hostView().leaderboard).toEqual([]);
+    vi.advanceTimersByTime(FINALE_MS);
+    expect(room.phase).toBe('ended');
+  });
+
+  it('lets the host skip the finale beat', () => {
+    const room = makeRoom(true);
+    room.next();
+    vi.advanceTimersByTime(3000 + 12_000);
+    room.next(); room.next(); room.next(); // → question 2
+    room.reveal();
+    room.clipEnded(1);
+    expect(room.phase).toBe('finale');
+    room.next();
     expect(room.phase).toBe('ended');
   });
 

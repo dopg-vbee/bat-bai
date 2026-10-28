@@ -10,6 +10,7 @@ import { Link } from '../../lib/router.tsx';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { HostClip } from './HostClip.tsx';
 import { HostEnded } from './HostEnded.tsx';
+import { HostFinale } from './HostFinale.tsx';
 import { HostLeaderboard } from './HostLeaderboard.tsx';
 import { HostLobby } from './HostLobby.tsx';
 import { HostMenu } from './HostMenu.tsx';
@@ -28,7 +29,7 @@ export function HostPage({ code }: { code: string }) {
   const connected = useConnected();
   const audio = useQuestionAudio(state);
   const paused = Boolean(state?.pausedAt);
-  const pausable = state !== null && ['question', 'reveal', 'leaderboard'].includes(state.phase);
+  const pausable = state !== null && ['question', 'reveal', 'leaderboard', 'finale'].includes(state.phase);
 
   useEffect(() => {
     preloadAnimatedEmoji(['💯', '🏆', '🔥']);
@@ -118,6 +119,7 @@ export function HostPage({ code }: { code: string }) {
       {state.phase === 'question' && <HostQuestion state={state} audio={audio} />}
       {state.phase === 'reveal' && <HostReveal state={state} onVideoSlot={setVideoSlot} />}
       {state.phase === 'leaderboard' && <HostLeaderboard key={state.qIndex} state={state} />}
+      {state.phase === 'finale' && <HostFinale state={state} />}
       {state.phase === 'ended' && <HostEnded state={state} />}
       {state.clip && (
         <HostClip

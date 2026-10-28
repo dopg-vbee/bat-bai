@@ -93,6 +93,8 @@ export const EMOJI_NAMES: Record<string, string> = {
   '👀': 'eyes',
   '🎧': 'headphone',
   '📺': 'television',
+  // The game is over
+  '🏁': 'chequered-flag',
   // How-to-play pictures
   '📱': 'mobile-phone',
   '🤝': 'handshake',

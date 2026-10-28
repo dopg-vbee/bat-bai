@@ -1,25 +1,33 @@
-import { SkipForward, Trophy } from 'lucide-react';
+import { SkipForward } from 'lucide-react';
 import { LEADERBOARD_MS, type HostState } from '../../../shared/types.ts';
 import { AnimatedLeaderboard } from '../../components/AnimatedLeaderboard.tsx';
 import { teamRows } from '../../components/Team.tsx';
 import { socket, useServerNow } from '../../lib/socket.ts';
 
 /** Ticks on its own so the list above isn't re-rendered ten times a second. */
-function AdvanceBar({ advanceAt, pausedAt }: { advanceAt: number; pausedAt: number }) {
+interface AdvanceBarProps {
+  advanceAt: number;
+  pausedAt: number;
+  /** How long the wait lasts, for the bar to drain over. */
+  durationMs?: number;
+}
+
+export function AdvanceBar({ advanceAt, pausedAt, durationMs = LEADERBOARD_MS }: AdvanceBarProps) {
   // While paused the clock stands still at the moment the host paused.
   const live = useServerNow(!pausedAt, 100);
   const remaining = Math.max(0, advanceAt - (pausedAt || live));
   return (
     <div className="advance-bar">
-      <div className="advance-bar-fill" style={{ width: `${(remaining / LEADERBOARD_MS) * 100}%` }} />
+      <div className="advance-bar-fill" style={{ width: `${(remaining / durationMs) * 100}%` }} />
     </div>
   );
 }
 
-/** A few seconds between rounds: rank changes animate, then the next question starts by itself. */
+/**
+ * A few seconds between rounds: rank changes animate, then the next question starts by itself.
+ * Not after the last question (see HostFinale).
+ */
 export function HostLeaderboard({ state }: { state: HostState }) {
-  const isLast = state.qIndex + 1 >= state.qTotal;
-
   function handleNext() {
     socket.emit('host:next');
   }
@@ -36,10 +44,10 @@ export function HostLeaderboard({ state }: { state: HostState }) {
       <button
         className="btn btn-ghost icon-btn skip-btn"
         onClick={handleNext}
-        aria-label={isLast ? 'Xem kết quả' : 'Câu tiếp'}
-        title={isLast ? 'Xem kết quả' : 'Câu tiếp'}
+        aria-label="Câu tiếp"
+        title="Câu tiếp"
       >
-        {isLast ? <Trophy /> : <SkipForward />}
+        <SkipForward />
       </button>
     </section>
   );

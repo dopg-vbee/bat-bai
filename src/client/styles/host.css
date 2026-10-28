@@ -213,6 +213,41 @@
   opacity: 1;
 }
 
+/* The beat between the last answer and the final results. */
+.host-finale {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Down from the top (the skip button below takes the free space), about where the middle would be. */
+  padding-top: 16dvh;
+  gap: 14px;
+  text-align: center;
+}
+
+.finale-flag {
+  width: clamp(120px, 22vh, 220px);
+  height: clamp(120px, 22vh, 220px);
+}
+
+.finale-title {
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 1.05;
+  animation: pop 0.5s ease-out;
+  text-shadow: 0 5px 0 rgb(0 0 0 / 0.18);
+}
+
+.finale-sub {
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.host-finale .advance-bar {
+  max-width: 520px;
+  margin-top: 18px;
+}
+
 .host-center {
   flex: 1;
   display: flex;

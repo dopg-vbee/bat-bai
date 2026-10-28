@@ -25,11 +25,13 @@ function nextStep(state: HostState): { label: string; icon: ReactNode } | null {
     case 'question':
       return { label: 'Hiện đáp án', icon: <SkipForward /> };
     case 'reveal':
-      return { label: 'Xem bảng xếp hạng', icon: <ListOrdered /> };
-    case 'leaderboard':
       return state.qIndex + 1 >= state.qTotal
-        ? { label: 'Xem kết quả', icon: <Trophy /> }
-        : { label: 'Câu tiếp', icon: <SkipForward /> };
+        ? { label: 'Kết thúc game', icon: <Trophy /> }
+        : { label: 'Xem bảng xếp hạng', icon: <ListOrdered /> };
+    case 'leaderboard':
+      return { label: 'Câu tiếp', icon: <SkipForward /> };
+    case 'finale':
+      return { label: 'Xem kết quả', icon: <Trophy /> };
     default:
       return null;
   }
@@ -59,6 +61,8 @@ function Status({ state }: { state: HostState }) {
           Bảng xếp hạng sau câu {state.qIndex + 1}/{state.qTotal}
         </>
       );
+    case 'finale':
+      return <>Chuẩn bị tổng kết điểm…</>;
     default:
       return <>Trò chơi đã kết thúc</>;
   }
@@ -103,7 +107,7 @@ export function RemotePage({ code }: { code: string }) {
 
   const step = nextStep(state);
   const paused = Boolean(state.pausedAt);
-  const pausable = ['question', 'reveal', 'leaderboard'].includes(state.phase);
+  const pausable = ['question', 'reveal', 'leaderboard', 'finale'].includes(state.phase);
   const inGame = state.phase !== 'lobby' && state.phase !== 'ended';
   const teamLobby = state.phase === 'lobby' && state.teamMode !== 'off';
   const teamless = state.players.filter((p) => p.team === null).length;
