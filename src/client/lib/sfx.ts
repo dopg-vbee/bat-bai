@@ -51,6 +51,12 @@ function note(ac: AudioContext, hz: number, start: number, length: number, volum
   osc.stop(start + length + 0.05);
 }
 
+/** Three soft bells stepping down: "that's the end", short and unlike the podium's drums and fanfare. */
+export function playGameOver() {
+  const ac = audio();
+  [783.99, 659.25, 523.25].forEach((hz, i) => note(ac, hz, ac.currentTime + i * 0.2, 0.7, CHIME_VOLUME * 1.4, 'sine')); // G5 E5 C5
+}
+
 /** Short victory fanfare: four quick rising notes, then a ringing major chord. */
 export function playFanfare() {
   const ac = audio();
