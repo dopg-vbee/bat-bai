@@ -130,7 +130,7 @@ export function HostPage({ code }: { code: string }) {
       {state.phase === 'ended' && <HostEnded state={state} />}
       {clip && (
         <HostClip
-          key={clip.qIndex}
+          key={`clip-${clip.qIndex}`}
           qIndex={clip.qIndex}
           paused={paused}
           clip={clip.clip}
