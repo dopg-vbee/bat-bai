@@ -47,12 +47,16 @@ const WARMUP_STOP_EARLY_SEC = 0.3;
 /** Already parked this close before the start (warm-up done): play on without seeking. */
 const NO_SEEK_WINDOW_SEC = 1.5;
 const ERROR_END_DELAY_MS = 4000;
-/** The sound comes up with the picture and goes down just before the end mark. YouTube only takes volume steps. */
+/**
+ * The sound fades in just before the start mark and out just after the end mark, so the marks the question's
+ * author set are heard at full volume. YouTube only takes volume steps.
+ */
 const FADE_IN_MS = 500;
 const FADE_OUT_MS = 400;
 const FADE_STEP_MS = 50;
-/** The poll is coarse (END_POLL_MS): start the end fade a little early so it still finishes before the stop. */
-const FADE_OUT_LEAD_SEC = FADE_OUT_MS / 1000 + 0.15;
+
+/** Where playback begins: the fade-in leads up to the start mark. */
+const playFrom = (startSec: number) => Math.max(0, startSec - FADE_IN_MS / 1000);
 
 /** Bare video + audio for [startSec, endSec] (OPEN_CLIP_SEC when there is no end): no YouTube chrome. */
 export function YoutubeClip({
@@ -79,6 +83,7 @@ export function YoutubeClip({
   /** Consecutive polls that found the player playing since the last play(). */
   const playingPollsRef = useRef(0);
   const fadeRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const fadingInRef = useRef(false);
   const fadingOutRef = useRef(false);
 
   optionsRef.current = { startSec, endSec, active };
@@ -99,6 +104,7 @@ export function YoutubeClip({
     clearInterval(fadeRef.current);
     const player = playerRef.current;
     if (!player) return;
+    if (ms <= 0) return player.setVolume(target);
     const startedAt = performance.now();
     fadeRef.current = setInterval(() => {
       const done = Math.min(1, (performance.now() - startedAt) / ms);
@@ -114,15 +120,15 @@ export function YoutubeClip({
     clearTimers();
     setStatus('loading');
     playingPollsRef.current = 0;
+    fadingInRef.current = false;
     fadingOutRef.current = false;
     player.unMute();
-    player.setVolume(0);
-    fadeTo(100, FADE_IN_MS, 0);
+    player.setVolume(0); // the poll brings it up when the video reaches the fade-in point
+    const from = playFrom(optionsRef.current.startSec);
     // A seek throws away the decoded frames and can rebuffer; skip it when the warm-up
-    // already parked the video just before the start.
-    const start = optionsRef.current.startSec;
+    // already parked the video just before where it starts.
     const time = player.getCurrentTime();
-    if (!(time >= start - NO_SEEK_WINDOW_SEC && time <= start + 0.2)) player.seekTo(start, true);
+    if (!(time >= from - NO_SEEK_WINDOW_SEC && time <= from + 0.2)) player.seekTo(from, true);
     player.playVideo();
     later(() => {
       if (player.getPlayerState() !== PLAYING) setStatus((s) => (s === 'loading' ? 'blocked' : s));
@@ -148,7 +154,7 @@ export function YoutubeClip({
     loadYoutubeApi()
       .then((api) => {
         if (cancelled) return;
-        const warmupFrom = Math.max(0, optionsRef.current.startSec - WARMUP_LEAD_SEC);
+        const warmupFrom = Math.max(0, playFrom(optionsRef.current.startSec) - WARMUP_LEAD_SEC);
         // YouTube replaces this node with its iframe, so React never owns it.
         const mount = document.createElement('div');
         host.append(mount);
@@ -158,7 +164,7 @@ export function YoutubeClip({
           height: VIDEO_HEIGHT + 2 * CROP,
           host: 'https://www.youtube-nocookie.com',
           playerVars: {
-            start: Math.floor(optionsRef.current.active ? optionsRef.current.startSec : warmupFrom),
+            start: Math.floor(optionsRef.current.active ? playFrom(optionsRef.current.startSec) : warmupFrom),
             autoplay: 0,
             controls: 0,
             disablekb: 1,
@@ -198,14 +204,21 @@ export function YoutubeClip({
             setStatus('playing');
           }
           const time = player.getCurrentTime();
-          const stopAt = end ?? start + OPEN_CLIP_SEC;
-          if (isActive && !fadingOutRef.current && time >= stopAt - FADE_OUT_LEAD_SEC) {
-            fadingOutRef.current = true;
-            fadeTo(0, FADE_OUT_MS);
+          const endMark = end ?? start + OPEN_CLIP_SEC;
+          const from = playFrom(start);
+          // Silent until the video reaches the fade-in point (it may still be playing muted from the warm-up).
+          if (isActive && !fadingInRef.current && time >= from - (END_POLL_MS / 1000) * 1.5) {
+            fadingInRef.current = true;
+            later(() => fadeTo(100, (start - from) * 1000, 0), Math.max(0, (from - time) * 1000));
           }
-          if (!isActive && time >= start - WARMUP_STOP_EARLY_SEC) {
+          // The poll is coarse: when the end mark is about to pass, schedule the fade for the moment it does.
+          if (isActive && !fadingOutRef.current && time >= endMark - (END_POLL_MS / 1000) * 1.5) {
+            fadingOutRef.current = true;
+            later(() => fadeTo(0, FADE_OUT_MS), Math.max(0, (endMark - time) * 1000));
+          }
+          if (!isActive && time >= from - WARMUP_STOP_EARLY_SEC) {
             player.pauseVideo();
-          } else if (isActive && time >= stopAt) {
+          } else if (isActive && time >= endMark + FADE_OUT_MS / 1000) {
             player.pauseVideo();
             clearTimers();
             setStatus('stopped');
