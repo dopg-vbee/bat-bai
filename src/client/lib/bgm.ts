@@ -1,45 +1,47 @@
-// Gentle background music for the host screen and home page, synthesised with Web Audio: no files, no licensing.
-// An eight-bar loop (C Am F G, C Em F G): soft chord pads, a quiet bass and a singable melody on top.
+// Cheerful background music for the host screen and home page, synthesised with Web Audio: no files, no licensing.
+// An eight-bar loop (C G Am F, C G F G): a bouncy bass, off-beat chord stabs, a soft kick and shaker,
+// and a bright staccato tune on top. Round waves and a low-pass filter keep it sunny rather than shrill.
 
-const BPM = 84;
+const BPM = 112;
 const EIGHTH_SEC = 60 / BPM / 2;
 const STEPS_PER_BAR = 8;
 /** The scheduler wakes this often and queues notes up to LOOKAHEAD_SEC ahead. */
 const TICK_MS = 50;
 const LOOKAHEAD_SEC = 0.25;
-const MASTER_VOLUME = 0.22;
-const FADE_SEC = 1.2;
+const MASTER_VOLUME = 0.26;
+const FADE_SEC = 1;
 
 const C5 = 523.25;
 const semitones = (n: number) => C5 * 2 ** (n / 12);
 
 /** Bass root per bar, in semitones from C5. */
-const BASS = [-24, -27, -31, -29, -24, -20, -31, -29];
-/** Pad chord per bar, in semitones from C5. */
-const PADS = [
+const BASS = [-24, -29, -27, -31, -24, -29, -31, -29];
+/** Chord per bar for the off-beat stabs, in semitones from C5. */
+const CHORDS = [
   [-12, -8, -5],
-  [-15, -12, -8],
-  [-19, -15, -12],
-  [-17, -13, -10],
+  [-5, -1, 2],
+  [-3, 0, 4],
+  [-7, -3, 0],
   [-12, -8, -5],
-  [-20, -17, -13],
-  [-19, -15, -12],
-  [-17, -13, -10],
+  [-5, -1, 2],
+  [-7, -3, 0],
+  [-5, -1, 2],
 ];
 /** Melody per bar: [step in the bar, semitones from C5, length in steps]. */
 const MELODY: [number, number, number][][] = [
-  [[0, 7, 3], [3, 4, 1], [4, 7, 2], [6, 9, 2]],
-  [[0, 12, 3], [3, 9, 1], [4, 7, 2], [6, 4, 2]],
-  [[0, 5, 3], [3, 9, 1], [4, 12, 2], [6, 9, 2]],
-  [[0, 7, 4], [4, 2, 2], [6, 4, 2]],
-  [[0, 4, 2], [2, 7, 2], [4, 12, 3], [7, 11, 1]],
-  [[0, 9, 3], [3, 7, 1], [4, 4, 4]],
-  [[0, 5, 2], [2, 9, 2], [4, 12, 2], [6, 14, 2]],
-  [[0, 12, 3], [3, 11, 1], [4, 7, 4]],
+  [[0, 4, 1], [1, 7, 1], [2, 12, 2], [4, 11, 1], [5, 12, 1], [6, 7, 2]],
+  [[0, 2, 1], [1, 7, 1], [2, 11, 2], [4, 9, 1], [5, 11, 1], [6, 7, 2]],
+  [[0, 4, 1], [1, 9, 1], [2, 12, 2], [4, 9, 1], [5, 12, 1], [6, 16, 2]],
+  [[0, 5, 1], [1, 9, 1], [2, 12, 2], [4, 9, 1], [5, 7, 1], [6, 5, 2]],
+  [[0, 4, 1], [1, 7, 1], [2, 12, 2], [4, 14, 1], [5, 12, 1], [6, 16, 2]],
+  [[0, 14, 2], [2, 11, 1], [3, 7, 1], [4, 2, 1], [5, 7, 1], [6, 11, 2]],
+  [[0, 12, 2], [2, 9, 1], [3, 12, 1], [4, 17, 2], [6, 16, 1], [7, 14, 1]],
+  [[0, 14, 1], [1, 11, 1], [2, 7, 2], [4, 11, 1], [5, 14, 1], [6, 7, 2]],
 ];
 
 let context: AudioContext | null = null;
 let master: GainNode | null = null;
+let noise: AudioBuffer | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
 let stopTimer: ReturnType<typeof setTimeout> | null = null;
 let nextStepAt = 0;
@@ -50,43 +52,75 @@ function setup(): AudioContext {
     context = new AudioContext();
     master = context.createGain();
     master.gain.value = 0;
-    // Rounds off the edges of the waves so the loop stays soft over a long time.
     const soften = context.createBiquadFilter();
     soften.type = 'lowpass';
-    soften.frequency.value = 2400;
+    soften.frequency.value = 3200;
     const squeeze = context.createDynamicsCompressor();
     master.connect(soften).connect(squeeze).connect(context.destination);
+    noise = context.createBuffer(1, Math.floor(context.sampleRate * 0.1), context.sampleRate);
+    const data = noise.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   }
   return context;
 }
 
-function tone(ac: AudioContext, hz: number, at: number, length: number, volume: number, type: OscillatorType, attack: number) {
+/** A short, round note: quick attack, then a fade to silence. */
+function pluck(ac: AudioContext, hz: number, at: number, length: number, volume: number, type: OscillatorType) {
   const osc = ac.createOscillator();
   const gain = ac.createGain();
   osc.type = type;
   osc.frequency.value = hz;
   gain.gain.setValueAtTime(0.0001, at);
-  gain.gain.exponentialRampToValueAtTime(volume, at + attack);
-  gain.gain.setValueAtTime(volume, at + Math.max(attack, length - 0.25));
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.01);
   gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
   osc.connect(gain).connect(master!);
   osc.start(at);
   osc.stop(at + length + 0.05);
 }
 
+/** A soft thump: a sine sliding down in pitch. */
+function kick(ac: AudioContext, at: number) {
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.frequency.setValueAtTime(130, at);
+  osc.frequency.exponentialRampToValueAtTime(48, at + 0.12);
+  gain.gain.setValueAtTime(0.22, at);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.2);
+  osc.connect(gain).connect(master!);
+  osc.start(at);
+  osc.stop(at + 0.25);
+}
+
+/** A whisper of band-passed noise on the off-beats. */
+function shaker(ac: AudioContext, at: number) {
+  const src = ac.createBufferSource();
+  const filter = ac.createBiquadFilter();
+  const gain = ac.createGain();
+  src.buffer = noise;
+  filter.type = 'bandpass';
+  filter.frequency.value = 5000;
+  gain.gain.setValueAtTime(0.03, at);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.06);
+  src.connect(filter).connect(gain).connect(master!);
+  src.start(at);
+}
+
 function playStep(ac: AudioContext, index: number, at: number) {
   const bar = Math.floor(index / STEPS_PER_BAR) % MELODY.length;
   const beat = index % STEPS_PER_BAR;
-  if (beat === 0) {
-    const barSec = EIGHTH_SEC * STEPS_PER_BAR;
-    PADS[bar].forEach((n) => tone(ac, semitones(n), at, barSec, 0.05, 'sine', 0.5));
-  }
-  if (beat === 0 || beat === 4) tone(ac, semitones(BASS[bar]), at, EIGHTH_SEC * 3.5, 0.16, 'sine', 0.03);
+  if (beat % 4 === 0) kick(ac, at);
+  if (beat % 2 === 1) shaker(ac, at);
+  // Bass bounces between the root and the octave above it.
+  const bass = semitones(BASS[bar]);
+  if (beat === 0 || beat === 4) pluck(ac, bass, at, EIGHTH_SEC * 1.8, 0.2, 'triangle');
+  else if (beat === 3 || beat === 7) pluck(ac, bass * 2, at, EIGHTH_SEC * 0.9, 0.12, 'triangle');
+  // Off-beat chord stabs.
+  if (beat === 2 || beat === 6) CHORDS[bar].forEach((n) => pluck(ac, semitones(n), at, EIGHTH_SEC * 1.1, 0.04, 'triangle'));
   for (const [start, n, len] of MELODY[bar]) {
     if (start !== beat) continue;
     const hz = semitones(n);
-    tone(ac, hz, at, EIGHTH_SEC * len * 0.95, 0.13, 'triangle', 0.03);
-    tone(ac, hz * 2, at, EIGHTH_SEC * len * 0.6, 0.015, 'sine', 0.03);
+    pluck(ac, hz, at, EIGHTH_SEC * len * 0.8, 0.12, 'triangle');
+    pluck(ac, hz * 2, at, EIGHTH_SEC * len * 0.5, 0.02, 'sine');
   }
 }
 
