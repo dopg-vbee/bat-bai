@@ -611,3 +611,36 @@
   font-size: 1.3rem;
   font-weight: 800;
 }
+
+/* The list of everyone else keeps a usable height; the page scrolls to it when the podium fills the screen. */
+.host-ended .leaderboard {
+  min-height: 240px;
+}
+
+/* Laptop-height screens: a smaller podium so the award titles fit under it. */
+@media (max-height: 820px) {
+  .host-ended {
+    gap: 14px;
+  }
+
+  .host-ended .avatar-lg {
+    width: 96px;
+    height: 96px;
+  }
+
+  .host-ended .podium-large .place-1 .podium-block {
+    height: 140px;
+  }
+
+  .host-ended .podium-large .place-2 .podium-block {
+    height: 105px;
+  }
+
+  .host-ended .podium-large .place-3 .podium-block {
+    height: 80px;
+  }
+
+  .ended-title {
+    font-size: 2.4rem;
+  }
+}

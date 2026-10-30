@@ -225,7 +225,7 @@
 
 .place-1 .podium-block {
   height: 130px;
-  background: rgb(250 204 21 / 0.55);
+  background: linear-gradient(180deg, rgb(250 204 21 / 0.85), rgb(202 138 4 / 0.6));
 }
 
 .place-2 .podium-block {
