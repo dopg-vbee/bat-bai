@@ -262,7 +262,8 @@ describe('preview rooms', () => {
     await waitFor(() => state !== null, 3000, 'host state');
     expect(state!.preview).toBe(true);
     expect(state!.qTotal).toBe(set.questions.length);
-    expect(state!.players).toHaveLength(PREVIEW_BOTS);
+    // The bots walk in one by one (one steps out and back), so the full table takes a few seconds.
+    await waitFor(() => state!.players.length === PREVIEW_BOTS, 10000, 'all bots seated');
     expect(state!.nextAudioUrl).toBe(set.questions[0].audioUrl);
   });
 });

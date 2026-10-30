@@ -90,7 +90,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
     }
   }
 
-  type RoomExtras = Pick<RoomOptions, 'preview' | 'bots' | 'teamMode' | 'teamCount' | 'audioMode'>;
+  type RoomExtras = Pick<RoomOptions, 'preview' | 'bots' | 'staggerBots' | 'teamMode' | 'teamCount' | 'audioMode'>;
 
   function createRoom(set: QuestionSet, durationSec: number, extras: RoomExtras): Room {
     const questions: GameQuestion[] = set.questions.map((q) => ({
@@ -153,6 +153,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
 
       const room = createRoom(set, Number(input.durationSec), {
         preview: Boolean(input.preview),
+        staggerBots: Boolean(input.preview),
         bots: Math.round(Number(input.bots)) || undefined,
         teamMode: input.teamMode === 'average' || input.teamMode === 'together' ? input.teamMode : 'off',
         teamCount: Math.round(Number(input.teamCount)) || undefined,
@@ -188,6 +189,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       socket.data = { role: 'host', code: room.code };
       socket.join(hostChannel(room.code));
       socket.emit('hostState', room.hostView());
+      room.startArrivals();
       cb({ ok: true });
     });
 

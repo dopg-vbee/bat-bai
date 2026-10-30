@@ -46,6 +46,8 @@ export interface RoomOptions {
   audioMode?: AudioMode;
   /** How many bots a preview room starts with (default PREVIEW_BOTS). */
   bots?: number;
+  /** Bots walk into the lobby one by one (one steps out and back) instead of all being there at once. */
+  staggerBots?: boolean;
   /** Random twists; omitted = none (tests). See pickLuck. */
   luck?: Luck;
   teamMode?: TeamMode;
@@ -62,6 +64,12 @@ const BOT_FRUITS = ['Mít', 'Xoài Cát Hòa Lộc', 'Na', 'Sầu Riêng Ri Sáu
 const botName = (i: number) => `Bot ${BOT_FRUITS[i] ?? i + 1}`;
 /** The first preview bot never misses, so a streak (and its fire) can be watched growing. */
 const SURE_BOT_NAME = 'Bot Luôn Đúng';
+/** Staggered bot arrivals (see RoomOptions.staggerBots): a gap each, at most this long altogether. */
+const BOT_ARRIVAL_MS = 700;
+const BOT_ARRIVAL_TOTAL_MS = 6000;
+/** After the last arrival one bot steps out for a moment, to show the "left" sound. */
+const BOT_LEAVE_DELAY_MS = 1500;
+const BOT_AWAY_MS = 1800;
 const BOT_MISS_RATE = 0.25;
 /** Share of answering bots that first try another song of the set (makes "Chơi thử" lively). */
 const BOT_WRONG_RATE = 0.4;
@@ -125,6 +133,11 @@ export class Room {
   private readonly luck: Luck;
   private timer: TimerEntry | null = null;
   private botTimers: TimerEntry[] = [];
+  /** Which player id sits in each bot seat (by bot index), and the real timers of the staggered arrivals. */
+  private readonly botSeats = new Map<number, string>();
+  private botTotal = 0;
+  private staggerPending = false;
+  private arrivalTimers: ReturnType<typeof setTimeout>[] = [];
   private sureBotId: string | null = null;
   /** Each team's place and score when the question started, for the leaderboard's movement. */
   private teamsAtStart = new Map<number, { rank: number; score: number }>();
@@ -147,10 +160,55 @@ export class Room {
     const teamCount = Math.round(options.teamCount ?? MIN_TEAMS);
     this.teamCount = this.teamMode === 'off' ? 0 : Math.min(Math.max(teamCount, MIN_TEAMS), TEAMS.length);
     const bots = this.preview ? Math.min(MAX_PLAYERS - 10, options.bots ?? PREVIEW_BOTS) : 0;
-    for (let i = 0; i < bots; i++) {
-      const bot = this.addPlayer(i === 0 ? SURE_BOT_NAME : botName(i - 1), null, true);
-      if (i === 0) this.sureBotId = bot.id;
+    this.botTotal = bots;
+    this.staggerPending = Boolean(options.staggerBots) && bots > 1;
+    for (let i = 0; i < (this.staggerPending ? 1 : bots); i++) this.seatBot(i);
+  }
+
+  /** The host screen has opened: the rest of the bots start walking in (once). */
+  startArrivals(): void {
+    if (!this.staggerPending || this.phase !== 'lobby') return;
+    this.staggerPending = false;
+    this.scheduleArrivals();
+  }
+
+  private seatBot(index: number): void {
+    const bot = this.addPlayer(index === 0 ? SURE_BOT_NAME : botName(index - 1), null, true);
+    this.botSeats.set(index, bot.id);
+    if (index === 0) this.sureBotId = bot.id;
+  }
+
+  /** The other bots join the lobby one after another; the last one then steps out and comes back. */
+  private scheduleArrivals(): void {
+    const later = this.botTotal - 1;
+    const gap = Math.min(BOT_ARRIVAL_MS, BOT_ARRIVAL_TOTAL_MS / later);
+    const at = (ms: number, fn: () => void) => this.arrivalTimers.push(setTimeout(fn, ms));
+    for (let i = 1; i < this.botTotal; i++) {
+      at(gap * i, () => {
+        this.seatBot(i);
+        this.changed();
+      });
     }
+    const last = this.botTotal - 1;
+    const leaveAt = gap * later + BOT_LEAVE_DELAY_MS;
+    at(leaveAt, () => {
+      const id = this.botSeats.get(last);
+      if (id) this.players.delete(id);
+      this.botSeats.delete(last);
+      this.changed();
+    });
+    at(leaveAt + BOT_AWAY_MS, () => {
+      this.seatBot(last);
+      this.changed();
+    });
+  }
+
+  /** Everyone still on their way in is seated at once (the game is starting, or the room is closing). */
+  private finishArrivals(): void {
+    this.staggerPending = false;
+    this.arrivalTimers.forEach(clearTimeout);
+    this.arrivalTimers = [];
+    for (let i = 0; i < this.botTotal; i++) if (!this.botSeats.has(i)) this.seatBot(i);
   }
 
   /** Opens the room for its owner: the first player, who gets the host controls on their phone. */
@@ -228,6 +286,7 @@ export class Room {
   /** Host "next"/"skip" button: moves one step along lobby → question → reveal → leaderboard → … → finale → ended. */
   next(): void {
     this.resume();
+    if (this.phase === 'lobby') this.finishArrivals();
     if (this.phase === 'lobby') return this.everyoneInATeam() ? this.startQuestion(0) : undefined;
     if (this.phase === 'question') return this.reveal();
     if (this.phase === 'reveal') return this.showLeaderboard();
@@ -392,6 +451,8 @@ export class Room {
   }
 
   dispose(): void {
+    this.arrivalTimers.forEach(clearTimeout);
+    this.arrivalTimers = [];
     this.clearTimer();
     this.clearBotTimers();
   }

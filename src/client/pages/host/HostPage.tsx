@@ -17,7 +17,7 @@ import { HostLeaderboard } from './HostLeaderboard.tsx';
 import { HostLobby } from './HostLobby.tsx';
 import { HostMenu } from './HostMenu.tsx';
 import { useBackgroundMusic } from './useBackgroundMusic.ts';
-import { useJoinSound } from './useJoinSound.ts';
+import { useLobbySounds } from './useLobbySounds.ts';
 import { HostQuestion } from './HostQuestion.tsx';
 import { HostReveal } from './HostReveal.tsx';
 import { JoinCard, RemoteCard } from './JoinCard.tsx';
@@ -35,7 +35,7 @@ export function HostPage({ code }: { code: string }) {
   const connected = useConnected();
   const audio = useQuestionAudio(state);
   const { musicOn, toggleMusic } = useBackgroundMusic(state);
-  useJoinSound(state);
+  useLobbySounds(state);
   // The answer video lives from the question (pre-buffering) to the end of the reveal, and fades out.
   const roundClip = state?.clip ? { qIndex: state.qIndex, clip: state.clip, title: state.answer ?? '' } : null;
   const { value: clip, leaving: clipLeaving } = useLingering(roundClip, CLIP_EXIT_MS);

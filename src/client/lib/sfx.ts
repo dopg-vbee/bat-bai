@@ -69,6 +69,14 @@ export function playJoinSound(count = 1) {
   if (count > 1) note(ac, 1318.5, now + 0.18, 0.3, CHIME_VOLUME, 'sine'); // E6
 }
 
+/** The mirror of the join sound: the same two notes, falling. */
+export function playLeaveSound() {
+  const ac = audio();
+  const now = ac.currentTime;
+  note(ac, 783.99, now, 0.16, CHIME_VOLUME * 1.1, 'triangle'); // G5
+  note(ac, 523.25, now + 0.1, 0.24, CHIME_VOLUME * 1.1, 'triangle'); // C5
+}
+
 /** Three soft bells stepping down: "that's the end", short and unlike the podium's drums and fanfare. */
 export function playGameOver() {
   const ac = audio();
