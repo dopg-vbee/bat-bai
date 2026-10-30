@@ -1,4 +1,4 @@
-import { ArrowRight, CircleHelp, Download, LogIn, ScanQrCode } from 'lucide-react';
+import { ArrowRight, CircleHelp, Download, ExternalLink, LogIn, ScanQrCode } from 'lucide-react';
 import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react';
 import { ROOM_NOT_FOUND } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
@@ -96,6 +96,12 @@ export function HomePage() {
       <Link to="/admin" className="link-subtle">
         Tôi là host <ArrowRight />
       </Link>
+      <p className="credit">
+        Các giọng đọc trong game được tạo tại{' '}
+        <a href="https://vbee.vn" target="_blank" rel="noreferrer">
+          vbee.vn <ExternalLink />
+        </a>
+      </p>
       {iosHint && <p className="install-hint">Cài app: bấm nút Chia sẻ rồi chọn “Thêm vào MH chính”</p>}
       {showScanner && (
         <Overlay onClose={handleHideScanner}>
