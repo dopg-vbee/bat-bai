@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { AnimatedBackground } from './components/AnimatedBackground.tsx';
 import { usePath } from './lib/router.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { PlayPage } from './pages/play/PlayPage.tsx';
@@ -15,6 +16,15 @@ const loading = (
 );
 
 export function App() {
+  return (
+    <>
+      <AnimatedBackground />
+      <Routes />
+    </>
+  );
+}
+
+function Routes() {
   const path = usePath();
   const host = /^\/host\/(\d{4})\/?$/.exec(path);
   const play = /^\/play\/(\d{4})\/?$/.exec(path);

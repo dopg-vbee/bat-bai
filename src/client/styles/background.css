@@ -1,0 +1,103 @@
+/* Animated backdrop (see AnimatedBackground): behind everything, never in the way. */
+.bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-blob {
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  opacity: 0.55;
+  will-change: transform;
+  animation: bg-drift 32s ease-in-out infinite alternate;
+}
+
+.bg-blob-1 {
+  top: -20vmax;
+  left: -15vmax;
+  background: radial-gradient(circle, rgb(168 85 247 / 0.35), transparent 65%);
+}
+
+.bg-blob-2 {
+  right: -20vmax;
+  bottom: -25vmax;
+  background: radial-gradient(circle, rgb(236 72 153 / 0.3), transparent 65%);
+  animation-duration: 40s;
+  animation-delay: -12s;
+}
+
+.bg-blob-3 {
+  top: 25%;
+  left: 35%;
+  width: 40vmax;
+  height: 40vmax;
+  background: radial-gradient(circle, rgb(250 204 21 / 0.14), transparent 65%);
+  animation-duration: 36s;
+  animation-delay: -22s;
+}
+
+.bg-note {
+  position: absolute;
+  bottom: -80px;
+  color: var(--on-page);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: bg-float linear infinite;
+}
+
+/* Notes in the game's own colours: yellow, pink and the page's text colour in turn. */
+.bg-note:nth-child(3n + 4) {
+  color: var(--primary);
+}
+
+.bg-note:nth-child(3n + 5) {
+  color: var(--accent-2);
+}
+
+:root[data-theme='light'] .bg-blob-3 {
+  background: radial-gradient(circle, rgb(253 224 71 / 0.3), transparent 65%);
+}
+
+@keyframes bg-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(12vmax, 8vmax, 0) scale(1.15);
+  }
+}
+
+@keyframes bg-float {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-12deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.26;
+  }
+  50% {
+    transform: translate3d(28px, -55vh, 0) rotate(10deg);
+  }
+  88% {
+    opacity: 0.26;
+  }
+  100% {
+    transform: translate3d(-18px, -115vh, 0) rotate(-8deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-blob {
+    animation: none;
+  }
+
+  .bg-note {
+    display: none;
+  }
+}

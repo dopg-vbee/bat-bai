@@ -1,5 +1,6 @@
 /* All styles, in cascade order: later files may override earlier ones. */
 @import './styles/base.css';
+@import './styles/background.css';
 @import './styles/teams.css';
 @import './styles/reactions.css';
 @import './styles/remote.css';
