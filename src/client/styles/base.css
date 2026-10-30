@@ -240,7 +240,7 @@ button {
 }
 
 .input::placeholder {
-  color: rgb(168 162 200 / 0.55);
+  color: rgb(168 162 200 / 0.82);
 }
 
 .input:focus {
