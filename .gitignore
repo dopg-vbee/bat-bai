@@ -5,3 +5,4 @@ backups
 src/client/public/emoji
 .env
 *.log
+.claude/
