@@ -1,6 +1,6 @@
 // Cheerful background music for the host screen and home page, synthesised with Web Audio: no files, no licensing.
 // An eight-bar loop (C G Am F, C G F G): a bouncy bass, off-beat chord stabs, a soft kick and shaker,
-// and a bright staccato tune on top. Round waves and a low-pass filter keep it sunny rather than shrill.
+// a bright staccato tune on top, and brass stabs that answer it. Round waves and a low-pass filter keep it sunny rather than shrill.
 
 const BPM = 112;
 const EIGHTH_SEC = 60 / BPM / 2;
@@ -37,6 +37,18 @@ const MELODY: [number, number, number][][] = [
   [[0, 14, 2], [2, 11, 1], [3, 7, 1], [4, 2, 1], [5, 7, 1], [6, 11, 2]],
   [[0, 12, 2], [2, 9, 1], [3, 12, 1], [4, 17, 2], [6, 16, 1], [7, 14, 1]],
   [[0, 14, 1], [1, 11, 1], [2, 7, 2], [4, 11, 1], [5, 14, 1], [6, 7, 2]],
+];
+
+/** Brass stabs per bar: [step in the bar, chord in semitones from C5, length in steps]. */
+const BRASS: [number, number[], number][][] = [
+  [[0, [-5, 0], 2]],
+  [],
+  [[0, [-3, 4], 2]],
+  [[6, [5, 9], 1], [7, [5, 9], 1]],
+  [[0, [-5, 0], 2]],
+  [],
+  [[0, [-7, 0], 2]],
+  [[6, [7, 11], 1], [7, [7, 11], 1]],
 ];
 
 let context: AudioContext | null = null;
@@ -78,6 +90,31 @@ function pluck(ac: AudioContext, hz: number, at: number, length: number, volume:
   osc.stop(at + length + 0.05);
 }
 
+/** A trumpet-like stab: two slightly detuned saws whose filter opens fast, like a brass player's attack. */
+function brass(ac: AudioContext, hz: number, at: number, length: number, volume: number) {
+  const filter = ac.createBiquadFilter();
+  const gain = ac.createGain();
+  filter.type = 'lowpass';
+  filter.Q.value = 2;
+  filter.frequency.setValueAtTime(500, at);
+  filter.frequency.exponentialRampToValueAtTime(2600, at + 0.07);
+  filter.frequency.exponentialRampToValueAtTime(900, at + length);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.03);
+  gain.gain.setValueAtTime(volume, at + Math.max(0.03, length - 0.08));
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+  filter.connect(gain).connect(master!);
+  for (const detune of [-7, 7]) {
+    const osc = ac.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = hz;
+    osc.detune.value = detune;
+    osc.connect(filter);
+    osc.start(at);
+    osc.stop(at + length + 0.05);
+  }
+}
+
 /** A soft thump: a sine sliding down in pitch. */
 function kick(ac: AudioContext, at: number) {
   const osc = ac.createOscillator();
@@ -116,6 +153,9 @@ function playStep(ac: AudioContext, index: number, at: number) {
   else if (beat === 3 || beat === 7) pluck(ac, bass * 2, at, EIGHTH_SEC * 0.9, 0.12, 'triangle');
   // Off-beat chord stabs.
   if (beat === 2 || beat === 6) CHORDS[bar].forEach((n) => pluck(ac, semitones(n), at, EIGHTH_SEC * 1.1, 0.04, 'triangle'));
+  for (const [start, chord, len] of BRASS[bar]) {
+    if (start === beat) chord.forEach((n) => brass(ac, semitones(n), at, EIGHTH_SEC * len * 0.9, 0.05));
+  }
   for (const [start, n, len] of MELODY[bar]) {
     if (start !== beat) continue;
     const hz = semitones(n);
