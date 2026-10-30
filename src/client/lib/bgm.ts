@@ -95,16 +95,16 @@ function brass(ac: AudioContext, hz: number, at: number, length: number, volume:
   const filter = ac.createBiquadFilter();
   const gain = ac.createGain();
   filter.type = 'lowpass';
-  filter.Q.value = 2;
-  filter.frequency.setValueAtTime(500, at);
-  filter.frequency.exponentialRampToValueAtTime(2600, at + 0.07);
-  filter.frequency.exponentialRampToValueAtTime(900, at + length);
+  filter.Q.value = 0.7;
+  filter.frequency.setValueAtTime(400, at);
+  filter.frequency.exponentialRampToValueAtTime(1300, at + 0.09);
+  filter.frequency.exponentialRampToValueAtTime(700, at + length);
   gain.gain.setValueAtTime(0.0001, at);
-  gain.gain.exponentialRampToValueAtTime(volume, at + 0.03);
-  gain.gain.setValueAtTime(volume, at + Math.max(0.03, length - 0.08));
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.05);
+  gain.gain.setValueAtTime(volume, at + Math.max(0.05, length - 0.08));
   gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
   filter.connect(gain).connect(master!);
-  for (const detune of [-7, 7]) {
+  for (const detune of [-5, 5]) {
     const osc = ac.createOscillator();
     osc.type = 'sawtooth';
     osc.frequency.value = hz;
@@ -154,7 +154,7 @@ function playStep(ac: AudioContext, index: number, at: number) {
   // Off-beat chord stabs.
   if (beat === 2 || beat === 6) CHORDS[bar].forEach((n) => pluck(ac, semitones(n), at, EIGHTH_SEC * 1.1, 0.04, 'triangle'));
   for (const [start, chord, len] of BRASS[bar]) {
-    if (start === beat) chord.forEach((n) => brass(ac, semitones(n), at, EIGHTH_SEC * len * 0.9, 0.05));
+    if (start === beat) chord.forEach((n) => brass(ac, semitones(n), at, EIGHTH_SEC * len * 0.9, 0.022));
   }
   for (const [start, n, len] of MELODY[bar]) {
     if (start !== beat) continue;
