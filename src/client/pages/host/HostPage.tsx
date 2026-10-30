@@ -16,6 +16,7 @@ import { HostFinale } from './HostFinale.tsx';
 import { HostLeaderboard } from './HostLeaderboard.tsx';
 import { HostLobby } from './HostLobby.tsx';
 import { HostMenu } from './HostMenu.tsx';
+import { useBackgroundMusic } from './useBackgroundMusic.ts';
 import { HostQuestion } from './HostQuestion.tsx';
 import { HostReveal } from './HostReveal.tsx';
 import { JoinCard, RemoteCard } from './JoinCard.tsx';
@@ -32,6 +33,7 @@ export function HostPage({ code }: { code: string }) {
   const [showRemote, setShowRemote] = useState(false);
   const connected = useConnected();
   const audio = useQuestionAudio(state);
+  const { musicOn, toggleMusic } = useBackgroundMusic(state);
   // The answer video lives from the question (pre-buffering) to the end of the reveal, and fades out.
   const roundClip = state?.clip ? { qIndex: state.qIndex, clip: state.clip, title: state.answer ?? '' } : null;
   const { value: clip, leaving: clipLeaving } = useLingering(roundClip, CLIP_EXIT_MS);
@@ -105,7 +107,14 @@ export function HostPage({ code }: { code: string }) {
         ) : (
           <span className="host-set" />
         )}
-        <HostMenu state={state} onEnd={handleEnd} onShowQr={handleShowQr} onShowRemote={handleShowRemote} />
+        <HostMenu
+          state={state}
+          musicOn={musicOn}
+          onToggleMusic={toggleMusic}
+          onEnd={handleEnd}
+          onShowQr={handleShowQr}
+          onShowRemote={handleShowRemote}
+        />
         {pausable && (
           <button
             className="btn btn-ghost icon-btn pause-btn"

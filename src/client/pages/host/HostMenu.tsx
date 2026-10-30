@@ -1,4 +1,4 @@
-import { ArrowLeft, Eye, Flag, Menu, Moon, QrCode, Smartphone, SquareUser, Sun, Users } from 'lucide-react';
+import { ArrowLeft, Eye, Flag, Menu, Moon, Music, QrCode, Smartphone, SquareUser, Sun, Users, VolumeX } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { HostState } from '../../../shared/types.ts';
 import { openPlayerWindow } from '../../lib/rooms.ts';
@@ -7,13 +7,15 @@ import { toggleTheme, useTheme } from '../../lib/theme.ts';
 
 interface HostMenuProps {
   state: HostState;
+  musicOn: boolean;
+  onToggleMusic: () => void;
   onEnd: () => void;
   onShowQr: () => void;
   onShowRemote: () => void;
 }
 
 /** Room info and host actions behind one icon; opens on hover (or tap on touch screens). */
-export function HostMenu({ state, onEnd, onShowQr, onShowRemote }: HostMenuProps) {
+export function HostMenu({ state, musicOn, onToggleMusic, onEnd, onShowQr, onShowRemote }: HostMenuProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -89,6 +91,9 @@ export function HostMenu({ state, onEnd, onShowQr, onShowRemote }: HostMenuProps
             <Smartphone /> Điều khiển bằng điện thoại
           </button>
         )}
+        <button className="host-menu-item" role="menuitem" onClick={onToggleMusic}>
+          {musicOn ? <VolumeX /> : <Music />} {musicOn ? 'Tắt nhạc nền' : 'Bật nhạc nền'}
+        </button>
         <button className="host-menu-item" role="menuitem" onClick={toggleTheme}>
           {theme === 'dark' ? <Sun /> : <Moon />} {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
         </button>

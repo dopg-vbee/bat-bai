@@ -33,6 +33,8 @@ export const storageKeys = {
   theme: 'batbai:theme',
   /** '0' when the host has folded the lobby's QR card away. */
   lobbyQr: 'batbai:lobby-qr',
+  /** '0' when the host has turned the background music off. */
+  music: 'batbai:music',
   player: (code: string) => `batbai:player:${code}`,
   host: (code: string) => `batbai:host:${code}`,
 };
