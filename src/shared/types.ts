@@ -128,6 +128,9 @@ export interface PlayerState {
   playerCount: number;
   /** This player opened the room: their phone shows the host controls. */
   owner: boolean;
+  /** Set only on phones that play the question audio themselves (see AudioMode). */
+  audioUrl: string | null;
+  nextAudioUrl: string | null;
   me: PlayerIdentity & { score: number; rank: number; delta: number; team: number | null };
   /**
    * streak: correct answers in a row, still counting the previous ones while this question is open.
@@ -157,10 +160,17 @@ export type GuessResult =
   /** close: wrong, but nearly the name (a typo or two too many, a word missing). */
   | { status: 'wrong' | 'close' | 'closed' | 'slow' | 'already' | 'paused' };
 
+/**
+ * Whose device plays the question audio: the big screen (admin rooms), only the owner's phone
+ * (everyone in the same place), or every phone (everyone apart).
+ */
+export type AudioMode = 'screen' | 'owner' | 'everyone';
+
 export interface OwnerRoomInput {
   setId: string;
   name: string;
   durationSec: number;
+  audio: Exclude<AudioMode, 'screen'>;
 }
 
 export interface CreateRoomInput {

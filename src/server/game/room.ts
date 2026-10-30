@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import {
   audioUrl,
+  type AudioMode,
   FINALE_MS,
   LEADERBOARD_MS,
   MIN_TEAMS,
@@ -41,6 +42,8 @@ export interface RoomOptions {
   durationMs: number;
   countdownMs: number;
   preview?: boolean;
+  /** Default 'screen': the big screen plays the audio. */
+  audioMode?: AudioMode;
   /** How many bots a preview room starts with (default PREVIEW_BOTS). */
   bots?: number;
   /** Random twists; omitted = none (tests). See pickLuck. */
@@ -92,6 +95,7 @@ export class Room {
   readonly setName: string;
   readonly durationMs: number;
   readonly preview: boolean;
+  readonly audioMode: AudioMode;
   readonly teamMode: TeamMode;
   /** 0 outside team play. */
   readonly teamCount: number;
@@ -135,6 +139,7 @@ export class Room {
     this.durationMs = options.durationMs;
     this.countdownMs = options.countdownMs;
     this.preview = options.preview ?? false;
+    this.audioMode = options.audioMode ?? 'screen';
     this.onChange = options.onChange;
     this.onReaction = options.onReaction;
     this.luck = options.luck ?? { doubleRounds: [], giftChances: [0, 0, 0], stealShare: 0 };
@@ -413,8 +418,8 @@ export class Room {
         bot: p.bot,
         team: p.team,
       })),
-      audioUrl: inRound && question ? audioUrl(question.audio) : null,
-      nextAudioUrl: upcoming ? audioUrl(upcoming.audio) : null,
+      audioUrl: this.audioMode === 'screen' && inRound && question ? audioUrl(question.audio) : null,
+      nextAudioUrl: this.audioMode === 'screen' && upcoming ? audioUrl(upcoming.audio) : null,
       answer: this.answerVisible() ? question.title : null,
       clip:
         inRound && question
@@ -462,13 +467,19 @@ export class Room {
     // Phones only show the rank after the reveal; holding it during the question keeps everyone
     // else's state unchanged when one player scores, so it isn't re-sent to all of them.
     const holdRank = this.phase === 'question';
+    const inRound = this.phase === 'question' || this.phase === 'reveal';
+    const question = this.questions[this.qIndex];
+    const upcoming = this.phase === 'ended' ? undefined : this.questions[this.phase === 'lobby' ? 0 : this.qIndex + 1];
     return ranked.flatMap((p, i) => {
       if (!p.socketId) return [];
       const mine = p.answers.get(this.qIndex);
+      const audible = this.playsAudio(p);
       const state: PlayerState = {
         ...base,
         playerCount: this.players.size,
         owner: p.id === this.ownerId,
+        audioUrl: audible && inRound && question ? audioUrl(question.audio) : null,
+        nextAudioUrl: audible && upcoming ? audioUrl(upcoming.audio) : null,
         me: {
           ...identity(p),
           score: p.score,
@@ -493,6 +504,10 @@ export class Room {
       };
       return [{ socketId: p.socketId, state }];
     });
+  }
+
+  private playsAudio(p: Player): boolean {
+    return this.audioMode === 'everyone' || (this.audioMode === 'owner' && p.id === this.ownerId);
   }
 
   private baseView() {

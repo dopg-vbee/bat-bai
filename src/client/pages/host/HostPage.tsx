@@ -8,6 +8,7 @@ import { preloadAnimatedEmoji } from '../../components/Emoji.tsx';
 import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { Link } from '../../lib/router.tsx';
 import { useLingering } from '../../lib/useLingering.ts';
+import { useQuestionAudio } from '../../lib/useQuestionAudio.ts';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { HostClip } from './HostClip.tsx';
 import { HostEnded } from './HostEnded.tsx';
@@ -21,7 +22,6 @@ import { JoinCard, RemoteCard } from './JoinCard.tsx';
 import { PauseOverlay } from './PauseOverlay.tsx';
 import { ReactionLayer } from './ReactionLayer.tsx';
 import { useHostRoom } from './useHostRoom.ts';
-import { useQuestionAudio } from './useQuestionAudio.ts';
 
 /** At least the .host-clip.closing animation (0.3 s), plus slack for the render. */
 const CLIP_EXIT_MS = 600;

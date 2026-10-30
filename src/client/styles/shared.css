@@ -445,3 +445,9 @@
   color: var(--on-page);
   opacity: 0.75;
 }
+
+/* A full-width button under the player bar (e.g. "turn the sound on"). */
+.banner-btn {
+  width: 100%;
+  margin-bottom: 12px;
+}

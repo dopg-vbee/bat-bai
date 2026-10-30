@@ -391,12 +391,12 @@ describe('rooms opened by a player (owner)', () => {
     expect(await publicSets()).toEqual([]);
 
     const owner = client();
-    const refused = await owner.emitWithAck('owner:create', { setId: set.id, name: 'Chủ', durationSec: 10 });
+    const refused = await owner.emitWithAck('owner:create', { setId: set.id, name: 'Chủ', durationSec: 10, audio: 'owner' });
     expect(refused.ok).toBe(false);
 
     await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: true }) });
     expect((await publicSets()).map((s) => s.id)).toEqual([set.id]);
-    const created = await owner.emitWithAck('owner:create', { setId: set.id, name: 'Chủ', durationSec: 10 });
+    const created = await owner.emitWithAck('owner:create', { setId: set.id, name: 'Chủ', durationSec: 10, audio: 'owner' });
     if (!created.ok) throw new Error(created.error);
     const ownerStates: PlayerState[] = [];
     owner.on('playerState', (s) => ownerStates.push(s));
@@ -414,7 +414,28 @@ describe('rooms opened by a player (owner)', () => {
     expect(guestStates.at(-1)!.phase).toBe('lobby');
     owner.emit('host:next');
     await waitFor(() => guestStates.at(-1)?.phase === 'question', 3000, 'owner started the game');
+    // Everyone in the same place: only the owner's phone plays the clip.
+    expect(ownerStates.at(-1)!.audioUrl).toBe(set.questions[0].audioUrl);
+    expect(guestStates.at(-1)!.audioUrl).toBeNull();
 
+    await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: false }) });
+  });
+});
+
+describe('audio on every phone (players apart)', () => {
+  it('every phone gets the clip, and the big screen none', async () => {
+    const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
+    await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: true }) });
+    const owner = client();
+    const created = await owner.emitWithAck('owner:create', { setId: set.id, name: 'Chủ', durationSec: 10, audio: 'everyone' });
+    if (!created.ok) throw new Error(created.error);
+    const guest = client();
+    const states: PlayerState[] = [];
+    guest.on('playerState', (s) => states.push(s));
+    await guest.emitWithAck('player:join', { code: created.code, name: 'Khách' });
+    owner.emit('host:next');
+    await waitFor(() => states.at(-1)?.phase === 'question', 3000, 'question');
+    expect(states.at(-1)!.audioUrl).toBe(set.questions[0].audioUrl);
     await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: false }) });
   });
 });

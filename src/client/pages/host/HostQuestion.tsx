@@ -7,7 +7,7 @@ import { TimerRing } from '../../components/TimerRing.tsx';
 import { useServerNow } from '../../lib/socket.ts';
 import { CorrectStream, useScreenUnit } from './CorrectStream.tsx';
 import { WrongList } from './WrongList.tsx';
-import type { QuestionAudio } from './useQuestionAudio.ts';
+import type { QuestionAudio } from '../../lib/useQuestionAudio.ts';
 
 const TIMER_SIZE = 240;
 

@@ -90,7 +90,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
     }
   }
 
-  type RoomExtras = Pick<RoomOptions, 'preview' | 'bots' | 'teamMode' | 'teamCount'>;
+  type RoomExtras = Pick<RoomOptions, 'preview' | 'bots' | 'teamMode' | 'teamCount' | 'audioMode'>;
 
   function createRoom(set: QuestionSet, durationSec: number, extras: RoomExtras): Room {
     const questions: GameQuestion[] = set.questions.map((q) => ({
@@ -166,7 +166,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       if (!set?.public || !set.questions.length) return cb({ ok: false, error: 'Bộ đề này không có sẵn để mở phòng' });
       if ([...rooms.values()].filter((r) => r.ownerId).length >= MAX_OWNER_ROOMS) return cb({ ok: false, error: 'Hiện có quá nhiều phòng, thử lại sau nhé' });
       if (!ownerRoomLimit.allow(socket.id)) return cb({ ok: false, error: 'Bạn mở phòng hơi nhiều, đợi chút nhé' });
-      const room = createRoom(set, Number(input.durationSec), {});
+      const room = createRoom(set, Number(input.durationSec), { audioMode: input.audio === 'everyone' ? 'everyone' : 'owner' });
       const owner = room.joinAsOwner(String(input.name ?? ''), socket.id);
       if (typeof owner === 'string') {
         room.dispose();

@@ -1,4 +1,4 @@
-import { ArrowLeft, DoorOpen, Pause, Users, WifiOff } from 'lucide-react';
+import { ArrowLeft, DoorOpen, Pause, Users, Volume2, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { TEAMS, type PlayerState } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
@@ -8,6 +8,7 @@ import { StatusBadge } from '../../components/StatusBadge.tsx';
 import { ThemeToggle } from '../../components/ThemeToggle.tsx';
 import { formatPoints } from '../../lib/format.ts';
 import { Link } from '../../lib/router.tsx';
+import { useQuestionAudio } from '../../lib/useQuestionAudio.ts';
 import { socket, useConnected } from '../../lib/socket.ts';
 import { readJson, storageKeys, writeJson, writeStorage } from '../../lib/storage.ts';
 import { JoinForm } from './JoinForm.tsx';
@@ -32,6 +33,9 @@ export function PlayPage({ code }: { code: string }) {
   const [error, setError] = useState('');
   const [kicked, setKicked] = useState(false);
   const connected = useConnected();
+  // Only phones the server picked (see AudioMode) get an audio URL; for the others this does nothing.
+  const audio = useQuestionAudio(state);
+  const playsAudio = Boolean(state?.audioUrl ?? state?.nextAudioUrl);
 
   useEffect(() => {
     const handleKicked = () => {
@@ -123,6 +127,12 @@ export function PlayPage({ code }: { code: string }) {
         <div className="banner banner-pause">
           <Pause /> Host đang tạm dừng
         </div>
+      )}
+      {playsAudio && !audio.unlocked && state.phase !== 'ended' && (
+        // Browsers only let a page play sound after a tap: do it before the first question.
+        <button className="btn btn-primary banner-btn" onClick={audio.blocked ? audio.replay : audio.unlock}>
+          <Volume2 /> Bấm để bật âm thanh
+        </button>
       )}
       {state.phase === 'lobby' && (
         <section className="player-body center">
