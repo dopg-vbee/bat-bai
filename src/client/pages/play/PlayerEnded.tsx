@@ -27,6 +27,7 @@ export function PlayerEnded({ state }: { state: PlayerState }) {
       <div className="rank-line">
         <span>{byTeam ? 'Đội bạn hạng' : 'Bạn hạng'}</span>
         <strong className="rank-big">#{rank}</strong>
+        {!byTeam && <span className="rank-of">/ {state.playerCount}</span>}
         <span>với {formatPoints(me.score)} điểm</span>
       </div>
       {!byTeam && teamRank > 0 && me.team !== null && (
