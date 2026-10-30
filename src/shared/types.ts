@@ -2,7 +2,7 @@
 /** finale: after the last answer, a beat to announce the end before the final results (no ranking). */
 export type Phase = 'lobby' | 'question' | 'reveal' | 'leaderboard' | 'finale' | 'ended';
 
-interface PlayerIdentity {
+export interface PlayerIdentity {
   id: string;
   name: string;
   avatar: string;
@@ -128,6 +128,8 @@ export interface PlayerState {
   playerCount: number;
   /** This player opened the room: their phone shows the host controls. */
   owner: boolean;
+  /** The owner's lobby list, to kick from; null for everyone else and outside the lobby. */
+  members: PlayerIdentity[] | null;
   /** Set only on phones that play the question audio themselves (see AudioMode). */
   audioUrl: string | null;
   nextAudioUrl: string | null;

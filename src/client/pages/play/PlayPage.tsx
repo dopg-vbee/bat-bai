@@ -1,5 +1,5 @@
 import { ArrowLeft, DoorOpen, Pause, Users, Volume2, WifiOff } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { TEAMS, type PlayerState } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
 import { Emoji, EmojiText, preloadAnimatedEmoji } from '../../components/Emoji.tsx';
@@ -18,6 +18,9 @@ import { PlayerQuestion } from './PlayerQuestion.tsx';
 import { PlayerReveal } from './PlayerReveal.tsx';
 import { ReactionBar } from './ReactionBar.tsx';
 import { TeamPicker } from './TeamPicker.tsx';
+
+// The owner's controls (and the QR code library behind the invite card) load only for owners.
+const OwnerBar = lazy(() => import('./OwnerBar.tsx').then((m) => ({ default: m.OwnerBar })));
 
 /** Animated emoji shown on correct/missed answers and the podium (see PlayerQuestion/Reveal/Ended). */
 const CELEBRATIONS = ['🎉', '🎁', '🥳', '😅', '🏆'];
@@ -125,7 +128,7 @@ export function PlayPage({ code }: { code: string }) {
       )}
       {state.pausedAt > 0 && (
         <div className="banner banner-pause">
-          <Pause /> Host đang tạm dừng
+          <Pause /> {state.owner ? 'Bạn đang tạm dừng' : 'Host đang tạm dừng'}
         </div>
       )}
       {playsAudio && !audio.unlocked && state.phase !== 'ended' && (
@@ -139,7 +142,7 @@ export function PlayPage({ code }: { code: string }) {
           <Emoji char={state.me.avatar} className="emoji-xl bounce" />
           <h2>Bạn đã vào phòng!</h2>
           <p className="muted-light">
-            <EmojiText text="Nhìn lên màn hình lớn và chờ host bắt đầu nhé 👀" />
+            <EmojiText text={state.owner ? 'Mời bạn bè vào phòng rồi bấm Bắt đầu nhé 👇' : 'Nhìn lên màn hình lớn và chờ host bắt đầu nhé 👀'} />
           </p>
           <p className="pill">
             <Users /> {state.playerCount} người chơi
@@ -151,6 +154,11 @@ export function PlayPage({ code }: { code: string }) {
       {(state.phase === 'reveal' || state.phase === 'leaderboard') && <PlayerReveal key={state.qIndex} state={state} />}
       {state.phase === 'finale' && <PlayerFinale />}
       {state.phase === 'ended' && <PlayerEnded state={state} />}
+      {state.owner && (
+        <Suspense fallback={null}>
+          <OwnerBar state={state} />
+        </Suspense>
+      )}
       {/* Same rule as the server: once answered, or while the answer and ranking are shown. */}
       {((state.phase === 'question' && state.round.correct) ||
         state.phase === 'reveal' ||

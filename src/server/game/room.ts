@@ -467,6 +467,7 @@ export class Room {
     // Phones only show the rank after the reveal; holding it during the question keeps everyone
     // else's state unchanged when one player scores, so it isn't re-sent to all of them.
     const holdRank = this.phase === 'question';
+    const members = this.phase === 'lobby' ? [...this.players.values()].filter((p) => !p.bot && p.id !== this.ownerId).map(identity) : null;
     const inRound = this.phase === 'question' || this.phase === 'reveal';
     const question = this.questions[this.qIndex];
     const upcoming = this.phase === 'ended' ? undefined : this.questions[this.phase === 'lobby' ? 0 : this.qIndex + 1];
@@ -478,6 +479,7 @@ export class Room {
         ...base,
         playerCount: this.players.size,
         owner: p.id === this.ownerId,
+        members: p.id === this.ownerId ? members : null,
         audioUrl: audible && inRound && question ? audioUrl(question.audio) : null,
         nextAudioUrl: audible && upcoming ? audioUrl(upcoming.audio) : null,
         me: {

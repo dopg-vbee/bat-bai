@@ -409,6 +409,8 @@ describe('rooms opened by a player (owner)', () => {
     expect(ownerStates.at(-1)!.owner).toBe(true);
     expect(guestStates.at(-1)!.owner).toBe(false);
 
+    expect(ownerStates.at(-1)!.members!.map((m) => m.name)).toEqual(['Khách']); // the owner can kick from this list
+    expect(guestStates.at(-1)!.members).toBeNull();
     guest.emit('host:next'); // a guest has no controls
     await sleep(200);
     expect(guestStates.at(-1)!.phase).toBe('lobby');

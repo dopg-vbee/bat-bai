@@ -147,3 +147,54 @@
 .countdown-xl {
   font-size: 14rem;
 }
+
+/* Room owner: invite card, kick list and the control bar pinned under the game. */
+.owner-lobby {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0 16px 24px;
+}
+
+.owner-members {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.owner-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--white-20);
+}
+
+.owner-member-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.owner-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg-bar, rgb(20 16 40 / 0.92));
+  backdrop-filter: blur(8px);
+}
+
+.owner-bar .btn {
+  flex-shrink: 0;
+  padding-inline: 12px;
+}
