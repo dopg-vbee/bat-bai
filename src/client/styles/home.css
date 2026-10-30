@@ -1,9 +1,9 @@
 /* Room code entry on the home page: one tile per digit, no card around it. */
 .code-title {
   display: block;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   color: var(--on-page);
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   font-weight: 800;
   text-align: center;
 }
@@ -16,18 +16,18 @@
 .code-cells {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 .code-cell {
   display: grid;
   place-items: center;
-  aspect-ratio: 4 / 5;
-  border-radius: 18px;
+  aspect-ratio: 1 / 1.15;
+  border-radius: 14px;
   border: 2px solid var(--surface-3);
   background: var(--surface-2);
   color: var(--text);
-  font-size: 3rem;
+  font-size: 2rem;
   font-weight: 800;
   line-height: 1;
   transition:
@@ -107,11 +107,64 @@
 
 .home-form {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
-  max-width: 420px;
+  max-width: 320px;
 }
 
 .home-form .error-text {
   text-align: center;
+}
+
+/* Public sets: tap one to open a room with it. */
+.home-sets {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.home-sets h2 {
+  margin: 0 0 2px;
+  color: var(--on-page);
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.home-set {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.home-set:hover {
+  border-color: var(--accent);
+}
+
+.home-set-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-set-count {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.owner-name-form {
+  min-width: min(340px, 86vw);
 }

@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { usePath } from './lib/router.tsx';
-import { CreateRoomPage } from './pages/CreateRoomPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { PlayPage } from './pages/play/PlayPage.tsx';
 
@@ -28,7 +27,6 @@ export function App() {
       </Suspense>
     );
   }
-  if (path === '/create') return <CreateRoomPage />;
   if (!host && !path.startsWith('/admin')) return <HomePage />;
   return <Suspense fallback={loading}>{host ? <HostPage key={host[1]} code={host[1]} /> : <AdminPage />}</Suspense>;
 }

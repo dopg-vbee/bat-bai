@@ -1,6 +1,6 @@
-import { ArrowRight, CircleHelp, Download, LogIn, PlusCircle, ScanQrCode } from 'lucide-react';
-import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react';
-import { ROOM_NOT_FOUND } from '../../shared/types.ts';
+import { ArrowRight, CircleHelp, Download, LogIn, ScanQrCode } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { ROOM_NOT_FOUND, type PublicSetDto } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
 import { Overlay } from '../components/Overlay.tsx';
 import { RoomCodeInput } from '../components/RoomCodeInput.tsx';
@@ -8,9 +8,24 @@ import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { needsIosInstallHint, promptInstall, useCanInstall } from '../lib/install.ts';
 import { Link, navigate } from '../lib/router.tsx';
 import { HowToPlay } from './HowToPlay.tsx';
+import { OwnerNameForm } from './OwnerNameForm.tsx';
 
 // The QR decoder only loads for the phones that open the scanner.
 const QrScanner = lazy(() => import('./QrScanner.tsx').then((m) => ({ default: m.QrScanner })));
+
+function SetButton({ set, onPick }: { set: PublicSetDto; onPick: (set: PublicSetDto) => void }) {
+  function handlePick() {
+    onPick(set);
+  }
+
+  return (
+    <button type="button" className="home-set" onClick={handlePick}>
+      <span className="home-set-name">{set.name}</span>
+      <span className="home-set-count">{set.questionCount} câu</span>
+      <ArrowRight />
+    </button>
+  );
+}
 
 export function HomePage() {
   const [code, setCode] = useState('');
@@ -18,8 +33,18 @@ export function HomePage() {
   const [showScanner, setShowScanner] = useState(false);
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
+  const [sets, setSets] = useState<PublicSetDto[]>([]);
+  const [pickedSet, setPickedSet] = useState<PublicSetDto | null>(null);
   const canInstall = useCanInstall();
   const [iosHint] = useState(needsIosInstallHint);
+
+  // Public sets sit on the home page: tap one to open a room with it.
+  useEffect(() => {
+    fetch('/api/public-sets')
+      .then((res) => res.json() as Promise<PublicSetDto[]>)
+      .then(setSets)
+      .catch(() => undefined);
+  }, []);
 
   function handleCodeChange(event: ChangeEvent<HTMLInputElement>) {
     setCode(event.target.value.replace(/\D/g, '').slice(0, 4));
@@ -47,6 +72,10 @@ export function HomePage() {
 
   function handleHideScanner() {
     setShowScanner(false);
+  }
+
+  function handleHideSet() {
+    setPickedSet(null);
   }
 
   function handleShowGuide() {
@@ -91,9 +120,14 @@ export function HomePage() {
           </button>
         </div>
       </form>
-      <Link to="/create" className="link-subtle">
-        <PlusCircle /> Tạo phòng của bạn
-      </Link>
+      {sets.length > 0 && (
+        <section className="home-sets">
+          <h2>Hoặc mở phòng mới</h2>
+          {sets.map((set) => (
+            <SetButton key={set.id} set={set} onPick={setPickedSet} />
+          ))}
+        </section>
+      )}
       <Link to="/admin" className="link-subtle">
         Tôi là host <ArrowRight />
       </Link>
@@ -104,6 +138,11 @@ export function HomePage() {
         </span>
       </a>
       {iosHint && <p className="install-hint">Cài app: bấm nút Chia sẻ rồi chọn “Thêm vào MH chính”</p>}
+      {pickedSet && (
+        <Overlay onClose={handleHideSet}>
+          <OwnerNameForm set={pickedSet} />
+        </Overlay>
+      )}
       {showScanner && (
         <Overlay onClose={handleHideScanner}>
           <Suspense fallback={<div className="card qr-scanner"><div className="spinner" /></div>}>
