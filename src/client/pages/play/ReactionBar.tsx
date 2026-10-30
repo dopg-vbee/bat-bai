@@ -25,7 +25,7 @@ export function ReactionBar() {
   return (
     <div className={`reaction-bar${cooling ? ' cooling' : ''}`} role="group" aria-label="Thả cảm xúc lên màn hình lớn">
       {REACTIONS.map((emoji) => (
-        <button key={emoji} type="button" className="reaction-btn" data-emoji={emoji} onClick={handleReact}>
+        <button key={emoji} type="button" className="reaction-btn" data-emoji={emoji} aria-label={emoji} onClick={handleReact}>
           <Emoji char={emoji} />
         </button>
       ))}

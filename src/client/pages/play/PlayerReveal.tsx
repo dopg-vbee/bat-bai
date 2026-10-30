@@ -54,6 +54,7 @@ export function PlayerReveal({ state }: { state: PlayerState }) {
         <div className="rank-line">
           <span>Hạng</span>
           <strong className="rank-big">#{me.rank}</strong>
+          <span className="rank-of">/ {state.playerCount}</span>
           {me.delta !== 0 && <Delta value={me.delta} />}
         </div>
       )}

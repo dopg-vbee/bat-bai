@@ -136,6 +136,11 @@
   line-height: 1;
 }
 
+.rank-of {
+  color: var(--on-page);
+  opacity: 0.7;
+}
+
 .countdown-number {
   font-size: 8rem;
   font-weight: 800;
