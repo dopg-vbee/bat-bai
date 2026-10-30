@@ -1,4 +1,4 @@
-import { ArrowRight, CircleHelp, Download, LogIn, ScanQrCode } from 'lucide-react';
+import { ArrowRight, CircleHelp, Download, LogIn, PlusCircle, ScanQrCode } from 'lucide-react';
 import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react';
 import { ROOM_NOT_FOUND } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
@@ -95,6 +95,9 @@ export function HomePage() {
           </button>
         </div>
       </form>
+      <Link to="/create" className="link-subtle">
+        <PlusCircle /> Tạo phòng của bạn
+      </Link>
       <Link to="/admin" className="link-subtle">
         Tôi là host <ArrowRight />
       </Link>
