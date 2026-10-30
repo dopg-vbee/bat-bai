@@ -148,12 +148,40 @@
   font-size: 14rem;
 }
 
-/* Room owner: invite card, kick list and the control bar pinned under the game. */
-.owner-lobby {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 0 16px 24px;
+/* The game under the player bar; for the owner it sits beside their control panel (see .owner-layout). */
+.player-stage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Room owner. Phones: the stage, then the panel (pinned to the bottom during the game). */
+.owner-layout {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.owner-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.owner-panel-title svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.owner-panel-lobby {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 24px;
 }
 
 .owner-members {
@@ -182,7 +210,7 @@
   font-weight: 700;
 }
 
-.owner-bar {
+.owner-panel-game {
   position: sticky;
   bottom: 0;
   display: flex;
@@ -194,7 +222,79 @@
   backdrop-filter: blur(8px);
 }
 
-.owner-bar .btn {
+.owner-panel-game .owner-panel-title {
+  display: none;
+}
+
+.owner-panel-game .btn {
   flex-shrink: 0;
   padding-inline: 12px;
+}
+
+/* Wide screens: the game on the left and the owner's panel on the right, like a host console. */
+@media (min-width: 1000px) {
+  .owner-screen {
+    max-width: 1120px;
+    padding-top: 24px;
+  }
+
+  .owner-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .owner-screen .player-stage {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .owner-screen .join-card {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .owner-screen .banner-btn {
+    width: auto;
+    align-self: center;
+    padding-inline: 32px;
+  }
+
+  .owner-panel {
+    position: sticky;
+    top: 24px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+
+  .owner-panel-lobby {
+    padding-bottom: 20px;
+  }
+
+  .owner-members {
+    max-height: min(50vh, 420px);
+    overflow-y: auto;
+  }
+
+  .owner-panel-game {
+    display: grid;
+    bottom: auto;
+    justify-content: stretch;
+    gap: 10px;
+    backdrop-filter: none;
+  }
+
+  .owner-panel-game .owner-panel-title {
+    display: flex;
+  }
+
+  .owner-panel-game .btn {
+    padding-inline: 16px;
+  }
 }

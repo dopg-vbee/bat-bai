@@ -20,7 +20,8 @@ import { ReactionBar } from './ReactionBar.tsx';
 import { TeamPicker } from './TeamPicker.tsx';
 
 // The owner's controls (and the QR code library behind the invite card) load only for owners.
-const OwnerBar = lazy(() => import('./OwnerBar.tsx').then((m) => ({ default: m.OwnerBar })));
+const OwnerPanel = lazy(() => import('./OwnerPanel.tsx').then((m) => ({ default: m.OwnerPanel })));
+const OwnerInvite = lazy(() => import('./OwnerPanel.tsx').then((m) => ({ default: m.OwnerInvite })));
 
 /** Animated emoji shown on correct/missed answers and the podium (see PlayerQuestion/Reveal/Ended). */
 const CELEBRATIONS = ['🎉', '🎁', '🥳', '😅', '🏆'];
@@ -110,7 +111,7 @@ export function PlayPage({ code }: { code: string }) {
   }
 
   return (
-    <main className="screen player-screen">
+    <main className={`screen player-screen${state.owner ? ' owner-screen' : ''}`}>
       <header className="player-bar">
         <OnFire streak={state.round.streak}>
           <Avatar avatar={state.me.avatar} color={state.me.color} size="sm" />
@@ -137,28 +138,40 @@ export function PlayPage({ code }: { code: string }) {
           <Volume2 /> Bấm để bật âm thanh
         </button>
       )}
-      {state.phase === 'lobby' && (
-        <section className="player-body center">
-          <Emoji char={state.me.avatar} className="emoji-xl bounce" />
-          <h2>Bạn đã vào phòng!</h2>
-          <p className="muted-light">
-            <EmojiText text={state.owner ? 'Mời bạn bè vào phòng rồi bấm Bắt đầu nhé 👇' : 'Nhìn lên màn hình lớn và chờ host bắt đầu nhé 👀'} />
-          </p>
-          <p className="pill">
-            <Users /> {state.playerCount} người chơi
-          </p>
-          {state.teams && <TeamPicker teams={state.teams} mine={state.me.team} />}
-        </section>
-      )}
-      {state.phase === 'question' && <PlayerQuestion key={state.qIndex} state={state} />}
-      {(state.phase === 'reveal' || state.phase === 'leaderboard') && <PlayerReveal key={state.qIndex} state={state} />}
-      {state.phase === 'finale' && <PlayerFinale />}
-      {state.phase === 'ended' && <PlayerEnded state={state} />}
-      {state.owner && (
-        <Suspense fallback={null}>
-          <OwnerBar state={state} />
-        </Suspense>
-      )}
+      <div className={state.owner ? 'owner-layout' : 'player-stage'}>
+        <div className="player-stage">
+          {state.phase === 'lobby' && state.owner && (
+            <section className="player-body center">
+              <h2>Mời bạn bè vào phòng</h2>
+              <Suspense fallback={null}>
+                <OwnerInvite code={state.code} />
+              </Suspense>
+            </section>
+          )}
+          {state.phase === 'lobby' && !state.owner && (
+            <section className="player-body center">
+              <Emoji char={state.me.avatar} className="emoji-xl bounce" />
+              <h2>Bạn đã vào phòng!</h2>
+              <p className="muted-light">
+                <EmojiText text="Nhìn lên màn hình lớn và chờ host bắt đầu nhé 👀" />
+              </p>
+              <p className="pill">
+                <Users /> {state.playerCount} người chơi
+              </p>
+              {state.teams && <TeamPicker teams={state.teams} mine={state.me.team} />}
+            </section>
+          )}
+          {state.phase === 'question' && <PlayerQuestion key={state.qIndex} state={state} />}
+          {(state.phase === 'reveal' || state.phase === 'leaderboard') && <PlayerReveal key={state.qIndex} state={state} />}
+          {state.phase === 'finale' && <PlayerFinale />}
+          {state.phase === 'ended' && <PlayerEnded state={state} />}
+        </div>
+        {state.owner && (
+          <Suspense fallback={null}>
+            <OwnerPanel state={state} />
+          </Suspense>
+        )}
+      </div>
       {/* Same rule as the server: once answered, or while the answer and ranking are shown. */}
       {((state.phase === 'question' && state.round.correct) ||
         state.phase === 'reveal' ||

@@ -1,4 +1,4 @@
-import { ListOrdered, Pause, Play, SkipForward, Trophy, UserX, X } from 'lucide-react';
+import { ListOrdered, Pause, Play, SkipForward, Trophy, UserX, Users, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import type { PlayerIdentity, PlayerState } from '../../../shared/types.ts';
 import { Avatar } from '../../components/Avatar.tsx';
@@ -39,15 +39,19 @@ function Member({ member }: { member: PlayerIdentity }) {
   );
 }
 
-/** What the room owner has beyond a player: invite, start, kick (lobby), then pace and end the game. */
-export function OwnerBar({ state }: { state: PlayerState }) {
+/** The lobby's invite: QR code, address and room code. */
+export function OwnerInvite({ code }: { code: string }) {
+  return <JoinCard code={code} />;
+}
+
+/**
+ * What the room owner has beyond a player. Lobby: who is in (to kick) and Start. In the game: pause,
+ * next step and end. Wide screens show it as a side panel; phones pin it under the game.
+ */
+export function OwnerPanel({ state }: { state: PlayerState }) {
   const [confirmEnd, setConfirmEnd] = useState(false);
   const paused = state.pausedAt > 0;
   const step = nextStep(state);
-
-  function handleStart() {
-    socket.emit('host:next');
-  }
 
   function handleNext() {
     socket.emit('host:next');
@@ -73,25 +77,33 @@ export function OwnerBar({ state }: { state: PlayerState }) {
   if (state.phase === 'ended') return null;
 
   if (state.phase === 'lobby') {
+    const members = state.members ?? [];
     return (
-      <section className="owner-lobby stack">
-        <JoinCard code={state.code} />
-        {state.members && state.members.length > 0 && (
+      <aside className="owner-panel owner-panel-lobby">
+        <h3 className="owner-panel-title">
+          <Users /> Người chơi ({state.playerCount})
+        </h3>
+        {members.length > 0 ? (
           <ul className="owner-members">
-            {state.members.map((member) => (
+            {members.map((member) => (
               <Member key={member.id} member={member} />
             ))}
           </ul>
+        ) : (
+          <p className="muted-light">Chưa có ai vào phòng.</p>
         )}
-        <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={state.playerCount < 2}>
+        <button className="btn btn-primary btn-lg" onClick={handleNext} disabled={state.playerCount < 2}>
           <Play /> {state.playerCount < 2 ? 'Chờ thêm người chơi' : 'Bắt đầu'}
         </button>
-      </section>
+      </aside>
     );
   }
 
   return (
-    <div className="owner-bar">
+    <aside className="owner-panel owner-panel-game">
+      <h3 className="owner-panel-title">
+        Điều khiển · Câu {state.qIndex + 1}/{state.qTotal}
+      </h3>
       {confirmEnd ? (
         <>
           <span>Kết thúc ván này?</span>
@@ -117,6 +129,6 @@ export function OwnerBar({ state }: { state: PlayerState }) {
           </button>
         </>
       )}
-    </div>
+    </aside>
   );
 }
