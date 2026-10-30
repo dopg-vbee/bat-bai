@@ -47,6 +47,27 @@ function fitAvatar(count: number, width: number, height: number): number {
   return MIN_AVATAR;
 }
 
+const GHOST_SLOTS = 6;
+const JOIN_STEPS = ['Quét mã QR hoặc vào địa chỉ ở bên trái', 'Nhập mã phòng 4 số', 'Gõ tên rồi chờ bắt đầu'];
+
+/** Before anyone has joined: empty seats that light up in turn, and the three steps to get in. */
+function EmptyLobby() {
+  return (
+    <div className="lobby-empty">
+      <div className="lobby-ghosts" aria-hidden>
+        {Array.from({ length: GHOST_SLOTS }, (_, i) => (
+          <span key={i} className="lobby-ghost" style={{ '--i': i } as CSSProperties} />
+        ))}
+      </div>
+      <ol className="lobby-steps">
+        {JOIN_STEPS.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 interface PlayerListProps {
   players: PlayerSummary[];
   /** Size the tiles for this many players (team boxes share the size of the fullest one). */
@@ -185,8 +206,10 @@ export function HostLobby({ state }: { state: HostState }) {
         )}
         {teamPlay ? (
           <TeamBoxes players={state.players} teamCount={state.teams.length} />
-        ) : (
+        ) : state.players.length > 0 ? (
           <PlayerList players={state.players} />
+        ) : (
+          <EmptyLobby />
         )}
       </div>
     </section>

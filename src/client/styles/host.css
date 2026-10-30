@@ -644,3 +644,75 @@
     font-size: 2.4rem;
   }
 }
+
+/* An empty lobby: empty seats lighting up one after another, and how to get in. */
+.lobby-empty {
+  width: 100%;
+  flex: 1;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 40px;
+  min-height: 40vh;
+  text-align: center;
+}
+
+.lobby-ghosts {
+  display: flex;
+  gap: 20px;
+}
+
+.lobby-ghost {
+  width: clamp(56px, 6vw, 96px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px dashed var(--on-page);
+  opacity: 0.2;
+  animation: lobby-ghost 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.25s);
+}
+
+.lobby-steps {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  color: var(--on-page);
+  font-size: clamp(1.3rem, 2vw, 1.9rem);
+  font-weight: 700;
+}
+
+.lobby-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  counter-increment: step;
+}
+
+.lobby-steps li::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  width: 2.2em;
+  height: 2.2em;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-size: 0.8em;
+  font-weight: 800;
+}
+
+@keyframes lobby-ghost {
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lobby-ghost {
+    animation: none;
+  }
+}
