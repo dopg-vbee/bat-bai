@@ -241,6 +241,16 @@ button {
   transition: border-color 0.15s;
 }
 
+/* Selected text and the caret follow the palette instead of the browser's blue. */
+::selection {
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--text);
+}
+
+.input {
+  caret-color: var(--primary);
+}
+
 .input::placeholder {
   color: rgb(168 162 200 / 0.82);
 }

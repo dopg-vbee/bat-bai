@@ -68,7 +68,14 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
         </span>
         <span className={remaining <= 5000 ? 'urgent-text' : ''}>{Math.ceil(remaining / 1000)}s</span>
       </div>
-      <div className="time-bar">
+      <div
+        className="time-bar"
+        role="progressbar"
+        aria-label="Thời gian còn lại"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(total / 1000)}
+        aria-valuenow={Math.ceil(remaining / 1000)}
+      >
         <div className="time-bar-fill" style={{ width: `${(remaining / total) * 100}%` }} />
       </div>
       <h2 className="text-center">
@@ -93,7 +100,7 @@ export function PlayerQuestion({ state }: { state: PlayerState }) {
         </button>
       </form>
       {feedback && (
-        <p className={`feedback feedback-${feedback.kind}`}>
+        <p className={`feedback feedback-${feedback.kind}`} role="status">
           <EmojiText text={feedback.text} />
         </p>
       )}
