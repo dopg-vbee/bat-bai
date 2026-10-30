@@ -122,14 +122,16 @@
   display: grid;
   gap: 8px;
   width: 100%;
-  max-width: 320px;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 
-.home-sets h2 {
-  margin: 0 0 2px;
-  color: var(--on-page);
-  font-size: 1.05rem;
-  text-align: center;
+.set-browser {
+  display: grid;
+  gap: 12px;
+  width: min(420px, 92vw);
+  margin: 0 auto;
+  justify-items: center;
 }
 
 .home-set {

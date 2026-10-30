@@ -1,4 +1,4 @@
-import { ArrowRight, CircleHelp, Download, LogIn, ScanQrCode } from 'lucide-react';
+import { CircleHelp, Compass, Download, LogIn, Presentation, ScanQrCode } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { ROOM_NOT_FOUND, type PublicSetDto } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
@@ -8,24 +8,10 @@ import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { needsIosInstallHint, promptInstall, useCanInstall } from '../lib/install.ts';
 import { Link, navigate } from '../lib/router.tsx';
 import { HowToPlay } from './HowToPlay.tsx';
-import { OwnerNameForm } from './OwnerNameForm.tsx';
+import { SetBrowser } from './SetBrowser.tsx';
 
 // The QR decoder only loads for the phones that open the scanner.
 const QrScanner = lazy(() => import('./QrScanner.tsx').then((m) => ({ default: m.QrScanner })));
-
-function SetButton({ set, onPick }: { set: PublicSetDto; onPick: (set: PublicSetDto) => void }) {
-  function handlePick() {
-    onPick(set);
-  }
-
-  return (
-    <button type="button" className="home-set" onClick={handlePick}>
-      <span className="home-set-name">{set.name}</span>
-      <span className="home-set-count">{set.questionCount} câu</span>
-      <ArrowRight />
-    </button>
-  );
-}
 
 export function HomePage() {
   const [code, setCode] = useState('');
@@ -34,7 +20,7 @@ export function HomePage() {
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
   const [sets, setSets] = useState<PublicSetDto[]>([]);
-  const [pickedSet, setPickedSet] = useState<PublicSetDto | null>(null);
+  const [showSets, setShowSets] = useState(false);
   const canInstall = useCanInstall();
   const [iosHint] = useState(needsIosInstallHint);
 
@@ -74,8 +60,12 @@ export function HomePage() {
     setShowScanner(false);
   }
 
-  function handleHideSet() {
-    setPickedSet(null);
+  function handleShowSets() {
+    setShowSets(true);
+  }
+
+  function handleHideSets() {
+    setShowSets(false);
   }
 
   function handleShowGuide() {
@@ -97,6 +87,9 @@ export function HomePage() {
         <button type="button" className="btn btn-ghost btn-sm" onClick={handleShowGuide}>
           <CircleHelp /> Hướng dẫn
         </button>
+        <Link to="/admin" className="btn btn-ghost btn-sm">
+          <Presentation /> Tôi là host
+        </Link>
         <ThemeToggle />
       </div>
       <Logo />
@@ -121,16 +114,10 @@ export function HomePage() {
         </div>
       </form>
       {sets.length > 0 && (
-        <section className="home-sets">
-          <h2>Hoặc mở phòng mới</h2>
-          {sets.map((set) => (
-            <SetButton key={set.id} set={set} onPick={setPickedSet} />
-          ))}
-        </section>
+        <button type="button" className="btn btn-ghost" onClick={handleShowSets}>
+          <Compass /> Khám phá bộ đề
+        </button>
       )}
-      <Link to="/admin" className="link-subtle">
-        Tôi là host <ArrowRight />
-      </Link>
       <a className="credit" href="https://vbee.vn" target="_blank" rel="noreferrer">
         <img src="/vbee-logo.svg" alt="" />
         <span>
@@ -138,9 +125,9 @@ export function HomePage() {
         </span>
       </a>
       {iosHint && <p className="install-hint">Cài app: bấm nút Chia sẻ rồi chọn “Thêm vào MH chính”</p>}
-      {pickedSet && (
-        <Overlay onClose={handleHideSet}>
-          <OwnerNameForm set={pickedSet} />
+      {showSets && (
+        <Overlay onClose={handleHideSets}>
+          <SetBrowser sets={sets} />
         </Overlay>
       )}
       {showScanner && (
