@@ -405,6 +405,7 @@ export class Room {
       ...this.baseView(),
       setName: this.setName,
       preview: this.preview,
+      ownerRoom: this.ownerId !== null,
       durationMs: this.durationMs,
       advanceAt: this.advanceAt,
       joinQr: this.joinQr,

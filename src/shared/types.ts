@@ -61,6 +61,8 @@ export interface HostState {
   setName: string;
   /** Trial room: bots play along so the host can see the real flow. */
   preview: boolean;
+  /** Opened by a player (not the admin): its owner plays in a second window and runs the game from here. */
+  ownerRoom: boolean;
   phase: Phase;
   qIndex: number;
   qTotal: number;

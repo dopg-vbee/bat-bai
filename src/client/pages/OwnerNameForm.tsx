@@ -5,6 +5,8 @@ import { navigate } from '../lib/router.tsx';
 import { socket } from '../lib/socket.ts';
 import { readStorage, storageKeys, writeJson, writeStorage } from '../lib/storage.ts';
 
+const WIDE_SCREEN = '(min-width: 1000px)';
+
 /** Opens a room with `set`: the owner only gives a name (20 s a question, every phone plays the audio). */
 export function OwnerNameForm({ set }: { set: PublicSetDto }) {
   const [name, setName] = useState(() => readStorage(storageKeys.lastName) ?? '');
@@ -28,7 +30,8 @@ export function OwnerNameForm({ set }: { set: PublicSetDto }) {
       writeJson(storageKeys.player(res.code), { name: trimmed, token: res.token });
       writeStorage(storageKeys.host(res.code), res.hostToken);
       writeStorage(storageKeys.lastName, trimmed);
-      navigate(`/play/${res.code}`);
+      // A computer gets the big-screen view (the owner plays from a window it opens); a phone gets the player page.
+      navigate(window.matchMedia(WIDE_SCREEN).matches ? `/host/${res.code}` : `/play/${res.code}`);
     } catch {
       setError('Mạng chậm quá, thử lại nhé');
     } finally {
