@@ -1,4 +1,4 @@
-import { CircleHelp, Compass, Download, LogIn, Presentation, ScanQrCode } from 'lucide-react';
+import { CircleHelp, Compass, Download, LogIn, Music, Presentation, ScanQrCode, VolumeX } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { ROOM_NOT_FOUND, type PublicSetDto } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
@@ -7,6 +7,7 @@ import { RoomCodeInput } from '../components/RoomCodeInput.tsx';
 import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { needsIosInstallHint, promptInstall, useCanInstall } from '../lib/install.ts';
 import { Link, navigate } from '../lib/router.tsx';
+import { useMusic } from '../lib/useMusic.ts';
 import { HowToPlay } from './HowToPlay.tsx';
 import { SetBrowser } from './SetBrowser.tsx';
 
@@ -21,6 +22,7 @@ export function HomePage() {
   const [checking, setChecking] = useState(false);
   const [sets, setSets] = useState<PublicSetDto[]>([]);
   const [showSets, setShowSets] = useState(false);
+  const { musicOn, toggleMusic } = useMusic(true);
   const canInstall = useCanInstall();
   const [iosHint] = useState(needsIosInstallHint);
 
@@ -90,6 +92,15 @@ export function HomePage() {
         <Link to="/admin" className="btn btn-ghost btn-sm">
           <Presentation /> Tôi là host
         </Link>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={toggleMusic}
+          aria-label={musicOn ? 'Tắt nhạc nền' : 'Bật nhạc nền'}
+          title={musicOn ? 'Tắt nhạc nền' : 'Bật nhạc nền'}
+        >
+          {musicOn ? <Music /> : <VolumeX />}
+        </button>
         <ThemeToggle />
       </div>
       <Logo />

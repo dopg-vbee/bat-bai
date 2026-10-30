@@ -51,6 +51,24 @@ function note(ac: AudioContext, hz: number, start: number, length: number, volum
   osc.stop(start + length + 0.05);
 }
 
+let lastJoinAt = -Infinity;
+/** Arrivals landing closer than this share one sound. */
+const JOIN_MIN_GAP_SEC = 0.12;
+
+/**
+ * A bubbly rising "pop-pop" when someone joins. A crowd arriving at once (`count` > 1) gets a third,
+ * higher note on top instead of a pile of overlapping sounds.
+ */
+export function playJoinSound(count = 1) {
+  const ac = audio();
+  if (ac.currentTime - lastJoinAt < JOIN_MIN_GAP_SEC) return;
+  lastJoinAt = ac.currentTime;
+  const now = ac.currentTime;
+  note(ac, 659.25, now, 0.16, CHIME_VOLUME * 1.3, 'triangle'); // E5
+  note(ac, 987.77, now + 0.09, 0.22, CHIME_VOLUME * 1.3, 'triangle'); // B5
+  if (count > 1) note(ac, 1318.5, now + 0.18, 0.3, CHIME_VOLUME, 'sine'); // E6
+}
+
 /** Three soft bells stepping down: "that's the end", short and unlike the podium's drums and fanfare. */
 export function playGameOver() {
   const ac = audio();
