@@ -15,6 +15,7 @@ const toSetDto = (set: QuestionSet): QuestionSetDto => ({
   id: set.id,
   name: set.name,
   updatedAt: set.updatedAt,
+  public: Boolean(set.public),
   questions: set.questions
     .filter((q) => !q.deletedAt)
     .map((q) => ({
@@ -116,6 +117,16 @@ export function adminRouter(library: Library, store: BlobStore, password: string
       const created: QuestionSet = { id: newId(), name, createdAt: now, updatedAt: now, questions: [] };
       data.sets.push(created);
       return created;
+    });
+    res.json(toSetDto(set));
+  });
+
+  router.put('/sets/:id/public', async (req, res) => {
+    const set = await library.mutate((data) => {
+      const target = findSet(data, req.params.id);
+      target.public = req.body?.public === true;
+      target.updatedAt = new Date().toISOString();
+      return target;
     });
     res.json(toSetDto(set));
   });

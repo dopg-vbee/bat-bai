@@ -3,8 +3,8 @@ import { REACTION_COOLDOWN_MS, REACTIONS, ROOM_NOT_FOUND, type ClientToServerEve
 import { checkPassword } from './auth.ts';
 import { createRateLimiter } from './game/rateLimit.ts';
 import { pickLuck } from './game/luck.ts';
-import { Room, type GameQuestion } from './game/room.ts';
-import type { Library } from './library.ts';
+import { Room, type GameQuestion, type RoomOptions } from './game/room.ts';
+import type { Library, QuestionSet } from './library.ts';
 
 interface SocketData {
   role?: 'host' | 'player';
@@ -30,6 +30,8 @@ const REACTION_BATCH_MS = 200;
 const MAX_REACTIONS_PER_BATCH = 3;
 
 const hostChannel = (code: string) => `host:${code}`;
+/** Rooms opened by players are capped, since opening one needs no password. */
+const MAX_OWNER_ROOMS = 40;
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 export function setupRealtime(io: GameServer, library: Library, options: RealtimeOptions) {
@@ -42,6 +44,7 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
   const sentToPhones = new WeakMap<Room, Map<string, string>>();
   /** One reaction a second per phone (the phone's bar waits as long too). */
   const reactionLimit = createRateLimiter(1, REACTION_COOLDOWN_MS);
+  const ownerRoomLimit = createRateLimiter(3, 10 * 60_000);
   const pendingReactions = new Map<string, string[]>();
   let reactionTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -87,6 +90,31 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
     }
   }
 
+  type RoomExtras = Pick<RoomOptions, 'preview' | 'bots' | 'teamMode' | 'teamCount'>;
+
+  function createRoom(set: QuestionSet, durationSec: number, extras: RoomExtras): Room {
+    const questions: GameQuestion[] = set.questions.map((q) => ({
+      title: q.title,
+      audio: q.audio,
+      youtubeId: q.youtubeId,
+      startSec: q.startSec,
+      endSec: q.endSec ?? null,
+    }));
+    const room: Room = new Room({
+      ...extras,
+      code: newCode(),
+      setName: set.name,
+      questions,
+      durationMs: clamp(Math.round(durationSec || 30), 10, 120) * 1000,
+      countdownMs: options.countdownMs,
+      luck: pickLuck(questions.length),
+      onChange: () => markDirty(room),
+      onReaction: (emoji) => queueReaction(room.code, emoji),
+    });
+    rooms.set(room.code, room);
+    return room;
+  }
+
   /** Unbinds a socket from the room it was in, so that room stops pushing state to it. */
   function detach(socket: GameSocket, { closingHostScreen = false } = {}) {
     const { role, code, playerId } = socket.data;
@@ -105,7 +133,13 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
   }
 
   io.on('connection', (socket) => {
-    const hostRoom = () => (socket.data.role === 'host' ? rooms.get(socket.data.code ?? '') : undefined);
+    // The big screen and the owner's phone both run the game.
+    const hostRoom = () => {
+      const { role, code, playerId } = socket.data;
+      const room = rooms.get(code ?? '');
+      if (!room) return undefined;
+      return role === 'host' || (role === 'player' && playerId !== undefined && playerId === room.ownerId) ? room : undefined;
+    };
 
     socket.on('time', (cb) => {
       if (typeof cb === 'function') cb(Date.now());
@@ -117,29 +151,31 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       const set = library.getSet(String(input.setId));
       if (!set?.questions.length) return cb({ ok: false, error: 'Bộ đề chưa có câu hỏi nào' });
 
-      const questions: GameQuestion[] = set.questions.map((q) => ({
-        title: q.title,
-        audio: q.audio,
-        youtubeId: q.youtubeId,
-        startSec: q.startSec,
-        endSec: q.endSec ?? null,
-      }));
-      const room: Room = new Room({
-        code: newCode(),
-        setName: set.name,
-        questions,
-        durationMs: clamp(Math.round(Number(input.durationSec) || 30), 10, 120) * 1000,
-        countdownMs: options.countdownMs,
+      const room = createRoom(set, Number(input.durationSec), {
         preview: Boolean(input.preview),
         bots: Math.round(Number(input.bots)) || undefined,
-        luck: pickLuck(questions.length),
         teamMode: input.teamMode === 'average' || input.teamMode === 'together' ? input.teamMode : 'off',
         teamCount: Math.round(Number(input.teamCount)) || undefined,
-        onChange: () => markDirty(room),
-        onReaction: (emoji) => queueReaction(room.code, emoji),
       });
-      rooms.set(room.code, room);
       cb({ ok: true, code: room.code, hostToken: room.hostToken });
+    });
+
+    socket.on('owner:create', (input, cb) => {
+      if (typeof cb !== 'function') return;
+      const set = library.getSet(String(input?.setId));
+      if (!set?.public || !set.questions.length) return cb({ ok: false, error: 'Bộ đề này không có sẵn để mở phòng' });
+      if ([...rooms.values()].filter((r) => r.ownerId).length >= MAX_OWNER_ROOMS) return cb({ ok: false, error: 'Hiện có quá nhiều phòng, thử lại sau nhé' });
+      if (!ownerRoomLimit.allow(socket.id)) return cb({ ok: false, error: 'Bạn mở phòng hơi nhiều, đợi chút nhé' });
+      const room = createRoom(set, Number(input.durationSec), {});
+      const owner = room.joinAsOwner(String(input.name ?? ''), socket.id);
+      if (typeof owner === 'string') {
+        room.dispose();
+        rooms.delete(room.code);
+        return cb({ ok: false, error: owner });
+      }
+      if (socket.data.code) detach(socket);
+      socket.data = { role: 'player', code: room.code, playerId: owner.id };
+      cb({ ok: true, code: room.code, hostToken: room.hostToken, playerId: owner.id, token: owner.token });
     });
 
     socket.on('host:join', (input, cb) => {

@@ -383,3 +383,38 @@ describe('durability', () => {
     expect(audio.status).toBe(200);
   });
 });
+
+describe('rooms opened by a player (owner)', () => {
+  it('only offers public sets, and the owner plays and runs the game from their phone', async () => {
+    const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
+    const publicSets = async () => (await (await fetch(`${base}/api/public-sets`)).json()) as { id: string }[];
+    expect(await publicSets()).toEqual([]);
+
+    const owner = client();
+    const refused = await owner.emitWithAck('owner:create', { setId: set.id, name: 'Chủ', durationSec: 10 });
+    expect(refused.ok).toBe(false);
+
+    await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: true }) });
+    expect((await publicSets()).map((s) => s.id)).toEqual([set.id]);
+    const created = await owner.emitWithAck('owner:create', { setId: set.id, name: 'Chủ', durationSec: 10 });
+    if (!created.ok) throw new Error(created.error);
+    const ownerStates: PlayerState[] = [];
+    owner.on('playerState', (s) => ownerStates.push(s));
+    const guest = client();
+    const guestStates: PlayerState[] = [];
+    guest.on('playerState', (s) => guestStates.push(s));
+    await guest.emitWithAck('player:join', { code: created.code, name: 'Khách' });
+    await owner.emitWithAck('player:join', { code: created.code, name: 'Chủ', token: created.token });
+    await waitFor(() => ownerStates.at(-1)?.playerCount === 2, 3000, 'both in the room');
+    expect(ownerStates.at(-1)!.owner).toBe(true);
+    expect(guestStates.at(-1)!.owner).toBe(false);
+
+    guest.emit('host:next'); // a guest has no controls
+    await sleep(200);
+    expect(guestStates.at(-1)!.phase).toBe('lobby');
+    owner.emit('host:next');
+    await waitFor(() => guestStates.at(-1)?.phase === 'question', 3000, 'owner started the game');
+
+    await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: false }) });
+  });
+});

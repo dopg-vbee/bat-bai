@@ -21,6 +21,8 @@ export interface QuestionSet {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
+  /** Room owners (players without the admin password) may open a room with a public set. */
+  public?: boolean;
   questions: Question[];
 }
 

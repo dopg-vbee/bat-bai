@@ -126,6 +126,8 @@ export interface PlayerState {
   multiplier: number;
   pausedAt: number;
   playerCount: number;
+  /** This player opened the room: their phone shows the host controls. */
+  owner: boolean;
   me: PlayerIdentity & { score: number; rank: number; delta: number; team: number | null };
   /**
    * streak: correct answers in a row, still counting the previous ones while this question is open.
@@ -154,6 +156,12 @@ export type GuessResult =
   | { status: 'correct'; points: number; gift: number; streak: number; stolenFrom: string | null }
   /** close: wrong, but nearly the name (a typo or two too many, a word missing). */
   | { status: 'wrong' | 'close' | 'closed' | 'slow' | 'already' | 'paused' };
+
+export interface OwnerRoomInput {
+  setId: string;
+  name: string;
+  durationSec: number;
+}
 
 export interface CreateRoomInput {
   password: string;
@@ -184,6 +192,11 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   time: (cb: (serverNow: number) => void) => void;
   'host:create': (input: CreateRoomInput, cb: (res: Ack<{ code: string; hostToken: string }>) => void) => void;
+  /** A player opens a room with a public set and becomes its owner. */
+  'owner:create': (
+    input: OwnerRoomInput,
+    cb: (res: Ack<{ code: string; hostToken: string; playerId: string; token: string }>) => void,
+  ) => void;
   'host:join': (input: { code: string; hostToken: string }, cb: (res: Ack) => void) => void;
   'host:next': () => void;
   'host:reveal': () => void;
@@ -220,7 +233,15 @@ export interface QuestionSetDto {
   id: string;
   name: string;
   updatedAt: string;
+  public: boolean;
   questions: QuestionDto[];
+}
+
+/** What the home page shows a would-be room owner for each public set. */
+export interface PublicSetDto {
+  id: string;
+  name: string;
+  questionCount: number;
 }
 
 export const DURATION_OPTIONS = [15, 20, 30, 45, 60];

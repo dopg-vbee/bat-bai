@@ -109,6 +109,15 @@ export async function createApp(options: AppOptions) {
     if (realtime.rooms.has(req.params.code)) res.json({ ok: true });
     else res.status(404).json({ error: ROOM_NOT_FOUND });
   });
+  /** Sets a room owner can pick from: public and with at least one question. */
+  app.get('/api/public-sets', (_req, res) => {
+    res.json(
+      library
+        .sets()
+        .filter((set) => set.public && set.questions.length)
+        .map((set) => ({ id: set.id, name: set.name, questionCount: set.questions.length })),
+    );
+  });
   app.use('/api/admin', adminRouter(library, store, adminPassword));
   app.use('/api', (_req, res) => {
     res.status(404).json({ error: 'Not found' });

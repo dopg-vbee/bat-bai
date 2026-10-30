@@ -34,7 +34,7 @@ export interface GameQuestion {
   endSec: number | null;
 }
 
-interface RoomOptions {
+export interface RoomOptions {
   code: string;
   setName: string;
   questions: GameQuestion[];
@@ -95,6 +95,8 @@ export class Room {
   readonly teamMode: TeamMode;
   /** 0 outside team play. */
   readonly teamCount: number;
+  /** The player who opened the room (not the admin): plays like the others, and also runs the game. */
+  ownerId: string | null = null;
   phase: Phase = 'lobby';
   qIndex = -1;
   startsAt = 0;
@@ -144,6 +146,13 @@ export class Room {
       const bot = this.addPlayer(i === 0 ? SURE_BOT_NAME : botName(i - 1), null, true);
       if (i === 0) this.sureBotId = bot.id;
     }
+  }
+
+  /** Opens the room for its owner: the first player, who gets the host controls on their phone. */
+  joinAsOwner(name: string, socketId: string): Player | string {
+    const result = this.join(name, undefined, socketId);
+    if (typeof result !== 'string') this.ownerId = result.id;
+    return result;
   }
 
   /** Returns the player, or an error message for the joiner. */
@@ -459,6 +468,7 @@ export class Room {
       const state: PlayerState = {
         ...base,
         playerCount: this.players.size,
+        owner: p.id === this.ownerId,
         me: {
           ...identity(p),
           score: p.score,
