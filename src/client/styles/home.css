@@ -1,0 +1,117 @@
+/* Room code entry on the home page: one tile per digit, no card around it. */
+.code-title {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--on-page);
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.code-field {
+  position: relative;
+  width: 100%;
+}
+
+.code-cells {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.code-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  border-radius: 18px;
+  border: 2px solid var(--surface-3);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.code-cell.filled {
+  border-color: var(--accent);
+}
+
+/* The next tile to fill: a ring while the field has focus, and a caret while it is empty. */
+.code-field:focus-within .code-cell.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 5px rgb(192 132 252 / 0.28);
+}
+
+.code-field:focus-within .code-cell.current:not(.filled)::after {
+  content: '';
+  width: 3px;
+  height: 46%;
+  border-radius: 2px;
+  background: var(--accent);
+  animation: code-caret 1s steps(1) infinite;
+}
+
+.code-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font-size: 1rem;
+  outline: none;
+  cursor: text;
+}
+
+.code-input::selection {
+  background: transparent;
+}
+
+.code-field.invalid .code-cell {
+  border-color: var(--danger);
+}
+
+.code-field.invalid .code-cells {
+  animation: code-shake 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes code-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes code-shake {
+  20% {
+    transform: translateX(-8px);
+  }
+  45% {
+    transform: translateX(7px);
+  }
+  70% {
+    transform: translateX(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .code-field.invalid .code-cells,
+  .code-field:focus-within .code-cell.current:not(.filled)::after {
+    animation: none;
+  }
+}
+
+.home-form {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.home-form .error-text {
+  text-align: center;
+}

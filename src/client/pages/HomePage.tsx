@@ -3,6 +3,7 @@ import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'reac
 import { ROOM_NOT_FOUND } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
 import { Overlay } from '../components/Overlay.tsx';
+import { RoomCodeInput } from '../components/RoomCodeInput.tsx';
 import { ThemeToggle } from '../components/ThemeToggle.tsx';
 import { needsIosInstallHint, promptInstall, useCanInstall } from '../lib/install.ts';
 import { Link, navigate } from '../lib/router.tsx';
@@ -71,21 +72,16 @@ export function HomePage() {
       </div>
       <Logo />
       <p className="tagline">Nghe lời – đoán tên bài hát!</p>
-      <form className="card stack" onSubmit={handleSubmit}>
-        <label className="label" htmlFor="room-code">
-          Mã phòng
+      <form className="home-form" onSubmit={handleSubmit}>
+        <label className="code-title" htmlFor="room-code">
+          Nhập mã phòng
         </label>
-        <input
-          id="room-code"
-          className="input input-code"
-          inputMode="numeric"
-          autoComplete="off"
-          placeholder="1234"
-          value={code}
-          onChange={handleCodeChange}
-          autoFocus
-        />
-        {error && <p className="error-text">{error}</p>}
+        <RoomCodeInput value={code} onChange={handleCodeChange} invalid={Boolean(error)} />
+        {error && (
+          <p className="error-text" role="alert">
+            {error}
+          </p>
+        )}
         <div className="join-row">
           <button className="btn btn-primary btn-lg" disabled={code.length !== 4 || checking}>
             <LogIn /> Vào phòng
