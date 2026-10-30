@@ -1,4 +1,4 @@
-import { GripVertical, Pencil, Play, RefreshCw, Shuffle, Trash2, X } from 'lucide-react';
+import { Globe, GripVertical, Lock, Pencil, Play, RefreshCw, Shuffle, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import type { QuestionDto, QuestionSetDto, VideoStatus } from '../../../shared/types.ts';
 import { shuffled } from '../../../shared/shuffle.ts';
@@ -170,6 +170,14 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
     });
   }
 
+  // Public sets can be picked by anyone who opens a room from the home page.
+  function handleTogglePublic() {
+    void run(async () => {
+      const body = JSON.stringify({ public: !set.public });
+      onChange(await api<QuestionSetDto>(`/sets/${set.id}/public`, { method: 'PUT', body }));
+    });
+  }
+
   function handleDeleteSet() {
     if (!confirm(`Xóa bộ đề "${set.name}"? (Dữ liệu vẫn được giữ trong bản sao lưu)`)) return;
     void run(async () => {
@@ -252,6 +260,13 @@ export function SetEditor({ set, onChange, onDeleted }: SetEditorProps) {
             <p className="muted">{set.questions.length} câu hỏi</p>
           </div>
           <div className="set-header-actions">
+            <button
+              className="btn btn-ghost-dark btn-sm"
+              onClick={handleTogglePublic}
+              title={set.public ? 'Đang cho mọi người mở phòng với bộ này: bấm để ẩn' : 'Cho mọi người mở phòng với bộ này'}
+            >
+              {set.public ? <Globe /> : <Lock />} {set.public ? 'Công khai' : 'Riêng tư'}
+            </button>
             <button className="btn btn-ghost-dark btn-sm" onClick={handleRename}>
               <Pencil /> Đổi tên
             </button>
