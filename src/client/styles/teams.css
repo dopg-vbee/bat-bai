@@ -228,3 +228,17 @@
   font-weight: 800;
   font-size: 1.2rem;
 }
+
+/* An odd last team gets the full row instead of sitting alone beside an empty cell. */
+.team-picker-options .team-option:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.team-option:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.team-option:active {
+  transform: translateY(1px);
+}

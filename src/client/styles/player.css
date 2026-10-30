@@ -230,3 +230,8 @@
   flex-shrink: 0;
   padding-inline: 12px;
 }
+
+.player-body h2,
+.player-body p {
+  text-wrap: balance;
+}
