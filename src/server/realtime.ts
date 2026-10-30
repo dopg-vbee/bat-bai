@@ -211,6 +211,12 @@ export function setupRealtime(io: GameServer, library: Library, options: Realtim
       target.emit('kicked');
     });
 
+    socket.on('host:guess', (text, cb) => {
+      if (typeof cb !== 'function') return;
+      const room = hostRoom();
+      cb(room?.ownerId ? room.guess(room.ownerId, String(text ?? '')) : { status: 'closed' });
+    });
+
     socket.on('player:join', (input, cb) => {
       if (typeof cb !== 'function') return;
       const room = rooms.get(String(input?.code));

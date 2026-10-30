@@ -584,3 +584,30 @@
       0 0 60px rgb(250 204 21 / 0.8);
   }
 }
+
+/* The room owner's answer box under the prompt on their host screen. */
+.owner-guess {
+  display: grid;
+  gap: 8px;
+  width: min(520px, 100%);
+}
+
+.owner-guess-form {
+  display: flex;
+  gap: 8px;
+}
+
+.owner-guess-form .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.owner-guess-done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--success-text);
+  font-size: 1.3rem;
+  font-weight: 800;
+}

@@ -441,3 +441,33 @@ describe('audio on every phone (players apart)', () => {
     await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: false }) });
   });
 });
+
+describe('owner answering from the host screen', () => {
+  it('the owner can guess through host:guess; an admin host cannot', async () => {
+    const set = (await admin<QuestionSetDto[]>('/sets')).find((s) => s.name === 'Nhạc Việt')!;
+    await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: true }) });
+    const owner = client();
+    const created = await owner.emitWithAck('owner:create', { setId: set.id, name: 'Chủ', durationSec: 10, audio: 'everyone' });
+    if (!created.ok) throw new Error(created.error);
+    const states: HostState[] = [];
+    owner.on('hostState', (s) => states.push(s));
+    await owner.emitWithAck('host:join', { code: created.code, hostToken: created.hostToken });
+    const guest = client();
+    await guest.emitWithAck('player:join', { code: created.code, name: 'Khách' });
+    owner.emit('host:next');
+    await waitFor(() => states.at(-1)?.phase === 'question', 3000, 'question');
+    expect(states.at(-1)!.ownerId).toBe(created.playerId);
+    await sleep(3200); // the countdown
+    const title = set.questions[0].title;
+    expect((await owner.emitWithAck('host:guess', 'sai bét')).status).toBe('wrong');
+    await sleep(1500); // guesses are spaced out
+    expect((await owner.emitWithAck('host:guess', title)).status).toBe('correct');
+
+    const adminHost = client();
+    const room = await adminHost.emitWithAck('host:create', { password: PASSWORD, setId: set.id, durationSec: 10 });
+    if (!room.ok) throw new Error(room.error);
+    await adminHost.emitWithAck('host:join', { code: room.code, hostToken: room.hostToken });
+    expect((await adminHost.emitWithAck('host:guess', title)).status).toBe('closed');
+    await admin(`/sets/${set.id}/public`, { method: 'PUT', body: JSON.stringify({ public: false }) });
+  });
+});

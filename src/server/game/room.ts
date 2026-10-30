@@ -405,7 +405,7 @@ export class Room {
       ...this.baseView(),
       setName: this.setName,
       preview: this.preview,
-      ownerRoom: this.ownerId !== null,
+      ownerId: this.ownerId,
       durationMs: this.durationMs,
       advanceAt: this.advanceAt,
       joinQr: this.joinQr,
@@ -419,8 +419,8 @@ export class Room {
         bot: p.bot,
         team: p.team,
       })),
-      audioUrl: this.audioMode === 'screen' && inRound && question ? audioUrl(question.audio) : null,
-      nextAudioUrl: this.audioMode === 'screen' && upcoming ? audioUrl(upcoming.audio) : null,
+      audioUrl: inRound && question ? audioUrl(question.audio) : null,
+      nextAudioUrl: upcoming ? audioUrl(upcoming.audio) : null,
       answer: this.answerVisible() ? question.title : null,
       clip:
         inRound && question

@@ -68,12 +68,12 @@ export function HostMenu({ state, onEnd, onShowQr, onShowRemote }: HostMenuProps
             <ArrowLeft /> Về trang quản lý
           </Link>
         )}
-        {state.ownerRoom && (
+        {state.ownerId && (
           <Link to="/" className="host-menu-item">
             <ArrowLeft /> Về trang chủ
           </Link>
         )}
-        {(state.preview || state.ownerRoom) && state.phase !== 'ended' && (
+        {state.preview && state.phase !== 'ended' && (
           <button className="host-menu-item" role="menuitem" onClick={handleOpenPlayer}>
             <SquareUser /> Mở màn hình người chơi
           </button>

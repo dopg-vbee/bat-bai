@@ -61,8 +61,8 @@ export interface HostState {
   setName: string;
   /** Trial room: bots play along so the host can see the real flow. */
   preview: boolean;
-  /** Opened by a player (not the admin): its owner plays in a second window and runs the game from here. */
-  ownerRoom: boolean;
+  /** Set when a player (not the admin) opened the room: they run it from here and answer in a box on this screen. */
+  ownerId: string | null;
   phase: Phase;
   qIndex: number;
   qTotal: number;
@@ -225,6 +225,8 @@ export interface ClientToServerEvents {
   /** The answer video finished playing on the big screen. */
   'host:clipEnded': (qIndex: number) => void;
   'host:kick': (playerId: string) => void;
+  /** The owner's answer, typed on the host screen of their room. */
+  'host:guess': (text: string, cb: (res: GuessResult) => void) => void;
   'player:join': (input: JoinInput, cb: (res: Ack<{ playerId: string; token: string }>) => void) => void;
   'player:guess': (text: string, cb: (res: GuessResult) => void) => void;
   'player:react': (emoji: string) => void;

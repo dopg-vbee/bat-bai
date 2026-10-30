@@ -6,6 +6,7 @@ import { Equalizer } from '../../components/Equalizer.tsx';
 import { TimerRing } from '../../components/TimerRing.tsx';
 import { useServerNow } from '../../lib/socket.ts';
 import { CorrectStream, useScreenUnit } from './CorrectStream.tsx';
+import { OwnerGuess } from './OwnerGuess.tsx';
 import { WrongList } from './WrongList.tsx';
 import type { QuestionAudio } from '../../lib/useQuestionAudio.ts';
 
@@ -51,6 +52,7 @@ export function HostQuestion({ state, audio }: { state: HostState; audio: Questi
         <TimerRing remainingMs={state.endsAt - now} totalMs={state.durationMs} size={Math.round(TIMER_SIZE * unit)} />
         <Equalizer playing={audio.playing} />
         <h2 className="host-prompt">Bài hát này tên gì?</h2>
+        {state.ownerId && <OwnerGuess state={state} remainingMs={state.endsAt - now} />}
         {/* Only when the browser blocked autoplay: without it the round would have no sound. */}
         {audio.blocked && (
           <button className="btn btn-primary btn-lg" onClick={audio.replay}>
