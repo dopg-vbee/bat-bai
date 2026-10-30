@@ -212,9 +212,11 @@ button {
   font-size: 1.25rem;
   font-weight: 700;
   opacity: 0.95;
+  text-wrap: balance;
 }
 
 .link-subtle {
+  padding: 10px 14px;
   color: rgb(255 255 255 / 0.85);
   font-weight: 700;
   text-decoration: none;

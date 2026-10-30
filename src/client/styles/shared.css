@@ -434,6 +434,10 @@
   background: #1e1b4b;
 }
 
+.credit span {
+  text-wrap: balance;
+}
+
 .credit strong {
   color: var(--primary);
   text-decoration: underline;

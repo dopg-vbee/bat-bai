@@ -1,6 +1,7 @@
 /* Room code entry on the home page: one tile per digit, no card around it. */
 .code-title {
   display: block;
+  text-wrap: balance;
   margin-bottom: 10px;
   color: var(--on-page);
   font-size: 1.15rem;
@@ -149,6 +150,15 @@
 
 .home-set:hover {
   border-color: var(--accent);
+}
+
+.home-set:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.home-set:active {
+  transform: translateY(1px);
 }
 
 .home-set-name {
