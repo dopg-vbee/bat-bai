@@ -1,4 +1,4 @@
-import { ArrowRight, CircleHelp, Download, ExternalLink, LogIn, ScanQrCode } from 'lucide-react';
+import { ArrowRight, CircleHelp, Download, LogIn, ScanQrCode } from 'lucide-react';
 import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react';
 import { ROOM_NOT_FOUND } from '../../shared/types.ts';
 import { Logo } from '../components/Brand.tsx';
@@ -57,13 +57,16 @@ export function HomePage() {
   }
 
   return (
-    <main className="screen center">
+    <main className="screen center home">
       <div className="home-corner">
         {canInstall && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={promptInstall}>
             <Download /> Cài app
           </button>
         )}
+        <button type="button" className="btn btn-ghost btn-sm" onClick={handleShowGuide}>
+          <CircleHelp /> Hướng dẫn
+        </button>
         <ThemeToggle />
       </div>
       <Logo />
@@ -83,25 +86,24 @@ export function HomePage() {
           autoFocus
         />
         {error && <p className="error-text">{error}</p>}
-        <button className="btn btn-primary btn-lg" disabled={code.length !== 4 || checking}>
-          <LogIn /> Vào phòng
-        </button>
-        <button type="button" className="btn btn-ghost-dark" onClick={handleShowScanner}>
-          <ScanQrCode /> Quét mã QR
-        </button>
+        <div className="join-row">
+          <button className="btn btn-primary btn-lg" disabled={code.length !== 4 || checking}>
+            <LogIn /> Vào phòng
+          </button>
+          <button type="button" className="btn btn-ghost-dark" onClick={handleShowScanner}>
+            <ScanQrCode /> Quét QR
+          </button>
+        </div>
       </form>
-      <button type="button" className="btn btn-ghost" onClick={handleShowGuide}>
-        <CircleHelp /> Hướng dẫn chơi
-      </button>
       <Link to="/admin" className="link-subtle">
         Tôi là host <ArrowRight />
       </Link>
-      <p className="credit">
-        Các giọng đọc trong game được tạo tại{' '}
-        <a href="https://vbee.vn" target="_blank" rel="noreferrer">
-          vbee.vn <ExternalLink />
-        </a>
-      </p>
+      <a className="credit" href="https://vbee.vn" target="_blank" rel="noreferrer">
+        <img src="/vbee-logo.svg" alt="" />
+        <span>
+          Các giọng đọc trong game được tạo tại <strong>vbee.vn</strong>
+        </span>
+      </a>
       {iosHint && <p className="install-hint">Cài app: bấm nút Chia sẻ rồi chọn “Thêm vào MH chính”</p>}
       {showScanner && (
         <Overlay onClose={handleHideScanner}>

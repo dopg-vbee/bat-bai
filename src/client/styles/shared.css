@@ -383,24 +383,60 @@
   gap: 8px;
 }
 
-/* Where the game's voices come from, with a link. */
+/* Room kept at the bottom of the home page for the credit pinned there. */
+.home {
+  padding-bottom: 84px;
+}
+
+/* Code box and the QR button on one row: the QR scan is the smaller of the two. */
+.join-row {
+  display: flex;
+  gap: 10px;
+}
+
+.join-row .btn-primary {
+  flex: 1;
+}
+
+/* Where the game's voices come from: a pill pinned to the bottom, with Vbee's mark. */
 .credit {
-  font-size: 0.95rem;
-  color: var(--on-page);
-  opacity: 0.85;
-}
-
-.credit a {
-  display: inline-flex;
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
   align-items: center;
-  gap: 4px;
-  color: inherit;
-  font-weight: 800;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 8px 16px 8px 10px;
+  border-radius: 999px;
+  background: var(--white-20);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  color: var(--on-page);
+  font-size: 0.95rem;
+  line-height: 1.25;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s;
 }
 
-.credit svg {
-  width: 1em;
-  height: 1em;
+.credit:hover {
+  background: rgb(255 255 255 / 0.32);
+}
+
+.credit img {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  padding: 4px;
+  border-radius: 50%;
+  background: #1e1b4b;
+}
+
+.credit strong {
+  color: var(--primary);
+  text-decoration: underline;
 }
 
 .install-hint {
